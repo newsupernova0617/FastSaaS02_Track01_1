@@ -10,4 +10,5 @@ build/
 .dev.vars
 ios/
 android/
+.worktrees/
 *.log
