@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api, SummaryRow } from '../api';
+import { api } from '../api';
+import type { SummaryRow } from '../api';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
