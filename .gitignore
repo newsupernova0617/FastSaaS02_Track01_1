@@ -1,0 +1,13 @@
+.agent/
+.gemini/
+node_modules/
+.env*
+!.env.example
+dist/
+build/
+.cloudflare/
+.wrangler/
+.dev.vars
+ios/
+android/
+*.log
