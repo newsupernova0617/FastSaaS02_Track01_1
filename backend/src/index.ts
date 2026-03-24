@@ -4,7 +4,7 @@ import transactions from './routes/transactions';
 
 const app = new Hono();
 
-app.use('*', cors({ origin: ['http://localhost:5173', 'capacitor://localhost'] }));
+app.use('*', cors({ origin: ['http://localhost:5173', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev'] }));
 app.route('/api/transactions', transactions);
 
 export default app;
