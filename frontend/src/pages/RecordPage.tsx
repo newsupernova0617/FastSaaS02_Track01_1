@@ -5,7 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
 export default function RecordPage() {
     const [type, setType] = useState<'expense' | 'income'>('expense');
     const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
+    const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
     const [memo, setMemo] = useState('');
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -85,8 +85,8 @@ export default function RecordPage() {
                                 type="button"
                                 onClick={() => setCategory(cat)}
                                 className={`py-2 rounded-lg text-sm font-medium border ${category === cat
-                                        ? 'bg-gray-800 text-white border-gray-800'
-                                        : 'bg-white text-gray-600 border-gray-200'
+                                    ? 'bg-gray-800 text-white border-gray-800'
+                                    : 'bg-white text-gray-600 border-gray-200'
                                     }`}
                             >
                                 {cat}

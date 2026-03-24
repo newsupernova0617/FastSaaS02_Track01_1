@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api, Transaction } from '../api';
+import { api } from '../api';
+import type { Transaction } from '../api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarPage() {
@@ -80,7 +81,7 @@ export default function CalendarPage() {
                                     }`}
                             >
                                 <span className={`text-sm font-semibold mb-1 ${new Date(year, month, d).getDay() === 0 ? 'text-red-500' :
-                                        new Date(year, month, d).getDay() === 6 ? 'text-blue-500' : 'text-gray-700'
+                                    new Date(year, month, d).getDay() === 6 ? 'text-blue-500' : 'text-gray-700'
                                     }`}>{d}</span>
                                 <div className="space-y-[2px]">
                                     {income > 0 && <div className="w-1 h-1 bg-blue-400 rounded-full mx-auto" />}
