@@ -1,9 +1,10 @@
-import { Hono } from 'hono'
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import transactions from './routes/transactions';
 
-const app = new Hono()
+const app = new Hono();
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.use('*', cors());
+app.route('/api/transactions', transactions);
 
-export default app
+export default app;
