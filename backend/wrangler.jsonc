@@ -6,7 +6,7 @@
   "vars": {
     "TURSO_DB_URL": "libsql://gagyebu-fastsaas2.aws-ap-northeast-1.turso.io",
     "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzQzNDE1MTMsImlkIjoiMDE5ZDFlZmUtYjUwMS03ZDU0LTg2ZjQtNTE1MjJkOTY1MTBmIiwicmlkIjoiMThiNTQxYzAtOWZhOC00YWNiLWFhZDAtZGQ2N2YzMWQ4MDI3In0.F5JYyvGQagWy_AGIvGEXvJh-ZHBEKqrNGAthK2k8L-h2AA5w1AYcbHC2DxndAzpXgpfYkdJMCe5SXzde0996CQ",
-    "SUPABASE_JWT_SECRET": "REPLACE_WITH_YOUR_SUPABASE_JWT_SECRET"
+    "SUPABASE_JWT_SECRET": "EJcsEWsjnggteOL9CyDbWDPvNqTsa/Dzd4PinbFfRx/JzEm+ttWhj9fqA9CybHIpCrofsjXMFk/gtE9aNqmztw=="
   },
   // "kv_namespaces": [
   //   {
