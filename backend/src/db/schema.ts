@@ -1,15 +1,27 @@
+// backend/src/db/schema.ts
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
-export const transactions = sqliteTable('transactions', {
-    id: integer('id').primaryKey({ autoIncrement: true }), // PK, 자동 증가
-    type: text('type', { enum: ['income', 'expense'] }).notNull(), // 수입 | 지출
-    amount: integer('amount').notNull(), // 금액 (원 단위)
-    category: text('category').notNull(), // 고정 카테고리
-    memo: text('memo'), // 메모 (선택)
-    date: text('date').notNull(), // YYYY-MM-DD
-    createdAt: text('created_at').default(sql`(datetime('now'))`), // 생성일시 자동
+export const users = sqliteTable('users', {
+    id:        text('id').primaryKey(),
+    email:     text('email'),
+    name:      text('name'),
+    avatarUrl: text('avatar_url'),
+    provider:  text('provider').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
-export type Transaction = typeof transactions.$inferSelect; // SELECT 결과 타입
-export type NewTransaction = typeof transactions.$inferInsert; // INSERT 입력 타입
+export const transactions = sqliteTable('transactions', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    userId:    text('user_id').notNull().references(() => users.id),
+    type:      text('type', { enum: ['income', 'expense'] }).notNull(),
+    amount:    integer('amount').notNull(),
+    category:  text('category').notNull(),
+    memo:      text('memo'),
+    date:      text('date').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+export type Transaction = typeof transactions.$inferSelect;
+export type NewTransaction = typeof transactions.$inferInsert;
+export type User = typeof users.$inferSelect;
