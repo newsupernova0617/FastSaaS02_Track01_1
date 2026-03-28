@@ -40,17 +40,24 @@ async function getJWKS(supabaseUrl: string): Promise<{ keys: JWKSKey[] } | null>
   const now = Date.now();
   // Cache for 1 hour
   if (jwksCache && now - jWKSCacheTime < 3600000) {
+    console.log('[JWKS] Using cached JWKS');
     return jwksCache;
   }
 
   try {
     const url = `${supabaseUrl}/.well-known/jwks.json`;
+    console.log('[JWKS] Fetching from:', url);
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error('[JWKS] Fetch failed with status:', res.status);
+      return null;
+    }
     jwksCache = await res.json();
     jWKSCacheTime = now;
+    console.log('[JWKS] Fetched successfully, keys:', jwksCache.keys.length);
     return jwksCache;
-  } catch {
+  } catch (err) {
+    console.error('[JWKS] Fetch exception:', err);
     return null;
   }
 }
@@ -82,7 +89,17 @@ async function verifyES256(
 
     // Find key by kid
     const key = jwks.keys.find(k => k.kid === header.kid);
-    if (!key || key.alg !== 'ES256') return null;
+    if (!key) {
+      console.error('[ES256] Key not found for kid:', header.kid);
+      console.error('[ES256] Available kids:', jwks.keys.map(k => k.kid));
+      return null;
+    }
+    if (key.alg !== 'ES256') {
+      console.error('[ES256] Key algorithm mismatch:', key.alg);
+      return null;
+    }
+
+    console.log('[ES256] Found matching key');
 
     // Import EC public key
     const x = base64urlToBuffer(key.x);
@@ -96,6 +113,8 @@ async function verifyES256(
       ['verify']
     );
 
+    console.log('[ES256] Public key imported');
+
     // Verify signature
     const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
     const signature = base64urlToBuffer(signatureB64);
@@ -107,15 +126,26 @@ async function verifyES256(
       data
     );
 
-    if (!valid) return null;
+    if (!valid) {
+      console.error('[ES256] Signature verification failed');
+      return null;
+    }
+
+    console.log('[ES256] Signature verified');
 
     // Verify payload
     const payloadJson = decodeBase64Url(payloadB64);
     const payload = JSON.parse(payloadJson);
 
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      console.error('[ES256] Token expired');
+      return null;
+    }
+
+    console.log('[ES256] Payload verified, returning');
     return payload;
-  } catch {
+  } catch (err) {
+    console.error('[ES256] Exception:', err);
     return null;
   }
 }
@@ -153,27 +183,43 @@ export async function verifyJWT(
   supabaseUrl?: string
 ): Promise<{ sub: string; [key: string]: unknown } | null> {
   const parts = token.split('.');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) {
+    console.error('[JWT] Invalid token format');
+    return null;
+  }
 
   try {
     // Decode header to determine algorithm
     const headerJson = decodeBase64Url(parts[0]);
     const header: JWTHeader = JSON.parse(headerJson);
+    console.log('[JWT] Header:', { alg: header.alg, kid: header.kid });
 
     // Try ES256 first (Supabase modern auth)
     if (header.alg === 'ES256' && supabaseUrl) {
+      console.log('[JWT] Attempting ES256 verification');
       const payload = await verifyES256(token, supabaseUrl);
-      if (payload) return payload;
+      if (payload) {
+        console.log('[JWT] ES256 verification succeeded');
+        return payload;
+      }
+      console.log('[JWT] ES256 verification failed');
     }
 
     // Fall back to HS256 (legacy)
     if (header.alg === 'HS256') {
+      console.log('[JWT] Attempting HS256 verification');
       const payload = await verifyHS256(token, secret);
-      if (payload) return payload;
+      if (payload) {
+        console.log('[JWT] HS256 verification succeeded');
+        return payload;
+      }
+      console.log('[JWT] HS256 verification failed');
     }
 
+    console.error('[JWT] No matching algorithm handler');
     return null;
-  } catch {
+  } catch (err) {
+    console.error('[JWT] Exception:', err);
     return null;
   }
 }
