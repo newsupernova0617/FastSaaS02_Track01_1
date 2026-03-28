@@ -68,11 +68,17 @@ async function verifyES256(
     const headerJson = decodeBase64Url(headerB64);
     const header: JWTHeader = JSON.parse(headerJson);
 
-    if (header.alg !== 'ES256' || !header.kid) return null;
+    if (header.alg !== 'ES256' || !header.kid) {
+      console.error('[ES256] Invalid header:', { alg: header.alg, kid: header.kid });
+      return null;
+    }
 
     // Get JWKS
     const jwks = await getJWKS(supabaseUrl);
-    if (!jwks) return null;
+    if (!jwks) {
+      console.error('[ES256] Failed to fetch JWKS');
+      return null;
+    }
 
     // Find key by kid
     const key = jwks.keys.find(k => k.kid === header.kid);
@@ -182,7 +188,10 @@ export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: Varia
     const supabaseUrl = 'https://uqvnepemplsdkkawbmdc.supabase.co';
 
     const payload = await verifyJWT(token, c.env.SUPABASE_JWT_SECRET, supabaseUrl);
-    if (!payload) return c.json({ error: 'Unauthorized' }, 401);
+    if (!payload) {
+      console.error('[AUTH] JWT verification failed');
+      return c.json({ error: 'Unauthorized', debug: 'JWT verification failed' }, 401);
+    }
     c.set('userId', payload.sub);
     await next();
   }
