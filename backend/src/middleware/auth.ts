@@ -45,7 +45,7 @@ async function getJWKS(supabaseUrl: string): Promise<{ keys: JWKSKey[] } | null>
   }
 
   try {
-    const url = `${supabaseUrl}/.well-known/jwks.json`;
+    const url = `${supabaseUrl}/auth/v1/.well-known/jwks.json`;
     console.log('[JWKS] Fetching from:', url);
     const res = await fetch(url);
     if (!res.ok) {
