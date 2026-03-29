@@ -3,19 +3,25 @@ import { api } from '../api';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
 
 export default function RecordPage() {
+    // 지출/수입 타입 (기본값: 지출)
     const [type, setType] = useState<'expense' | 'income'>('expense');
     const [amount, setAmount] = useState('');
+    // 카테고리 (지출 or 수입에 따라 다른 목록)
     const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0]);
     const [memo, setMemo] = useState('');
+    // 거래 날짜 (기본값: 오늘)
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
+    // type이 바뀌면 해당 카테고리 목록 적용
     const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        // 금액 검증
         if (!amount || Number(amount) <= 0) return alert('금액을 입력해주세요.');
 
         try {
+            // 백엔드에 거래 저장
             await api.addTransaction({
                 type,
                 amount: Number(amount),
@@ -24,6 +30,7 @@ export default function RecordPage() {
                 date,
             });
             alert('저장되었습니다!');
+            // 저장 성공하면 폼 초기화
             setAmount('');
             setMemo('');
         } catch (err) {
@@ -36,6 +43,7 @@ export default function RecordPage() {
         <div className="p-4 pt-8">
             <h1 className="text-2xl font-bold mb-6 text-gray-800">지출/수입 기록</h1>
 
+            {/* 지출/수입 선택 탭 */}
             <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
                 <button
                     onClick={() => { setType('expense'); setCategory(EXPENSE_CATEGORIES[0]); }}
@@ -78,6 +86,7 @@ export default function RecordPage() {
 
                 <div>
                     <label className="block text-sm font-semibold text-gray-600 mb-2">카테고리</label>
+                    {/* type(지출/수입)에 따라 동적으로 카테고리 버튼 렌더링 */}
                     <div className="grid grid-cols-3 gap-2">
                         {categories.map((cat) => (
                             <button
@@ -106,6 +115,7 @@ export default function RecordPage() {
                     />
                 </div>
 
+                {/* 저장 버튼 - 지출/수입에 따라 색상 변경 */}
                 <button
                     type="submit"
                     className={`w-full py-4 rounded-2xl text-lg font-bold text-white shadow-lg transition-transform active:scale-95 ${type === 'expense' ? 'bg-red-500 shadow-red-200' : 'bg-blue-500 shadow-blue-200'
