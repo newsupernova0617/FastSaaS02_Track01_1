@@ -250,8 +250,8 @@ export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: Varia
     const token = authHeader.slice(7);
 
     // Supabase 인스턴스의 공개키 정보를 가져오는 URL
-    // ES256 검증을 위해 필요함
-    const supabaseUrl = 'https://uqvnepemplsdkkawbmdc.supabase.co';
+    // ES256 검증을 위해 필요함 (환경변수에서 주입)
+    const supabaseUrl = c.env.SUPABASE_URL;
 
     // JWT 토큰 검증 - 유효하면 sub(사용자 ID) 필드 반환
     const payload = await verifyJWT(token, c.env.SUPABASE_JWT_SECRET, supabaseUrl);
