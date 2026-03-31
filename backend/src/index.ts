@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import transactions from './routes/transactions';
 import usersRoute from './routes/users';
+import aiRouter from './routes/ai';
 import { authMiddleware } from './middleware/auth';
 import type { Env } from './db/index';
 import type { Variables } from './middleware/auth';
@@ -19,8 +20,9 @@ app.use('*', cors({
 // 검증에 실패하면 401 Unauthorized 반환
 app.use('/api/*', authMiddleware);
 
-// 라우트 마운트: /api/transactions와 /api/users 엔드포인트 등록
+// 라우트 마운트: /api/transactions, /api/users, /api/ai 엔드포인트 등록
 app.route('/api/transactions', transactions);
 app.route('/api/users', usersRoute);
+app.route('/api/ai', aiRouter);
 
 export default app;
