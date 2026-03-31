@@ -4,9 +4,11 @@
 
 **Goal:** Implement backend API for AI-powered transaction management, allowing users to create/read/update/delete budget transactions via natural language chat.
 
-**Architecture:** Backend-mediated AI where the server coordinates Gemini API calls, validates responses, executes database operations, and returns typed results. All transaction operations remain scoped to authenticated user via existing auth middleware.
+**Architecture:** Backend-mediated AI where the server coordinates Gemma API calls, validates responses, executes database operations, and returns typed results. All transaction operations remain scoped to authenticated user via existing auth middleware.
 
-**Tech Stack:** Hono (server), Drizzle ORM (database), Turso (SQLite-compatible), Google Gemma model (via Google AI Studio), Zod (validation)
+**Tech Stack:** Hono on Cloudflare Workers (server), Drizzle ORM (database), Turso (SQLite-compatible), Google Gemma model (via Google AI Studio), Zod (validation), Cloudflare Pages (frontend)
+
+**Deployment:** Backend runs on Cloudflare Workers with access to Turso database. Frontend runs on Cloudflare Pages. Both use environment variables for API keys and secrets.
 
 ---
 
@@ -853,22 +855,36 @@ git commit -m "feat: register AI action route"
 
 **Context:** Document required Gemini API key.
 
-- [ ] **Step 1: Update `.env.example`**
+- [ ] **Step 1: Update environment configuration**
 
-Add this line to `.env.example`:
+Update `.env.example` with:
 
 ```
 GEMINI_API_KEY=your-google-ai-studio-api-key-here
 ```
 
+Also update `backend/wrangler.toml` to include the environment variable in the Cloudflare Workers config (for local dev and secrets management):
+
+```toml
+[env.development]
+vars = { GEMINI_API_KEY = "your-dev-key-here" }
+```
+
+For production, set the secret in Cloudflare dashboard:
+```bash
+wrangler secret put GEMINI_API_KEY
+```
+
 Note: Get your API key from https://aistudio.google.com/app/apikey for Google AI Studio (Gemma model access)
 
-- [ ] **Step 2: Commit environment docs**
+- [ ] **Step 2: Commit environment configuration**
 
 ```bash
-git add .env.example
-git commit -m "docs: add GEMINI_API_KEY to environment variables"
+git add .env.example backend/wrangler.toml
+git commit -m "docs: add GEMINI_API_KEY to environment variables and wrangler config"
 ```
+
+Note: Ensure `backend/wrangler.toml` already has the Turso database binding configured (should be done by existing setup). The `Env` type in `backend/src/db/index.ts` should include both database and GEMINI_API_KEY bindings.
 
 ---
 
