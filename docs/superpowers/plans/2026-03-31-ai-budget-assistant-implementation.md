@@ -746,23 +746,7 @@ router.post('/:id/undo', async (c) => {
 });
 ```
 
-Also update the DELETE endpoint to use soft delete:
-
-```typescript
-// UPDATE DELETE endpoint to soft delete
-router.delete('/:id', async (c) => {
-    const db = getDb(c.env);
-    const userId = c.get('userId');
-    const id = Number(c.req.param('id'));
-
-    await db.delete(transactions).where(
-        and(eq(transactions.id, id), eq(transactions.userId, userId))
-    );
-    return c.json({ success: true });
-});
-```
-
-Actually, for consistency with the AI feature, let's update DELETE to soft-delete too:
+Also update the DELETE endpoint to soft delete:
 
 ```typescript
 router.delete('/:id', async (c) => {
