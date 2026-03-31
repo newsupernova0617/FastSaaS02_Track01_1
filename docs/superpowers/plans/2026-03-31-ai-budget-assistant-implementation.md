@@ -119,7 +119,7 @@ git commit -m "feat: add AI action type definitions"
 **Files:**
 - Create: `backend/src/services/validation.ts`
 
-**Context:** Define Zod schemas for parsing and validating Gemini API responses and enforce semantic rules.
+**Context:** Define Zod schemas for parsing and validating AI model API responses and enforce semantic rules.
 
 - [ ] **Step 1: Create validation service file**
 
@@ -129,8 +129,8 @@ Create `backend/src/services/validation.ts`:
 import { z } from 'zod';
 import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload } from '../types/ai';
 
-// Schema for Gemini response
-export const GeminiResponseSchema = z.object({
+// Schema for AI model response
+export const AIResponseSchema = z.object({
   type: z.enum(['create', 'update', 'read', 'delete']),
   payload: z.record(z.any()),
   confidence: z.number().min(0).max(1),
@@ -165,9 +165,9 @@ const DeletePayloadSchema = z.object({
   reason: z.string().optional(),
 });
 
-// Validate Gemini response format
-export function validateGeminiResponse(data: unknown): TransactionAction {
-  return GeminiResponseSchema.parse(data);
+// Validate AI model response format
+export function validateAIResponse(data: unknown): TransactionAction {
+  return AIResponseSchema.parse(data);
 }
 
 // Validate action payloads
@@ -303,12 +303,12 @@ git commit -m "feat: add Korean message generation service"
 
 ---
 
-## Task 5: Create Gemini API Service
+## Task 5: Create AI Model Service
 
 **Files:**
 - Create: `backend/src/services/ai.ts`
 
-**Context:** Handle Gemini API communication and action coordination.
+**Context:** Handle Google AI (Gemma model) API communication and action coordination.
 
 - [ ] **Step 1: Create AI service file**
 
@@ -318,7 +318,7 @@ Create `backend/src/services/ai.ts`:
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { TransactionAction } from '../types/ai';
 import type { Transaction } from '../db/schema';
-import { validateGeminiResponse } from './validation';
+import { validateAIResponse } from './validation';
 
 const SYSTEM_PROMPT = `You are a budget transaction assistant. Users write in natural language (Korean),
 and you extract/modify financial transactions.
@@ -385,9 +385,9 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
-      return validateGeminiResponse(parsed);
+      return validateAIResponse(parsed);
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('AI model API error:', error);
       throw new Error('Failed to process request. Please try again.');
     }
   }
@@ -412,7 +412,7 @@ npm install @google/generative-ai
 
 ```bash
 git add backend/src/services/ai.ts backend/package.json
-git commit -m "feat: add Gemini API service integration"
+git commit -m "feat: add AI model service integration (Google Gemma)"
 ```
 
 ---
@@ -435,6 +435,7 @@ import { transactions } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { AIService } from '../services/ai';
 import {
+  validateAIResponse,
   validateCreatePayload,
   validateUpdatePayload,
   validateReadPayload,
@@ -853,7 +854,7 @@ git commit -m "feat: register AI action route"
 **Files:**
 - Modify: `.env.example`
 
-**Context:** Document required Gemini API key.
+**Context:** Document required Google AI Studio API key for the AI model.
 
 - [ ] **Step 1: Update environment configuration**
 
@@ -902,7 +903,7 @@ Create `backend/tests/services/validation.test.ts`:
 ```typescript
 import { describe, it, expect } from 'vitest';
 import {
-  validateGeminiResponse,
+  validateAIResponse,
   validateCreatePayload,
   validateUpdatePayload,
   validateReadPayload,
@@ -912,21 +913,21 @@ import {
 } from '../../src/services/validation';
 
 describe('Validation Schemas', () => {
-  describe('validateGeminiResponse', () => {
-    it('should parse valid Gemini response', () => {
+  describe('validateAIResponse', () => {
+    it('should parse valid AI model response', () => {
       const response = {
         type: 'create',
         payload: { transactionType: 'expense', amount: 5500, category: 'food', date: '2026-03-30' },
         confidence: 0.95,
       };
-      const result = validateGeminiResponse(response);
+      const result = validateAIResponse(response);
       expect(result.type).toBe('create');
       expect(result.confidence).toBe(0.95);
     });
 
     it('should reject invalid type', () => {
       expect(() => {
-        validateGeminiResponse({
+        validateAIResponse({
           type: 'invalid',
           payload: {},
           confidence: 0.95,
@@ -936,7 +937,7 @@ describe('Validation Schemas', () => {
 
     it('should reject confidence outside 0-1 range', () => {
       expect(() => {
-        validateGeminiResponse({
+        validateAIResponse({
           type: 'create',
           payload: {},
           confidence: 1.5,
@@ -1159,7 +1160,7 @@ import { transactions, users } from '../../src/db/schema';
 import aiRouter from '../../src/routes/ai';
 import { eq } from 'drizzle-orm';
 
-// Mock Gemini API
+// Mock AI model API
 vi.mock('../../src/services/ai', () => ({
   AIService: class {
     async parseUserInput() {
@@ -1372,7 +1373,7 @@ git status
 ✅ Type definitions for AI actions
 ✅ Validation schemas (Zod + semantic)
 ✅ Message generation service
-✅ Gemini API integration
+✅ AI model (Google Gemma) integration
 ✅ POST /api/ai/action endpoint
 ✅ POST /api/transactions/:id/undo endpoint
 ✅ All transaction queries filter deleted transactions
