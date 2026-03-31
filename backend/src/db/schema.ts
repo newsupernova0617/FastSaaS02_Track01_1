@@ -22,6 +22,7 @@ export const transactions = sqliteTable('transactions', {
     memo:      text('memo'),                  // 추가 설명 (선택사항)
     date:      text('date').notNull(),        // YYYY-MM-DD 형식의 거래 날짜
     createdAt: text('created_at').default(sql`(datetime('now'))`), // 기록 생성 시간 (자동)
+    deletedAt: text('deleted_at'),            // 소프트 삭제 타임스탬프 (선택사항, null이면 활성 상태)
 });
 
 export type Transaction = typeof transactions.$inferSelect;
