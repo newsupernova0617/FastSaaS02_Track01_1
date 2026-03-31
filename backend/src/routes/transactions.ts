@@ -101,7 +101,7 @@ router.get('/summary', async (c) => {
         .from(transactions)
         .where(and(eq(transactions.userId, userId), like(transactions.date, `${month}%`), isNull(transactions.deletedAt)))
         // type과 category 조합별로 그룹화 (같은 카테고리들의 합계를 한 행으로)
-        .groupBy((r: typeof transactions.$inferSelect) => r.type, (r: typeof transactions.$inferSelect) => r.category);
+        .groupBy(transactions.type, transactions.category);
     return c.json(rows);
 });
 
