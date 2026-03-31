@@ -6,7 +6,7 @@
 
 **Architecture:** Backend-mediated AI where the server coordinates Gemini API calls, validates responses, executes database operations, and returns typed results. All transaction operations remain scoped to authenticated user via existing auth middleware.
 
-**Tech Stack:** Hono (server), Drizzle ORM (database), Turso (SQLite-compatible), Google Gemini API, Zod (validation)
+**Tech Stack:** Hono (server), Drizzle ORM (database), Turso (SQLite-compatible), Google Gemma model (via Google AI Studio), Zod (validation)
 
 ---
 
@@ -345,7 +345,7 @@ export class AIService {
 
   constructor(apiKey: string) {
     this.client = new GoogleGenerativeAI(apiKey);
-    this.model = this.client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    this.model = this.client.getGenerativeModel({ model: 'models/gemma-2-9b-it' });
   }
 
   async parseUserInput(
@@ -393,7 +393,7 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
 
 export function createAIService(apiKey: string): AIService {
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not set');
+    throw new Error('GEMINI_API_KEY (Google AI Studio) environment variable is not set');
   }
   return new AIService(apiKey);
 }
@@ -858,8 +858,10 @@ git commit -m "feat: register AI action route"
 Add this line to `.env.example`:
 
 ```
-GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_API_KEY=your-google-ai-studio-api-key-here
 ```
+
+Note: Get your API key from https://aistudio.google.com/app/apikey for Google AI Studio (Gemma model access)
 
 - [ ] **Step 2: Commit environment docs**
 
