@@ -53,7 +53,7 @@ router.post('/action', async (c) => {
       .from(transactions)
       .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)));
 
-    const userCategories = categoryRows.map((r: any) => r.category);
+    const userCategories = categoryRows.map((r: { category: string }) => r.category);
 
     // Parse user input with AI
     const action = await aiService.parseUserInput(text, recentTransactions, userCategories);
