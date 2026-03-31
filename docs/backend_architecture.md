@@ -9,32 +9,63 @@
 ## 1. 시스템 아키텍처
 
 ```mermaid
-flowchart LR
-    Client["Frontend<br/>React / Capacitor"] --> Entry["src/index.ts<br/>Hono app"]
-    Entry --> Cors["CORS middleware"]
-    Cors --> Auth["src/middleware/auth.ts<br/>JWT verify + userId 주입"]
-
-    subgraph Worker["Cloudflare Workers Runtime"]
-        Auth --> Tx["src/routes/transactions.ts"]
-        Auth --> User["src/routes/users.ts"]
-        Auth --> AI["src/routes/ai.ts"]
-
-        Tx --> Val["src/services/validation.ts"]
-        Tx --> DB["src/db/index.ts<br/>Drizzle client"]
-
-        User --> DB
-
-        AI --> AISvc["src/services/ai.ts<br/>Gemini 호출"]
-        AI --> Val
-        AI --> Msg["src/services/messages.ts<br/>응답 문구 생성"]
-        AI --> DB
-
-        DB --> Schema["src/db/schema.ts<br/>users / transactions"]
+flowchart TD
+    subgraph Clients["Frontend Clients"]
+        direction LR
+        Web["🌐 Web App<br/>(Vite / React)"]
+        Mobile["📱 Mobile App<br/>(Capacitor)"]
     end
 
-    DB --> Turso["Turso / libSQL"]
-    Auth --> Supabase["Supabase JWT secret<br/>+ JWKS"]
-    AISvc --> Gemini["Google Generative AI<br/>models/gemma-2-9b-it"]
+    subgraph Worker["Cloudflare Workers (Backend)"]
+        direction TB
+        App["App Entry (src/index.ts)<br/>Hono Instance"]
+        Cors["CORS Middleware<br/>(localhost, pages.dev,<br/>capacitor)"]
+        Auth["Auth Middleware<br/>(src/middleware/auth.ts)<br/>JWT verify + userId"]
+        RouteMount["Mounted Routes<br/>/api/transactions<br/>/api/users<br/>/api/ai"]
+        Tx["Transactions Router<br/>(src/routes/transactions.ts)"]
+        User["Users Router<br/>(src/routes/users.ts)"]
+        AI["AI Router<br/>(src/routes/ai.ts)"]
+        AISvc["Service Layer<br/>ai.ts / validation.ts / messages.ts"]
+        DBClient["DB Client (src/db/index.ts)<br/>Stateless @libsql/client"]
+
+        App --> Cors --> Auth --> RouteMount
+        RouteMount --> Tx
+        RouteMount --> User
+        RouteMount --> AI
+        AI --> AISvc
+        Tx --> DBClient
+        User --> DBClient
+        AISvc --> DBClient
+    end
+
+    subgraph Data["Turso (Serverless SQLite)"]
+        direction TB
+        Schema["Schema (src/db/schema.ts)<br/>Drizzle ORM"]
+        DB[("users / transactions DB")]
+        Schema --> DB
+    end
+
+    Web -- "HTTP REST" --> App
+    Mobile -- "HTTP REST" --> App
+    DBClient -- "SQL over HTTP" --> DB
+    Auth -. "JWKS / JWT verify" .-> Supabase["Supabase Auth<br/>JWT Secret + JWKS"]
+    AISvc -. "Gemini API" .-> Gemini["Google Generative AI<br/>gemma-2-9b-it"]
+
+    classDef client fill:#67C5E8,stroke:#1F6E8C,stroke-width:2px,color:#083344;
+    classDef workerBox fill:#FF8616,stroke:#D96D08,stroke-width:2px,color:#FFFFFF;
+    classDef note fill:#EFEFEF,stroke:#CFCFCF,stroke-width:1px,color:#444444;
+    classDef dbBox fill:#0B5D6B,stroke:#083F49,stroke-width:2px,color:#FFFFFF;
+    classDef external fill:#DCE9FF,stroke:#8AA7D6,stroke-width:1.5px,color:#23395B;
+
+    class Web,Mobile client;
+    class App,Cors,Auth,Tx,User,AI,AISvc,DBClient workerBox;
+    class RouteMount note;
+    class Schema,DB dbBox;
+    class Supabase,Gemini external;
+
+    style Clients fill:#FFF9D7,stroke:#D8C873,stroke-width:1px,color:#333333
+    style Worker fill:#FFF9D7,stroke:#D8C873,stroke-width:1px,color:#333333
+    style Data fill:#FFF9D7,stroke:#D8C873,stroke-width:1px,color:#333333
 ```
 
 ## 2. 레이어별 구성
