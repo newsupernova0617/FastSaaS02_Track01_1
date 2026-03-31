@@ -9,11 +9,14 @@ import type { Transaction } from '../../src/db/schema';
  * Tests actual route behavior with mocked Gemini API and database
  */
 
+// Create a shared mock function object that all instances will reference
+const sharedParseUserInputMock = vi.fn();
+
 // Mock the AIService module
 vi.mock('../../src/services/ai', () => {
   return {
     AIService: class MockAIService {
-      parseUserInput = vi.fn();
+      parseUserInput = sharedParseUserInputMock;
     },
   };
 });
@@ -33,6 +36,50 @@ describe('POST /api/ai/action', () => {
   let mockDb: any;
   let mockAiInstance: any;
 
+  // Helper to create a complete select chain mock with limit (for recent transactions)
+  function createSelectChain(resolveValue: any = null) {
+    return {
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue(resolveValue || []),
+          }),
+        }),
+      }),
+    };
+  }
+
+  // Helper to create a select chain without limit (for READ queries)
+  function createReadSelectChain(resolveValue: any = null) {
+    return {
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockResolvedValue(resolveValue || []),
+        }),
+      }),
+    };
+  }
+
+  // Helper to create a simple select chain for ownership checks
+  function createOwnershipCheckChain(resolveValue: any = null) {
+    return {
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(resolveValue || []),
+      }),
+    };
+  }
+
+  // Helper to create an update chain
+  function createUpdateChain(resolveValue: any = null) {
+    return {
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue(resolveValue || []),
+        }),
+      }),
+    };
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -49,22 +96,45 @@ describe('POST /api/ai/action', () => {
       deletedAt: null,
     };
 
+    const mockUpdatedTransaction = {
+      id: 1,
+      userId: 'user-123',
+      type: 'expense',
+      amount: 20000,
+      category: 'food',
+      memo: 'lunch',
+      date: '2024-03-15',
+      createdAt: '2024-03-15T10:00:00Z',
+      deletedAt: null,
+    };
+
     // Setup mock database with chainable query builder pattern
+    // The default select implementation - returns fresh chains each time
+    // Tests that need specific behavior will override this
     mockDb = {
-      select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([mockTransaction]),
-            }),
+      select: vi.fn().mockImplementation(() => {
+        // Create a flexible chain that supports multiple patterns:
+        // Pattern 1: select().from().where().orderBy().limit() - for recent transactions
+        // Pattern 2: select().from().where() - for ownership checks (awaitable directly)
+        // Pattern 3: select().from().where().orderBy() - for READ queries (awaitable)
+
+        const orderByResult = Promise.resolve([mockTransaction]);
+        (orderByResult as any).limit = vi.fn().mockResolvedValue([mockTransaction]);
+
+        const whereResult = Promise.resolve([mockTransaction]);
+        (whereResult as any).orderBy = vi.fn().mockReturnValue(orderByResult);
+
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue(whereResult),
           }),
-        }),
+        };
       }),
-      selectDistinct: vi.fn().mockReturnValue({
+      selectDistinct: vi.fn().mockImplementation(() => ({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([{ category: 'food' }, { category: 'transport' }]),
         }),
-      }),
+      })),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([
@@ -82,32 +152,15 @@ describe('POST /api/ai/action', () => {
           ]),
         }),
       }),
-      update: vi.fn().mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([
-            {
-              id: 1,
-              userId: 'user-123',
-              type: 'expense',
-              amount: 20000,
-              category: 'food',
-              memo: 'lunch',
-              date: '2024-03-15',
-              createdAt: '2024-03-15T10:00:00Z',
-              deletedAt: null,
-            },
-          ]),
-        }),
-      }),
+      update: vi.fn().mockImplementation(() => createUpdateChain([mockUpdatedTransaction])),
     };
 
     // Mock getDb to return mockDb
     vi.mocked(getDb).mockReturnValue(mockDb);
 
-    // The AIService is a mock class, so create an instance to get the parseUserInput mock
-    const mockAIServiceInstance = new AIService('test-key');
-    // @ts-ignore - Access the mock function
-    mockAiInstance = mockAIServiceInstance;
+    // The AIService is a mock class - create a new instance
+    // Each instance shares the same sharedParseUserInputMock function
+    mockAiInstance = new (AIService as any)('test-key');
 
     // Create a fresh Hono app for each test
     app = new Hono<{ Bindings: any; Variables: Variables }>();
@@ -226,11 +279,33 @@ describe('POST /api/ai/action', () => {
         confidence: 0.87,
       });
 
-      // Override select to return empty for non-existent transaction
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-        }),
+      // Override select to return transactions for first call, empty for ownership check
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First call: recent transactions
+          return createSelectChain([
+            {
+              id: 1,
+              userId: 'user-123',
+              type: 'expense',
+              amount: 10000,
+              category: 'food',
+              memo: 'breakfast',
+              date: '2024-03-14',
+              createdAt: '2024-03-14T08:00:00Z',
+              deletedAt: null,
+            },
+          ]);
+        } else {
+          // Second call: ownership verification - return empty
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -282,36 +357,42 @@ describe('POST /api/ai/action', () => {
         confidence: 0.92,
       });
 
-      // Override select to return multiple transactions
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([
-              {
-                id: 1,
-                userId: 'user-123',
-                type: 'expense',
-                amount: 10000,
-                category: 'food',
-                memo: 'breakfast',
-                date: '2024-03-14',
-                createdAt: '2024-03-14T08:00:00Z',
-                deletedAt: null,
-              },
-              {
-                id: 2,
-                userId: 'user-123',
-                type: 'expense',
-                amount: 15000,
-                category: 'food',
-                memo: 'lunch',
-                date: '2024-03-15',
-                createdAt: '2024-03-15T10:00:00Z',
-                deletedAt: null,
-              },
-            ]),
-          }),
-        }),
+      const multipleTransactions = [
+        {
+          id: 1,
+          userId: 'user-123',
+          type: 'expense',
+          amount: 10000,
+          category: 'food',
+          memo: 'breakfast',
+          date: '2024-03-14',
+          createdAt: '2024-03-14T08:00:00Z',
+          deletedAt: null,
+        },
+        {
+          id: 2,
+          userId: 'user-123',
+          type: 'expense',
+          amount: 15000,
+          category: 'food',
+          memo: 'lunch',
+          date: '2024-03-15',
+          createdAt: '2024-03-15T10:00:00Z',
+          deletedAt: null,
+        },
+      ];
+
+      // Override select for recent transactions (first call) and query (second call)
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First call: recent transactions (with limit)
+          return createSelectChain(multipleTransactions.slice(0, 1));
+        } else {
+          // Second call: READ query (without limit)
+          return createReadSelectChain(multipleTransactions);
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -340,23 +421,33 @@ describe('POST /api/ai/action', () => {
         confidence: 0.88,
       });
 
-      // Override select to return existing transaction for delete
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([
-            {
-              id: 1,
-              userId: 'user-123',
-              type: 'expense',
-              amount: 10000,
-              category: 'food',
-              memo: 'breakfast',
-              date: '2024-03-14',
-              createdAt: '2024-03-14T08:00:00Z',
-              deletedAt: null,
-            },
-          ]),
-        }),
+      const mockTransaction = {
+        id: 1,
+        userId: 'user-123',
+        type: 'expense',
+        amount: 10000,
+        category: 'food',
+        memo: 'breakfast',
+        date: '2024-03-14',
+        createdAt: '2024-03-14T08:00:00Z',
+        deletedAt: null,
+      };
+
+      // Override select for recent transactions (first call) and ownership check (second call)
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First call: recent transactions
+          return createSelectChain([mockTransaction]);
+        } else {
+          // Second call: ownership verification - return existing
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([mockTransaction]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -383,22 +474,30 @@ describe('POST /api/ai/action', () => {
         confidence: 0.88,
       });
 
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([
-            {
-              id: 1,
-              userId: 'user-123',
-              type: 'expense',
-              amount: 10000,
-              category: 'food',
-              memo: 'breakfast',
-              date: '2024-03-14',
-              createdAt: '2024-03-14T08:00:00Z',
-              deletedAt: null,
-            },
-          ]),
-        }),
+      const mockTransaction = {
+        id: 1,
+        userId: 'user-123',
+        type: 'expense',
+        amount: 10000,
+        category: 'food',
+        memo: 'breakfast',
+        date: '2024-03-14',
+        createdAt: '2024-03-14T08:00:00Z',
+        deletedAt: null,
+      };
+
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          return createSelectChain([mockTransaction]);
+        } else {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([mockTransaction]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -421,10 +520,18 @@ describe('POST /api/ai/action', () => {
         confidence: 0.88,
       });
 
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-        }),
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          return createSelectChain([]);
+        } else {
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -594,10 +701,32 @@ describe('POST /api/ai/action', () => {
         confidence: 0.87,
       });
 
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-        }),
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First call: recent transactions - return some transactions
+          return createSelectChain([
+            {
+              id: 2,
+              userId: 'other-user-456',
+              type: 'expense',
+              amount: 10000,
+              category: 'food',
+              memo: 'other user transaction',
+              date: '2024-03-14',
+              createdAt: '2024-03-14T08:00:00Z',
+              deletedAt: null,
+            },
+          ]);
+        } else {
+          // Second call: ownership verification - return empty (user doesn't own this tx)
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
@@ -619,10 +748,32 @@ describe('POST /api/ai/action', () => {
         confidence: 0.88,
       });
 
-      mockDb.select.mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-        }),
+      let selectCallCount = 0;
+      mockDb.select.mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First call: recent transactions
+          return createSelectChain([
+            {
+              id: 2,
+              userId: 'other-user-456',
+              type: 'expense',
+              amount: 10000,
+              category: 'food',
+              memo: 'other user transaction',
+              date: '2024-03-14',
+              createdAt: '2024-03-14T08:00:00Z',
+              deletedAt: null,
+            },
+          ]);
+        } else {
+          // Second call: ownership verification - return empty
+          return {
+            from: vi.fn().mockReturnValue({
+              where: vi.fn().mockResolvedValue([]),
+            }),
+          };
+        }
       });
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
