@@ -6,7 +6,7 @@
 
 **Architecture:** Backend-mediated AI where the server coordinates Gemini API calls, validates responses, executes database operations, and returns typed results. All transaction operations remain scoped to authenticated user via existing auth middleware.
 
-**Tech Stack:** Hono (server), Drizzle ORM (database), SQLite, Google Gemini API, Zod (validation)
+**Tech Stack:** Hono (server), Drizzle ORM (database), Turso (SQLite-compatible), Google Gemini API, Zod (validation)
 
 ---
 
