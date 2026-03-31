@@ -12,3 +12,5 @@ ios/
 android/
 .worktrees/
 *.log
+
+semgrep-env/
