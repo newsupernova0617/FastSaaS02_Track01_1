@@ -139,7 +139,7 @@ export const AIResponseSchema = z.object({
 // Action schemas
 const CreatePayloadSchema = z.object({
   transactionType: z.enum(['income', 'expense']),
-  amount: z.number().positive().max(10000000),  // Reasonable upper bound
+  amount: z.number().positive().max(1000000000),  // Reasonable upper bound
   category: z.string().min(1).max(50),
   memo: z.string().max(500).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),  // YYYY-MM-DD
@@ -148,7 +148,7 @@ const CreatePayloadSchema = z.object({
 const UpdatePayloadSchema = z.object({
   id: z.number().positive(),
   transactionType: z.enum(['income', 'expense']).optional(),
-  amount: z.number().positive().max(10000000).optional(),
+  amount: z.number().positive().max(1000000000).optional(),
   category: z.string().min(1).max(50).optional(),
   memo: z.string().max(500).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -192,8 +192,8 @@ export function validateAmount(amount: number): void {
   if (amount <= 0) {
     throw new Error('Amount must be greater than 0');
   }
-  if (amount >= 10000000) {
-    throw new Error('Amount exceeds maximum limit (₩10,000,000)');
+  if (amount >= 1000000000) {
+    throw new Error('Amount exceeds maximum limit (₩1,000,000,000)');
   }
 }
 
