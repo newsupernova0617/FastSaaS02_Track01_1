@@ -7,7 +7,7 @@ export type Env = {
     TURSO_DB_URL: string;
     TURSO_AUTH_TOKEN: string;
     SUPABASE_JWT_SECRET: string;
-    SUPABASE_URL: string;
+    GEMINI_API_KEY: string;
 };
 
 export function getDb(env: Env) {
