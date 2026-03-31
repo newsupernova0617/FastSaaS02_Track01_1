@@ -190,8 +190,7 @@ Marks transaction as deleted (soft delete). Backend performs logical delete by s
   "success": true,
   "type": "delete",
   "result": {
-    "id": 42,
-    "message": "지출 ₩5,500 Starbucks (2026-03-30) 삭제되었습니다. 최근 삭제된 항목에서 되돌릴 수 있습니다"
+    "id": 42
   },
   "message": "지출 ₩5,500 Starbucks (2026-03-30) 삭제되었습니다. 최근 삭제된 항목에서 되돌릴 수 있습니다"
 }
