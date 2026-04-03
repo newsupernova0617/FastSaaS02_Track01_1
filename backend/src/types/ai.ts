@@ -1,10 +1,10 @@
-/** AI action types corresponding to CRUD operations */
-export type ActionType = 'create' | 'update' | 'read' | 'delete';
+/** AI action types corresponding to CRUD operations and report generation */
+export type ActionType = 'create' | 'update' | 'read' | 'delete' | 'report';
 
 /** Parsed action from AI model with confidence score */
 export interface TransactionAction {
   type: ActionType;
-  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload;
+  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload | ReportPayload;
   /** Confidence score 0.0-1.0 (higher = more confident) */
   confidence: number;
 }
@@ -39,6 +39,15 @@ export interface ReadPayload {
 export interface DeletePayload {
   id: number;
   reason?: string;
+}
+
+/** Payload for generating a financial report */
+export interface ReportPayload {
+  reportType: 'monthly_summary' | 'category_detail' | 'spending_pattern' | 'anomaly' | 'suggestion';
+  params?: {
+    month?: string;  // YYYY-MM
+    category?: string;
+  };
 }
 
 /** Standard response from AI action endpoint */

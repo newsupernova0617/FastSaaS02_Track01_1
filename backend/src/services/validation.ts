@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload } from '../types/ai';
+import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload, ReportPayload } from '../types/ai';
 
 /**
  * Schema for AI model response validation
@@ -7,7 +7,7 @@ import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, Dele
  * required action type, payload, and confidence score
  */
 export const AIResponseSchema = z.object({
-  type: z.enum(['create', 'update', 'read', 'delete']),
+  type: z.enum(['create', 'update', 'read', 'delete', 'report']),
   payload: z.record(z.string(), z.any()),
   confidence: z.number().min(0).max(1),
 });
@@ -89,6 +89,21 @@ const DeletePayloadSchema = z.object({
 });
 
 /**
+ * Schema for report payload validation
+ */
+const ReportPayloadSchema = z.object({
+  reportType: z.enum(['monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion'], {
+    message: 'Invalid report type',
+  }),
+  params: z.object({
+    month: z.string()
+      .regex(/^\d{4}-\d{2}$/, { message: 'Expected YYYY-MM format for month' })
+      .optional(),
+    category: z.string().optional(),
+  }).optional().default({}),
+});
+
+/**
  * Validates AI model response structure and returns typed action
  * @param data - The raw data to validate against AIResponseSchema
  * @returns Parsed and typed TransactionAction
@@ -136,6 +151,16 @@ export function validateReadPayload(payload: unknown): ReadPayload {
  */
 export function validateDeletePayload(payload: unknown): DeletePayload {
   return DeletePayloadSchema.parse(payload);
+}
+
+/**
+ * Validates report payload
+ * @param payload - The raw payload to validate against ReportPayloadSchema
+ * @returns Parsed and typed ReportPayload
+ * @throws {z.ZodError} If payload fails schema validation
+ */
+export function validateReportPayload(payload: unknown): ReportPayload {
+  return ReportPayloadSchema.parse(payload);
 }
 
 /**
