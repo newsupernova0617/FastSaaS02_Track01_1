@@ -59,3 +59,22 @@ export interface AIActionResponse {
   message?: string;
   error?: string;
 }
+
+/** Section in a financial report */
+export interface ReportSection {
+  type: 'card' | 'pie' | 'bar' | 'line' | 'alert' | 'suggestion';
+  title: string;
+  subtitle?: string;
+  metric?: string;
+  trend?: 'up' | 'down' | 'stable';
+  data?: Record<string, any>;
+}
+
+/** Generated financial report */
+export interface Report {
+  reportType: ReportPayload['reportType'];
+  title: string;
+  subtitle?: string;
+  sections: ReportSection[];
+  generatedAt: string;
+}
