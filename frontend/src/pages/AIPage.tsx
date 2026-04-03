@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import ChatMessageList from '../components/ai/ChatMessageList';
 import ChatInput from '../components/ai/ChatInput';
-import { sendAIMessage, getChatHistory, ChatMessage } from '../api';
+import { sendAIMessage, getChatHistory } from '../api';
+import type { ChatMessage } from '../api';
 
 export default function AIPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);

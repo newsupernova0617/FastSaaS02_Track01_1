@@ -20,8 +20,17 @@ export default function ActionButton({ metadata }: ActionButtonProps) {
   const handleClick = () => {
     if (shouldNavigateToCalendar && metadata.action?.date) {
       navigate(`/calendar?date=${metadata.action.date}`);
-    } else if (shouldNavigateToStats && metadata.report?.params?.month) {
-      navigate(`/stats?month=${metadata.report.params.month}`);
+    } else if (shouldNavigateToStats && metadata.report) {
+      const params = (metadata.report as Record<string, unknown>).params as Record<string, unknown> | undefined;
+      const month = params?.month as string | undefined;
+      if (month) {
+        navigate(`/stats?month=${month}`);
+      } else {
+        // Default to current month in YYYY-MM format
+        const now = new Date();
+        const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        navigate(`/stats?month=${defaultMonth}`);
+      }
     } else if (shouldNavigateToStats) {
       // Default to current month in YYYY-MM format
       const now = new Date();

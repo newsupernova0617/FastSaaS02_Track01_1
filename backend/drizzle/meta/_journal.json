@@ -15,6 +15,13 @@
       "when": 1774591105471,
       "tag": "0001_pretty_jamie_braddock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774608822000,
+      "tag": "0002_remarkable_hulk",
+      "breakpoints": true
     }
   ]
 }
