@@ -25,6 +25,18 @@ export const transactions = sqliteTable('transactions', {
     deletedAt: text('deleted_at'),            // 소프트 삭제 타임스탬프 (선택사항, null이면 활성 상태)
 });
 
+// AI 챗 메시지 기록
+export const chatMessages = sqliteTable('chat_messages', {
+    id:        integer('id').primaryKey({ autoIncrement: true }), // 자동 증가 ID
+    userId:    text('user_id').notNull().references(() => users.id), // 어느 사용자의 메시지인지
+    role:      text('role', { enum: ['user', 'assistant'] }).notNull(), // 사용자 또는 어시스턴트
+    content:   text('content').notNull(),     // 메시지 내용
+    metadata:  text('metadata'),              // JSON 형식의 추가 메타데이터 (리포트 데이터 등)
+    createdAt: text('created_at').default(sql`(datetime('now'))`), // 메시지 생성 시간 (자동)
+});
+
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type NewChatMessage = typeof chatMessages.$inferInsert;

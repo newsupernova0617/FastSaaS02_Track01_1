@@ -28,8 +28,35 @@ vi.mock('../../src/db/index', () => {
   };
 });
 
+// Mock chat service
+vi.mock('../../src/services/chat', () => {
+  return {
+    saveMessage: vi.fn().mockResolvedValue(undefined),
+    getChatHistory: vi.fn().mockResolvedValue([]),
+    clearChatHistory: vi.fn().mockResolvedValue(0),
+  };
+});
+
+// Mock AI report service
+vi.mock('../../src/services/ai-report', () => {
+  return {
+    AIReportService: class MockAIReportService {
+      constructor(apiKey: string) {}
+      async generateReport() {
+        return {
+          reportType: 'monthly_summary',
+          title: 'Test Report',
+          sections: [],
+          generatedAt: new Date().toISOString(),
+        };
+      }
+    },
+  };
+});
+
 const { AIService } = await import('../../src/services/ai');
 const { getDb } = await import('../../src/db/index');
+const { saveMessage } = await import('../../src/services/chat');
 
 describe('POST /api/ai/action', () => {
   let app: Hono<{ Bindings: any; Variables: Variables }>;

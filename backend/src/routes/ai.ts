@@ -9,11 +9,14 @@ import {
   validateUpdatePayload,
   validateReadPayload,
   validateDeletePayload,
+  validateReportPayload,
   validateAmount,
   validateDate,
   validateCategory,
 } from '../services/validation';
 import * as messages from '../services/messages';
+import { saveMessage, getChatHistory, clearChatHistory } from '../services/chat';
+import { AIReportService } from '../services/ai-report';
 import { and, eq, isNull, desc, sql } from 'drizzle-orm';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -34,6 +37,9 @@ router.post('/action', async (c) => {
         400
       );
     }
+
+    // Save user message to chat history
+    await saveMessage(db, userId, 'user', text);
 
     // Initialize AI service once
     if (!aiService) {
@@ -204,6 +210,30 @@ router.post('/action', async (c) => {
         });
       }
 
+      case 'report': {
+        // Validate report payload
+        const reportPayload = validateReportPayload(action.payload);
+
+        // Initialize report service
+        const reportService = new AIReportService(c.env.GEMINI_API_KEY);
+
+        // Generate report
+        const report = await reportService.generateReport(db, userId, reportPayload);
+
+        // Format as chat message
+        const { content, metadata } = messages.generateReportMessage(report);
+
+        // Save assistant message to database
+        await saveMessage(db, userId, 'assistant', content, metadata);
+
+        return c.json({
+          success: true,
+          action: 'report',
+          content,
+          metadata,
+        });
+      }
+
       default:
         return c.json(
           { success: false, error: 'Unknown action type' },
@@ -217,6 +247,40 @@ router.post('/action', async (c) => {
       { success: false, error: message },
       400
     );
+  }
+});
+
+// Get chat history with pagination
+router.get('/chat/history', async (c) => {
+  const userId = c.get('userId');
+  const db = getDb(c.env);
+
+  // Parse query parameters
+  const limitStr = c.req.query('limit') || '50';
+  const limit = parseInt(limitStr);
+  const beforeStr = c.req.query('before');
+  const beforeId = beforeStr ? parseInt(beforeStr) : undefined;
+
+  try {
+    const history = await getChatHistory(db, userId, limit, beforeId);
+    return c.json({ success: true, messages: history });
+  } catch (err) {
+    console.error('[Chat History] Error:', err);
+    return c.json({ success: false, error: 'Failed to fetch chat history' }, 500);
+  }
+});
+
+// Clear chat history
+router.delete('/chat/history', async (c) => {
+  const userId = c.get('userId');
+  const db = getDb(c.env);
+
+  try {
+    const deletedCount = await clearChatHistory(db, userId);
+    return c.json({ success: true, deletedCount });
+  } catch (err) {
+    console.error('[Clear Chat History] Error:', err);
+    return c.json({ success: false, error: 'Failed to clear chat history' }, 500);
   }
 });
 
