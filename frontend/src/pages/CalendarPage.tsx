@@ -1,15 +1,29 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import type { Transaction } from '../api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarPage() {
+    const [searchParams] = useSearchParams();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
     // 현재 표시 중인 월 (YYYY-MM 형식)
     const monthStr = currentDate.toISOString().slice(0, 7);
+
+    // Query parameter에서 date가 전달되면 해당 날짜로 이동
+    useEffect(() => {
+        const dateParam = searchParams.get('date');
+        if (dateParam) {
+            const paramDate = new Date(dateParam);
+            if (!isNaN(paramDate.getTime())) {
+                setSelectedDate(dateParam);
+                setCurrentDate(new Date(paramDate.getFullYear(), paramDate.getMonth(), 1));
+            }
+        }
+    }, [searchParams]);
 
     // monthStr이 바뀔 때마다 데이터 로드
     useEffect(() => {

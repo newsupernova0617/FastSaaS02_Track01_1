@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import type { SummaryRow } from '../api';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -7,12 +8,29 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export default function StatsPage() {
+    const [searchParams] = useSearchParams();
     const [currentDate, setCurrentDate] = useState(new Date());
     // 월별 카테고리 합계 데이터
     const [summary, setSummary] = useState<SummaryRow[]>([]);
 
     // 현재 표시 중인 월 (YYYY-MM 형식)
     const monthStr = currentDate.toISOString().slice(0, 7);
+
+    // Query parameter에서 month가 전달되면 해당 월로 이동
+    useEffect(() => {
+        const monthParam = searchParams.get('month');
+        if (monthParam) {
+            // monthParam 형식: YYYY-MM
+            const [year, month] = monthParam.split('-');
+            if (year && month) {
+                const parsedYear = parseInt(year, 10);
+                const parsedMonth = parseInt(month, 10) - 1; // JavaScript months are 0-indexed
+                if (!isNaN(parsedYear) && !isNaN(parsedMonth) && parsedMonth >= 0 && parsedMonth <= 11) {
+                    setCurrentDate(new Date(parsedYear, parsedMonth, 1));
+                }
+            }
+        }
+    }, [searchParams]);
 
     // monthStr이 바뀔 때마다 데이터 로드
     useEffect(() => {
