@@ -82,7 +82,7 @@ router.post('/action', async (c) => {
     // Save user message to chat history
     await saveMessage(db, userId, 'user', text);
 
-    const aiService = new AIService(c.env.GEMINI_API_KEY, c.env.GEMINI_MODEL_NAME);
+    const aiService = new AIService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
 
     // Fetch user context
     const recentTransactions = await db
@@ -307,7 +307,7 @@ router.post('/action', async (c) => {
         const reportPayload = validateReportPayload(action.payload);
 
         // Initialize report service
-        const reportService = new AIReportService(c.env.GEMINI_API_KEY);
+        const reportService = new AIReportService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
 
         // Generate report
         const report = await reportService.generateReport(db, userId, reportPayload);

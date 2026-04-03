@@ -1,13 +1,14 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { eq, gte, lte, and } from 'drizzle-orm';
 import type { ReportPayload, Report } from '../types/ai';
 import { transactions } from '../db/schema';
 
 export class AIReportService {
-  private genAI: GoogleGenerativeAI;
+  private apiKey: string;
+  private modelName: string;
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
+  constructor(apiKey: string, modelName: string = 'llama-3.3-70b-versatile') {
+    this.apiKey = apiKey;
+    this.modelName = modelName;
   }
 
   /**
@@ -115,7 +116,7 @@ export class AIReportService {
   }
 
   /**
-   * Calls Google Gemini AI to generate report sections
+   * Calls Groq AI to generate report sections
    * @param reportType - Type of report
    * @param transactionData - Aggregated transaction data as JSON
    * @returns Array of report sections with type, title, data
@@ -124,8 +125,6 @@ export class AIReportService {
     reportType: string,
     transactionData: string
   ) {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
     const prompt = `
 You are a financial report generator. Generate a detailed ${reportType} report based on this transaction data:
 
@@ -151,8 +150,27 @@ For alert sections, include: message about spending anomaly
 For suggestion sections, include: message with actionable advice
 `;
 
-    const response = await model.generateContent(prompt);
-    const responseText = response.response.text();
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
+    }
+
+    const data = await response.json() as { choices: { message: { content: string } }[] };
+    const responseText = data.choices[0]?.message?.content;
+    if (!responseText) throw new Error('No response from AI');
 
     // Parse JSON from response
     const parsed = JSON.parse(responseText);
@@ -186,7 +204,7 @@ For suggestion sections, include: message with actionable advice
 
 export function createAIReportService(apiKey: string): AIReportService {
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY (Google AI Studio) environment variable is not set');
+    throw new Error('GROQ_API_KEY environment variable is not set');
   }
   return new AIReportService(apiKey);
 }

@@ -195,7 +195,7 @@ describe('POST /api/ai/action', () => {
     // Add environment and variables middleware
     app.use('*', async (c, next) => {
       c.env = {
-        GEMINI_API_KEY: 'test-api-key',
+        GROQ_API_KEY: 'test-api-key',
         TURSO_DB_URL: 'test-url',
         TURSO_AUTH_TOKEN: 'test-token',
         SUPABASE_JWT_SECRET: 'test-secret',

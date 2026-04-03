@@ -9,9 +9,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.17.2",
     "drizzle-orm": "^0.45.1",
+    "groq-sdk": "^1.1.2",
     "hono": "^4.12.9",
     "zod": "^4.3.6"
   },

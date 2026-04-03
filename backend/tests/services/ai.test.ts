@@ -1,65 +1,112 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const getGenerativeModelMock = vi.fn();
-
-vi.mock('@google/generative-ai', () => ({
-  GoogleGenerativeAI: class MockGoogleGenerativeAI {
-    getGenerativeModel = getGenerativeModelMock;
-  },
-}));
-
-import { AIService, AIServiceError } from '../../src/services/ai';
+import { AIService } from '../../src/services/ai';
 
 describe('AIService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
-  it('parses JSON wrapped in markdown code fences', async () => {
-    getGenerativeModelMock.mockReturnValue({
-      generateContent: vi.fn().mockResolvedValue({
-        response: {
-          text: () => '```json\n{"type":"read","payload":{"month":"2024-03"},"confidence":0.95}\n```',
-        },
+  it('parses valid JSON response from Groq API', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: '{"type":"read","payload":{"month":"2024-03"},"confidence":0.95}',
+          },
+        }],
       }),
-    });
+    }));
 
     const service = new AIService('test-api-key');
     const result = await service.parseUserInput('3월 내역 보여줘', [], []);
 
     expect(result.type).toBe('read');
     expect(result.payload).toEqual({ month: '2024-03' });
-    expect(getGenerativeModelMock).toHaveBeenCalledWith({ model: 'gemini-2.0-flash' });
   });
 
-  it('falls back to the secondary model when the primary model fails', async () => {
-    getGenerativeModelMock
-      .mockReturnValueOnce({
-        generateContent: vi.fn().mockRejectedValue(new Error('primary model unavailable')),
-      })
-      .mockReturnValueOnce({
-        generateContent: vi.fn().mockResolvedValue({
-          response: {
-            text: () => '{"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"food","date":"2024-03-15"},"confidence":0.9}',
+  it('sends request to Groq API endpoint with correct headers', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: '{"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"food","date":"2024-03-15"},"confidence":0.9}',
           },
+        }],
+      }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const service = new AIService('my-api-key');
+    await service.parseUserInput('점심 12000원 썼어', [], []);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.groq.com/openai/v1/chat/completions',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer my-api-key',
         }),
-      });
-
-    const service = new AIService('test-api-key');
-    const result = await service.parseUserInput('점심 12000원 썼어', [], []);
-
-    expect(result.type).toBe('create');
-    expect(getGenerativeModelMock).toHaveBeenNthCalledWith(1, { model: 'gemini-2.0-flash' });
-    expect(getGenerativeModelMock).toHaveBeenNthCalledWith(2, { model: 'gemini-1.5-flash' });
+      })
+    );
   });
 
-  it('throws AIServiceError after all models fail', async () => {
-    getGenerativeModelMock.mockReturnValue({
-      generateContent: vi.fn().mockRejectedValue(new Error('model unavailable')),
+  it('uses custom model name when provided', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: '{"type":"read","payload":{},"confidence":0.8}',
+          },
+        }],
+      }),
     });
+    vi.stubGlobal('fetch', mockFetch);
+
+    const service = new AIService('test-api-key', 'mixtral-8x7b-32768');
+    await service.parseUserInput('내역 보여줘', [], []);
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.model).toBe('mixtral-8x7b-32768');
+  });
+
+  it('uses default model when model name not provided', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: '{"type":"read","payload":{},"confidence":0.8}',
+          },
+        }],
+      }),
+    });
+    vi.stubGlobal('fetch', mockFetch);
 
     const service = new AIService('test-api-key');
+    await service.parseUserInput('내역 보여줘', [], []);
 
-    await expect(service.parseUserInput('테스트', [], [])).rejects.toBeInstanceOf(AIServiceError);
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.model).toBe('llama-3.3-70b-versatile');
+  });
+
+  it('throws error when API response is not ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: { message: 'Invalid API key' } }),
+    }));
+
+    const service = new AIService('bad-api-key');
+    await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow();
+  });
+
+  it('throws error when fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+
+    const service = new AIService('test-api-key');
+    await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow('Failed to process request');
   });
 });

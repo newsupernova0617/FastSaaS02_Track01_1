@@ -7,8 +7,8 @@ export type Env = {
     TURSO_DB_URL: string;
     TURSO_AUTH_TOKEN: string;
     SUPABASE_JWT_SECRET: string;
-    GEMINI_API_KEY: string;
-    GEMINI_MODEL_NAME?: string;
+    GROQ_API_KEY: string;
+    GROQ_MODEL_NAME?: string;
 };
 
 export function getDb(env: Env) {
