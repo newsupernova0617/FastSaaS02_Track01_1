@@ -32,6 +32,27 @@ export type SummaryRow = {
   total: number;
 };
 
+/**
+ * Chat message type matching backend schema
+ */
+export interface ChatMessage {
+  id: number;
+  userId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  metadata?: Record<string, unknown>; // JSON data for reports, actions
+  createdAt: string;
+}
+
+/**
+ * Chat message metadata for storing action results and chart data
+ */
+export interface ChatMessageMetadata {
+  actionType?: 'create' | 'update' | 'read' | 'delete' | 'report';
+  report?: Record<string, unknown>; // Full report object if actionType is 'report'
+  action?: Record<string, unknown>; // Action details for CRUD operations
+}
+
 export const api = {
   getTransactions: (date?: string): Promise<Transaction[]> =>
     fetch(`${BASE}/api/transactions${date ? `?date=${date}` : ''}`, {
@@ -56,3 +77,55 @@ export const api = {
       headers: authHeaders(),
     }).then((r) => r.json()),
 };
+
+/**
+ * Send a message to AI and get response
+ * @param text - User message text
+ * @returns Assistant response with content and metadata
+ */
+export async function sendAIMessage(text: string): Promise<{ success: boolean; content: string; metadata?: Record<string, unknown> }> {
+  const response = await fetch(`${BASE}/api/ai/action`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ text }),
+  });
+
+  if (!response.ok) throw new Error('Failed to send AI message');
+  return response.json();
+}
+
+/**
+ * Retrieve chat history with pagination
+ * @param limit - Max messages to retrieve (default: 50)
+ * @param before - Cursor message ID (returns messages before this ID)
+ * @returns Array of chat messages
+ */
+export async function getChatHistory(limit?: number, before?: number): Promise<ChatMessage[]> {
+  const params = new URLSearchParams();
+  if (limit) params.append('limit', String(limit));
+  if (before) params.append('before', String(before));
+
+  const query = params.toString() ? `?${params.toString()}` : '';
+  const response = await fetch(`${BASE}/api/ai/chat/history${query}`, {
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) throw new Error('Failed to fetch chat history');
+  const data = await response.json();
+  return data.messages || [];
+}
+
+/**
+ * Clear all chat history for the current user
+ * @returns Number of messages deleted
+ */
+export async function clearChatHistory(): Promise<number> {
+  const response = await fetch(`${BASE}/api/ai/chat/history`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+
+  if (!response.ok) throw new Error('Failed to clear chat history');
+  const data = await response.json();
+  return data.deletedCount || 0;
+}
