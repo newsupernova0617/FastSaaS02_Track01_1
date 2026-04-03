@@ -53,6 +53,18 @@ export interface ChatMessageMetadata {
   action?: Record<string, unknown>; // Action details for CRUD operations
 }
 
+/**
+ * Report section for rendering charts, cards, and alerts
+ */
+export interface ReportSection {
+  type: 'pie' | 'bar' | 'line' | 'card' | 'alert' | 'suggestion';
+  title?: string;
+  subtitle?: string;
+  metric?: string;
+  trend?: 'up' | 'down';
+  data?: Record<string, unknown> | Array<Record<string, unknown>>;
+}
+
 export const api = {
   getTransactions: (date?: string): Promise<Transaction[]> =>
     fetch(`${BASE}/api/transactions${date ? `?date=${date}` : ''}`, {
