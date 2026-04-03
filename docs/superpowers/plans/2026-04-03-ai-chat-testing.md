@@ -1988,3 +1988,198 @@ Add to `package.json`:
 - **Phase 5:** E2E with Playwright (6 tests) - 완전한 사용자 흐름
 
 **총 테스트: 118개** (설계 당 78개에서 추가 상세 테스트)
+
+● 좋습니다! 계획에 포함된 모든 테스트 케이스를 간략하게 정리해드리겠습니다:
+
+  Read 1 file (ctrl+o to expand)
+
+● 좋습니다! 계획의 모든 테스트 케이스를 간략히 정리하겠습니다:
+
+  ---
+  📊 AI 채팅 테스트 케이스 전체 요약
+
+  Phase 1: 백엔드 유닛 테스트 (48개)
+
+  Task 1: Chat Service (11개)
+
+  ✅ saveMessage()
+    └─ 일반 메시지 저장 (role='user')
+    └─ metadata 포함 저장
+    └─ JSON 직렬화 검증
+    └─ createdAt 자동 생성
+    └─ userId 저장 검증
+
+  ✅ getChatHistory()
+    └─ 사용자 메시지만 반환
+    └─ limit 파라미터 적용
+    └─ beforeId 커서 기반 페이지네이션
+    └─ 빈 히스토리 ([] 반환)
+    └─ 100개+ 메시지 조회 성능
+
+  ✅ clearChatHistory()
+    └─ 모든 메시지 삭제
+    └─ 삭제된 개수 반환
+
+  Task 2: AI Report Service (6개)
+
+  ✅ generateReport()
+    └─ 유효한 reportType으로 Report 객체 반환
+    └─ title, subtitle 생성 (subtitle은 month 있을 때만)
+    └─ sections 배열 생성
+    └─ generatedAt ISO 타임스탬프
+
+  ✅ aggregateTransactionData()
+    └─ 월 필터 (YYYY-MM): 해당 월의 거래만
+    └─ 카테고리 필터: 특정 카테고리만
+
+  Task 3: Validation (8개)
+
+  ✅ validateReportPayload()
+    └─ 유효한 reportType (monthly_summary 등)
+    └─ 모든 reportType 검증
+    └─ month 형식 YYYY-MM 검증
+    └─ 잘못된 월 (2026-13, 2026-0) → ZodError
+    └─ category 선택사항
+    └─ month + category 동시 필터
+    └─ 잘못된 reportType 거부
+    └─ reportType 필수
+
+  ---
+  Phase 2: 프론트엔드 유닛 테스트 (28개)
+
+  Task 4: ChatInput (8개)
+
+  ✅ 렌더링 & 기본 동작
+    └─ textarea + send button 렌더링
+    └─ 텍스트 입력 시 상태 변경
+
+  ✅ 키보드 이벤트
+    └─ Enter 키 → onSend 호출
+    └─ Shift+Enter → 줄바꿈 (onSend 미호출)
+
+  ✅ 전송 후 처리
+    └─ 입력 필드 비우기
+    └─ 에러 발생 시 텍스트 복구
+
+  ✅ 로딩 상태
+    └─ isLoading=true → 버튼 비활성
+    └─ isLoading=true → textarea 비활성
+
+  Task 5: 나머지 컴포넌트 (약 33개)
+
+  ✅ ChatBubble (12개)
+    └─ role='user' → 파란색
+    └─ role='assistant' → 회색
+    └─ metadata 없음 → ActionButton 미렌더링
+    └─ metadata.actionType='report' → ActionButton 렌더링
+    └─ reportSections → ReportCard/ReportChart 렌더링
+    └─ whitespace-pre-wrap 유지
+
+  ✅ ChatMessageList (4개)
+    └─ messages=[] → 환영 메시지
+    └─ 메시지 추가 시 자동 스크롤
+    └─ isLoading=true → 로딩 표시기 (3개 점 애니메이션)
+    └─ 각 메시지 ChatBubble로 렌더링
+
+  ✅ ReportCard (7개)
+    └─ section.type별 배경색 (card/alert/suggestion)
+    └─ metric ₩ 포맷팅 (1000 → "₩1,000")
+    └─ trend='up' → TrendingUp (빨강)
+    └─ trend='down' → TrendingDown (초록)
+    └─ section.data 키-값 렌더링
+    └─ alert 아이콘
+    └─ suggestion 아이콘
+
+  ✅ ReportChart (6개)
+    └─ section.type='pie' → PieChart 렌더링
+    └─ section.type='bar' → BarChart 렌더링
+    └─ section.type='line' → LineChart 렌더링
+    └─ section.type='card' → null 반환
+    └─ chartData=[] → null 반환
+    └─ tooltip 통화 포맷팅
+
+  ✅ ActionButton (4개)
+    └─ metadata 없음 → null 반환
+    └─ actionType='create' → /calendar?date=
+    └─ actionType='report' → /stats?month=
+    └─ month 없으면 현재 월 사용
+
+  Task 6: API & AIPage (10개)
+
+  ✅ sendAIMessage() (4개)
+    └─ POST /api/ai/action 호출
+    └─ Authorization 헤더 포함
+    └─ text 파라미터 전송
+    └─ 응답 파싱 (success, content, metadata)
+
+  ✅ getChatHistory() (3개)
+    └─ GET /api/ai/chat/history 호출
+    └─ ?limit=20&before=123 쿼리 파라미터
+    └─ 빈 배열 반환
+
+  ✅ clearChatHistory() (1개)
+    └─ DELETE /api/ai/chat/history 호출
+
+  ✅ AIPage (3개)
+    └─ useEffect → getChatHistory(100) 호출
+    └─ 로드 성공 → messages 상태 업데이트
+    └─ 로드 실패 → error 상태 설정
+
+  ---
+  Phase 3: 백엔드 통합 테스트 (10개)
+
+  Task 7: Backend Integration Routes
+
+  ✅ POST /api/ai/action (type=report) (5개)
+    └─ 사용자 메시지 저장 (role='user')
+    └─ Gemini 호출 (실제 API)
+    └─ 어시스턴트 응답 저장 (role='assistant', metadata)
+    └─ chat_messages 테이블에 2개 행 존재
+    └─ reportPayload 유효성 검사 (YYYY-MM 형식)
+
+  ✅ GET /api/ai/chat/history (3개)
+    └─ 기본 호출 (limit 기본값 50)
+    └─ ?limit=20 → 20개 반환
+    └─ ?before=100 → id < 100인 메시지
+
+  ✅ DELETE /api/ai/chat/history (2개)
+    └─ 모든 메시지 삭제
+    └─ deletedCount = 0 (처음부터 비었을 때)
+
+  ---
+  Phase 4: 프론트엔드 통합 테스트 (5개)
+
+  Task 8: AIPage Integration
+
+  ✅ 메시지 흐름 (5개)
+    └─ 초기 로드: getChatHistory 호출 → 이전 메시지 로드
+    └─ 메시지 전송: 옵티미스틱 UI → API 호출 → 응답 렌더링
+    └─ 에러 처리: API 실패 → 에러 메시지 → 옵티미스틱 UI 롤백
+    └─ 다중 메시지: 연속 전송 → 순서 유지 → 자동 스크롤
+    └─ 로딩 표시: API 호출 중 → 로딩 표시기 표시 → 응답 후 숨김
+
+  ---
+  Phase 5: E2E 테스트 - Playwright (6개)
+
+  Task 9: Playwright Setup
+
+  ✅ 설정 (Setup 전용, 테스트 아님)
+    └─ playwright.config.ts
+    └─ Auth fixture (로그인)
+    └─ DB cleanup fixture (테스트 후 정리)
+    └─ AIPage POM (Page Object Model)
+    └─ StatsPage POM
+
+  Task 10: E2E Specs (6개)
+
+  ✅ ai-chat.spec.ts (3개)
+    └─ 메시지 전송 → 응답 수신 → 렌더링
+    └─ 다중 메시지 연속 전송 → 순서 유지
+    └─ 네트워크 에러 → 에러 메시지 → 재시도
+
+  ✅ ai-report.spec.ts (2개)
+    └─ 리포트 렌더링: cards + charts (₩ 포맷팅)
+    └─ "View Details" 클릭 → /stats?month= 네비게이션
+
+  ✅ ai-navigation.spec.ts (1개)
+    └─ /stats?month=2026-03 직접 방문 → 3월 데이터 표시
