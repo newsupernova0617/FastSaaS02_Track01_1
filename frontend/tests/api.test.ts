@@ -127,8 +127,9 @@ describe('API Functions', () => {
       const config = callArgs[1];
 
       expect(url).toContain('/api/ai/chat/history');
-      // GET is default, so method may be undefined or not included
-      expect(config.method === undefined || config.method === 'GET').toBe(true);
+      // GET is default, so method should be undefined or 'GET'
+      const isGetRequest = !config.method || config.method === 'GET';
+      expect(isGetRequest).toBe(true);
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(1);
