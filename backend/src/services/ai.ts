@@ -48,7 +48,7 @@ export class AIService {
   private apiKey: string;
   private modelName: string;
 
-  constructor(apiKey: string, modelName: string = 'llama-3.3-70b-versatile') {
+  constructor(apiKey: string, modelName: string = 'llama-3.1-8b-instant') {
     this.apiKey = apiKey;
     this.modelName = modelName;
   }
