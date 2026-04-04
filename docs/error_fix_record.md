@@ -167,3 +167,114 @@ AI action error: ZodError
 ```
 
 기존에 `Rules:` 항목으로만 설명하던 방식에서 각 타입별 JSON 예시 + 강제 조건으로 변경하여 LLM이 잘못된 값을 반환하는 것을 방지합니다.
+
+---
+
+## [2026-04-05] API URL 이중 슬래시 — .env.production trailing slash
+
+### 증상
+
+프로덕션 환경에서 API 요청이 `https://backend.fastsaas2.workers.dev//api/transactions`처럼 슬래시가 두 개 붙음.
+
+### 원인
+
+`frontend/.env.production`의 `VITE_API_BASE_URL`에 trailing slash가 있었습니다.
+
+```
+VITE_API_BASE_URL=https://backend.fastsaas2.workers.dev/
+```
+
+`api.ts`에서 `${BASE}/api/...`로 조합하면 `//api/...`가 됩니다.
+
+### 해결
+
+`frontend/src/api.ts`에서 BASE 설정 시 trailing slash를 제거합니다.
+
+```ts
+const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787').replace(/\/$/, '');
+```
+
+---
+
+## [2026-04-05] Groq API 403 Forbidden — 모델 변경
+
+### 증상
+
+`POST /api/ai/action` 요청 시 503 응답.
+
+```
+AI model API error: Error: Groq API error: 403 {"error":{"message":"Forbidden"}}
+```
+
+### 원인
+
+`llama-3.3-70b-versatile` 모델의 무료 티어 분당 요청 제한(RPM)에 걸렸습니다. 403은 Groq 무료 티어에서 rate limit 초과 시 반환되는 코드입니다.
+
+### 해결
+
+`backend/src/services/ai.ts`, `ai-report.ts`의 기본 모델을 `llama-3.1-8b-instant`로 변경했습니다. 속도가 더 빠르고 rate limit이 더 관대합니다.
+
+```ts
+constructor(config: LLMConfig) {
+  // 기본값: llama-3.1-8b-instant
+}
+```
+
+---
+
+## [2026-04-05] drizzle-kit migrate — .dev.vars 환경변수 미인식
+
+### 증상
+
+```
+npx drizzle-kit migrate
+Error: Please provide required params for 'turso' dialect: url: undefined
+```
+
+### 원인
+
+`drizzle-kit`은 Wrangler 전용 파일인 `.dev.vars`를 자동으로 읽지 않습니다. 일반 환경변수나 `.env` 파일만 인식합니다.
+
+### 해결
+
+`backend/drizzle.config.ts`에서 직접 `.dev.vars`를 파싱해서 `process.env`에 주입합니다.
+
+```ts
+import { readFileSync } from 'fs';
+
+try {
+    const vars = readFileSync('.dev.vars', 'utf-8');
+    vars.split('\n').forEach((line) => {
+        const [key, ...rest] = line.split('=');
+        if (key && rest.length) process.env[key.trim()] = rest.join('=').trim();
+    });
+} catch {}
+```
+
+이후 `npx drizzle-kit migrate`를 별도 환경변수 주입 없이 실행 가능합니다.
+
+---
+
+## [2026-04-05] 거래 저장 400 Validation failed — type/transactionType 불일치
+
+### 증상
+
+프로덕션 프론트엔드에서 거래 저장 시 400 응답. 로컬에서는 정상.
+
+### 원인
+
+배포된 프론트엔드 버전에 따라 요청 body에 `transactionType` 없이 `type`만 포함되는 경우가 있었습니다. 백엔드 `CreatePayloadSchema`는 `transactionType`만 required로 받아서 ZodError가 발생했습니다.
+
+### 해결
+
+백엔드 `CreatePayloadSchema`에 `z.preprocess`를 추가해 `type`과 `transactionType` 둘 다 허용하도록 수정했습니다.
+
+```ts
+const CreatePayloadSchema = z.preprocess((data: any) => ({
+  ...data,
+  transactionType: data.transactionType ?? data.type,
+}), z.object({
+  transactionType: z.enum(['income', 'expense']),
+  // ...
+}));
+```
