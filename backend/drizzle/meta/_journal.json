@@ -22,6 +22,13 @@
       "when": 1774608822000,
       "tag": "0002_remarkable_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1775198655390,
+      "tag": "0003_breezy_peter_parker",
+      "breakpoints": true
     }
   ]
 }
