@@ -9,6 +9,9 @@ export type Env = {
     SUPABASE_JWT_SECRET: string;
     GROQ_API_KEY: string;
     GROQ_MODEL_NAME?: string;
+    GEMINI_API_KEY?: string;
+    GEMINI_MODEL_NAME?: string;
+    AI_PROVIDER?: 'groq' | 'gemini'; // defaults to 'groq'
 };
 
 export function getDb(env: Env) {

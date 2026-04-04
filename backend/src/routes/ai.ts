@@ -4,6 +4,7 @@ import { getDb, Env } from '../db/index';
 import { transactions } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { AIService } from '../services/ai';
+import { getLLMConfig } from '../services/llm';
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -82,7 +83,7 @@ router.post('/action', async (c) => {
     // Save user message to chat history
     await saveMessage(db, userId, 'user', text);
 
-    const aiService = new AIService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
+    const aiService = new AIService(getLLMConfig(c.env));
 
     // Fetch user context
     const recentTransactions = await db
@@ -307,7 +308,7 @@ router.post('/action', async (c) => {
         const reportPayload = validateReportPayload(action.payload);
 
         // Initialize report service
-        const reportService = new AIReportService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
+        const reportService = new AIReportService(getLLMConfig(c.env));
 
         // Generate report
         const report = await reportService.generateReport(db, userId, reportPayload);

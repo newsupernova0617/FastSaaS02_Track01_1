@@ -1,6 +1,7 @@
 import type { TransactionAction } from '../types/ai';
 import type { Transaction } from '../db/schema';
 import { validateAIResponse } from './validation';
+import { callLLM, type LLMConfig } from './llm';
 
 const SYSTEM_PROMPT = `You are a budget transaction assistant. Users write in natural language (Korean),
 and you extract/modify financial transactions or request financial analysis.
@@ -45,12 +46,10 @@ Rules:
 Only return valid JSON. No explanations.`;
 
 export class AIService {
-  private apiKey: string;
-  private modelName: string;
+  private config: LLMConfig;
 
-  constructor(apiKey: string, modelName: string = 'llama-3.1-8b-instant') {
-    this.apiKey = apiKey;
-    this.modelName = modelName;
+  constructor(config: LLMConfig) {
+    this.config = config;
   }
 
   async parseUserInput(
@@ -73,30 +72,13 @@ ${recentTxsFormatted || '(none)'}
 User's categories: ${userCategories.join(', ') || '(none)'}`;
 
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: this.modelName,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: contextMessage },
-          ],
-          response_format: { type: 'json_object' },
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
-      }
-
-      const data = await response.json() as { choices: { message: { content: string } }[] };
-      const responseText = data.choices[0]?.message?.content;
-      if (!responseText) throw new Error('No response from AI');
+      const responseText = await callLLM(
+        [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: contextMessage },
+        ],
+        this.config
+      );
 
       const parsed = JSON.parse(responseText);
       return validateAIResponse(parsed);
@@ -107,9 +89,6 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
   }
 }
 
-export function createAIService(apiKey: string): AIService {
-  if (!apiKey) {
-    throw new Error('GROQ_API_KEY environment variable is not set');
-  }
-  return new AIService(apiKey);
+export function createAIService(config: LLMConfig): AIService {
+  return new AIService(config);
 }

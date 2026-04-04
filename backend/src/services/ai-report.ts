@@ -1,14 +1,13 @@
 import { eq, gte, lte, and } from 'drizzle-orm';
 import type { ReportPayload, Report } from '../types/ai';
 import { transactions } from '../db/schema';
+import { callLLM, type LLMConfig } from './llm';
 
 export class AIReportService {
-  private apiKey: string;
-  private modelName: string;
+  private config: LLMConfig;
 
-  constructor(apiKey: string, modelName: string = 'llama-3.1-8b-instant') {
-    this.apiKey = apiKey;
-    this.modelName = modelName;
+  constructor(config: LLMConfig) {
+    this.config = config;
   }
 
   /**
@@ -150,27 +149,10 @@ For alert sections, include: message about spending anomaly
 For suggestion sections, include: message with actionable advice
 `;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.modelName,
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' },
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
-    }
-
-    const data = await response.json() as { choices: { message: { content: string } }[] };
-    const responseText = data.choices[0]?.message?.content;
-    if (!responseText) throw new Error('No response from AI');
+    const responseText = await callLLM(
+      [{ role: 'user', content: prompt }],
+      this.config
+    );
 
     // Parse JSON from response
     const parsed = JSON.parse(responseText);
@@ -202,9 +184,6 @@ For suggestion sections, include: message with actionable advice
   }
 }
 
-export function createAIReportService(apiKey: string): AIReportService {
-  if (!apiKey) {
-    throw new Error('GROQ_API_KEY environment variable is not set');
-  }
-  return new AIReportService(apiKey);
+export function createAIReportService(config: LLMConfig): AIReportService {
+  return new AIReportService(config);
 }

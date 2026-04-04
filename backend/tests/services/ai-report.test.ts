@@ -54,7 +54,7 @@ describe('AIReportService', () => {
 
   beforeEach(() => {
     // Initialize service with fake API key
-    service = new AIReportService('fake-api-key-test');
+    service = new AIReportService({ provider: 'groq', apiKey: 'fake-api-key-test', modelName: 'llama-3.1-8b-instant' });
     // Reset all mocks
     vi.clearAllMocks();
   });
