@@ -1,6 +1,6 @@
 // API 서버의 기본 주소
 // 환경변수가 없으면 개발 환경(localhost:8787)으로 기본 설정
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
+const BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787').replace(/\/$/, '');
 
 // JWT 토큰을 전역 변수에 저장 (AuthContext에서 로그인/로그아웃 시 업데이트)
 // 이렇게 하면 모든 API 요청에 자동으로 토큰을 붙일 수 있음
@@ -85,7 +85,7 @@ export const api = {
     fetch(`${BASE}/api/transactions`, {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, transactionType: data.type }),
     }).then((r) => r.json()),
 
   deleteTransaction: (id: number): Promise<{ success: boolean }> =>
