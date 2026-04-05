@@ -70,7 +70,20 @@ router.post('/action', async (c) => {
   try {
     const db = getDb(c.env);
     const userId = c.get('userId');
-    const { text } = await c.req.json();
+
+    let requestBody: any;
+    try {
+      requestBody = await c.req.json();
+      console.log('[AI Route] Request body:', requestBody);
+    } catch (parseError) {
+      console.error('[AI Route] JSON parse error:', parseError);
+      return c.json(
+        { success: false, error: 'Invalid JSON request' },
+        400
+      );
+    }
+
+    const { text } = requestBody;
 
     if (!text || typeof text !== 'string') {
       return c.json(
@@ -81,6 +94,24 @@ router.post('/action', async (c) => {
 
     // Save user message to chat history
     await saveMessage(db, userId, 'user', text);
+
+    // Debug: Check environment variables
+    console.log('[AI Route] Environment check:', {
+      hasGROQ_API_KEY: !!c.env.GROQ_API_KEY,
+      GROQ_API_KEY_length: c.env.GROQ_API_KEY?.length || 0,
+      GROQ_API_KEY_prefix: c.env.GROQ_API_KEY ? c.env.GROQ_API_KEY.substring(0, 10) : 'UNDEFINED',
+      GROQ_API_KEY_suffix: c.env.GROQ_API_KEY ? c.env.GROQ_API_KEY.substring(c.env.GROQ_API_KEY.length - 10) : 'UNDEFINED',
+      GROQ_MODEL_NAME: c.env.GROQ_MODEL_NAME,
+      hasGROQ_MODEL_NAME: !!c.env.GROQ_MODEL_NAME,
+    });
+
+    if (!c.env.GROQ_API_KEY) {
+      console.error('[AI Route] GROQ_API_KEY is not set!');
+      return c.json(
+        { success: false, error: 'AI service is not configured' },
+        500
+      );
+    }
 
     const aiService = new AIService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
 
@@ -341,6 +372,15 @@ router.post('/action', async (c) => {
         );
     }
   } catch (error) {
+    // Check if it's a ZodError
+    if (error instanceof ZodError) {
+      console.error('[AI Route] ZodError detected:', error.errors);
+      return c.json(
+        { success: false, error: 'Validation error', details: error.errors },
+        400
+      );
+    }
+
     console.error('AI action error:', error);
     const message = error instanceof Error ? error.message : 'Failed to process request';
     const status = isAIServiceError(error) ? 502 : isClientError(error) ? 400 : 500;

@@ -6,7 +6,7 @@ export class AIReportService {
   private apiKey: string;
   private modelName: string;
 
-  constructor(apiKey: string, modelName: string = 'llama-3.3-70b-versatile') {
+  constructor(apiKey: string, modelName: string = 'llama-3.1-8b-instant') {
     this.apiKey = apiKey;
     this.modelName = modelName;
   }
@@ -150,31 +150,60 @@ For alert sections, include: message about spending anomaly
 For suggestion sections, include: message with actionable advice
 `;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.modelName,
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' },
-      }),
+    // 디버깅용 로그
+    const apiKeyMasked = this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT_SET';
+    console.log('[Groq Report API] Request params:', {
+      apiKey: apiKeyMasked,
+      model: this.modelName,
+      reportType,
+      transactionDataLength: transactionData.length,
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
+    const requestBody = {
+      model: this.modelName,
+      messages: [{ role: 'user', content: prompt }],
+    };
+
+    console.log('[Groq Report API] Request body model:', requestBody.model);
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('[Groq Report API] Response status:', response.status);
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('[Groq Report API] Error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: err,
+        });
+        throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
+      }
+
+      const data = await response.json() as { choices: { message: { content: string } }[] };
+      const responseText = data.choices[0]?.message?.content;
+      if (!responseText) throw new Error('No response from AI');
+
+      console.log('[Groq Report API] Successfully parsed response');
+      // Parse JSON from response
+      const parsed = JSON.parse(responseText);
+      return parsed.sections || [];
+    } catch (error) {
+      console.error('[Groq Report API] Caught error:', error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      } : error);
+      throw error;
     }
-
-    const data = await response.json() as { choices: { message: { content: string } }[] };
-    const responseText = data.choices[0]?.message?.content;
-    if (!responseText) throw new Error('No response from AI');
-
-    // Parse JSON from response
-    const parsed = JSON.parse(responseText);
-    return parsed.sections || [];
   }
 
   /**
