@@ -11,7 +11,8 @@ export type Env = {
     GROQ_MODEL_NAME?: string;
     GEMINI_API_KEY?: string;
     GEMINI_MODEL_NAME?: string;
-    AI_PROVIDER?: 'groq' | 'gemini'; // defaults to 'groq'
+    AI_PROVIDER?: 'groq' | 'gemini' | 'workers-ai'; // defaults to 'groq'
+    AI?: any; // Cloudflare Workers AI binding
 };
 
 export function getDb(env: Env) {

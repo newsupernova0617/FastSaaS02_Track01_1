@@ -47,9 +47,11 @@ Only return valid JSON. No explanations.`;
 
 export class AIService {
   private config: LLMConfig;
+  private ai?: any;
 
-  constructor(config: LLMConfig) {
+  constructor(config: LLMConfig, ai?: any) {
     this.config = config;
+    this.ai = ai;
   }
 
   async parseUserInput(
@@ -77,7 +79,8 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: contextMessage },
         ],
-        this.config
+        this.config,
+        this.ai
       );
 
       const parsed = JSON.parse(responseText);

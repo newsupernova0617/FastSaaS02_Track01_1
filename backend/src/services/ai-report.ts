@@ -5,9 +5,11 @@ import { callLLM, type LLMConfig } from './llm';
 
 export class AIReportService {
   private config: LLMConfig;
+  private ai?: any;
 
-  constructor(config: LLMConfig) {
+  constructor(config: LLMConfig, ai?: any) {
     this.config = config;
+    this.ai = ai;
   }
 
   /**
@@ -151,7 +153,8 @@ For suggestion sections, include: message with actionable advice
 
     const responseText = await callLLM(
       [{ role: 'user', content: prompt }],
-      this.config
+      this.config,
+      this.ai
     );
 
     // Parse JSON from response

@@ -83,7 +83,7 @@ router.post('/action', async (c) => {
     // Save user message to chat history
     await saveMessage(db, userId, 'user', text);
 
-    const aiService = new AIService(getLLMConfig(c.env));
+    const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
 
     // Fetch user context
     const recentTransactions = await db
@@ -308,7 +308,7 @@ router.post('/action', async (c) => {
         const reportPayload = validateReportPayload(action.payload);
 
         // Initialize report service
-        const reportService = new AIReportService(getLLMConfig(c.env));
+        const reportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
 
         // Generate report
         const report = await reportService.generateReport(db, userId, reportPayload);
