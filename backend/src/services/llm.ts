@@ -1,4 +1,4 @@
-export type LLMProvider = 'groq' | 'gemini' | 'openai';
+export type LLMProvider = 'groq' | 'gemini' | 'openai' | 'workers-ai';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -26,6 +26,7 @@ export async function callLLM(messages: LLMMessage[], config: LLMConfig): Promis
 }
 
 async function callGroq(messages: LLMMessage[], config: LLMConfig): Promise<string> {
+  console.log('[Groq API Call] Starting request to api.groq.com');
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -41,6 +42,11 @@ async function callGroq(messages: LLMMessage[], config: LLMConfig): Promise<stri
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    console.error('[Groq API Error]', {
+      status: response.status,
+      statusText: response.statusText,
+      error: err,
+    });
     throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
   }
 
@@ -51,6 +57,7 @@ async function callGroq(messages: LLMMessage[], config: LLMConfig): Promise<stri
 }
 
 async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<string> {
+  console.log('[OpenAI API Call] Starting request to api.openai.com');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -66,6 +73,11 @@ async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<st
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    console.error('[OpenAI API Error]', {
+      status: response.status,
+      statusText: response.statusText,
+      error: err,
+    });
     throw new Error(`OpenAI API error: ${response.status} ${JSON.stringify(err)}`);
   }
 
@@ -76,6 +88,7 @@ async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<st
 }
 
 async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<string> {
+  console.log('[Gemini API Call] Starting request to generativelanguage.googleapis.com');
   const systemMsg = messages.find((m) => m.role === 'system');
   const userMessages = messages.filter((m) => m.role !== 'system');
 
@@ -100,6 +113,11 @@ async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<st
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
+    console.error('[Gemini API Error]', {
+      status: response.status,
+      statusText: response.statusText,
+      error: err,
+    });
     throw new Error(`Gemini API error: ${response.status} ${JSON.stringify(err)}`);
   }
 
@@ -107,6 +125,40 @@ async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<st
   const text = data.candidates[0]?.content?.parts[0]?.text;
   if (!text) throw new Error('No response from Gemini');
   return text;
+}
+
+async function callWorkersAI(
+  messages: LLMMessage[],
+  config: LLMConfig,
+  ai: any // Cloudflare Workers AI binding from Env
+): Promise<string> {
+  console.log('[Workers AI Call] Starting request to Cloudflare Workers AI');
+
+  // Format messages for Cloudflare Workers AI
+  const formattedMessages = messages.map((m) => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  try {
+    const response = await ai.run(config.modelName, {
+      messages: formattedMessages,
+      max_tokens: 1024,
+    });
+
+    // Extract text from response
+    const text = response.result?.response || response?.response;
+    if (!text) {
+      throw new Error('No response from Workers AI');
+    }
+    return text;
+  } catch (error) {
+    console.error('[Workers AI Error]', {
+      model: config.modelName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw new Error(`Workers AI error: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 /**
@@ -128,7 +180,7 @@ export function getLLMConfig(env: {
     return {
       provider: 'openai',
       apiKey: env.OPENAI_API_KEY,
-      modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
+      modelName: env.OPENAI_MODEL_NAME || 'gpt-5.4-nano-2026-03-17',
     };
   }
   if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
