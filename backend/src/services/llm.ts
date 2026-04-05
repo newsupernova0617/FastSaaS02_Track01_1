@@ -111,6 +111,7 @@ async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<st
 
 /**
  * Build LLMConfig from environment variables.
+ * If AI_PROVIDER is 'openai' and OPENAI_API_KEY is set, uses OpenAI.
  * If AI_PROVIDER is 'gemini' and GEMINI_API_KEY is set, uses Gemini.
  * Otherwise falls back to Groq.
  */
@@ -120,7 +121,16 @@ export function getLLMConfig(env: {
   GROQ_MODEL_NAME?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL_NAME?: string;
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL_NAME?: string;
 }): LLMConfig {
+  if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+    return {
+      provider: 'openai',
+      apiKey: env.OPENAI_API_KEY,
+      modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
+    };
+  }
   if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
     return {
       provider: 'gemini',
