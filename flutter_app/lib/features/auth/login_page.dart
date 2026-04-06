@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
@@ -27,36 +26,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId:
-            '946644354766-3fri9s3msihs4tn9lvqd3e953j8f3cgg.apps.googleusercontent.com', // Replace with your Google OAuth Client ID
-        scopes: ['email', 'profile'],
-      );
-
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        // User cancelled sign-in
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        throw Exception('Failed to get ID token from Google sign-in');
-      }
-
-      // Sign in with Supabase using ID token
+      // Use Supabase's native OAuth flow - recommended for web
       final authService = ref.read(supabaseAuthProvider);
-      await authService.client.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
+      await authService.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'http://localhost:3000/#/auth/callback',
       );
 
       if (mounted) {
