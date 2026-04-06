@@ -10,20 +10,15 @@ import type { Variables } from './middleware/auth';
 
 const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-<<<<<<< HEAD
 // 루트 경로 설정: 서버 작동 확인용
 app.get('/', (c) => c.text('Hello! FastSaaS Backend is running!'));
 
 // CORS 설정: 이 도메인들의 요청만 허용
-// localhost:5173는 개발 환경, capacitor://는 모바일 앱, pages.dev는 프로덕션
+// localhost:5173는 개발 환경, localhost:3000은 Flutter 웹 개발 환경
+// capacitor://는 모바일 앱, pages.dev는 프로덕션
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev', 'https://fastsaas2.fastsaas2.workers.dev'],
-=======
-// CORS 설정: 이 도메인들의 요청만 허용
-// localhost:5173는 개발 환경, capacitor://는 모바일 앱, pages.dev는 프로덕션
-app.use('*', cors({
-    origin: ['http://localhost:5173', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev'],
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev', 'https://fastsaas2.fastsaas2.workers.dev'],
+
 }));
 
 // /api/* 경로의 모든 요청은 JWT 검증을 거쳐야 함
