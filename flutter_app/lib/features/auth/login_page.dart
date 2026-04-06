@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 
@@ -27,11 +28,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // Replace with your Google OAuth Client ID
-        scopes: [
-          'email',
-          'profile',
-        ],
+        clientId:
+            '946644354766-3fri9s3msihs4tn9lvqd3e953j8f3cgg.apps.googleusercontent.com', // Replace with your Google OAuth Client ID
+        scopes: ['email', 'profile'],
       );
 
       final googleUser = await googleSignIn.signIn();
@@ -56,7 +55,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // Sign in with Supabase using ID token
       final authService = ref.read(supabaseAuthProvider);
       await authService.client.auth.signInWithIdToken(
-        provider: 'google',
+        provider: OAuthProvider.google,
         idToken: idToken,
       );
 
@@ -138,10 +137,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Text(
                   '가계부',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -150,9 +149,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Text(
                   'Your Personal Finance Manager',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.black54,
-                        fontSize: 16,
-                      ),
+                    color: Colors.black54,
+                    fontSize: 16,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -212,9 +211,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               const SizedBox(width: 12),
                               Text(
                                 'Sign in with Google',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: Colors.black87,
                                       fontWeight: FontWeight.w500,
@@ -277,9 +274,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               const SizedBox(width: 12),
                               Text(
                                 'Sign in with Kakao',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
                                       color: const Color(0xFF3C1E1E),
                                       fontWeight: FontWeight.w500,
@@ -307,8 +302,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: Text(
                       _errorMessage!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.errorColor,
-                          ),
+                        color: AppTheme.errorColor,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
