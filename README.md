@@ -98,6 +98,7 @@ pkill -f "node.*vite"
 # 이후 백엔드, 프론트엔드 순서로 재시작
 ```
 
+<<<<<<< HEAD
 ## 클라우드 배포 방법
 
 ### 백엔드 (Cloudflare Workers)
@@ -156,6 +157,8 @@ npm run build
 npx wrangler pages deploy dist --project-name=fastsaas02-track01-1
 ```
 
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 ## 기타 명령어
 
 | 명령어 | 위치 | 설명 |
@@ -163,4 +166,8 @@ npx wrangler pages deploy dist --project-name=fastsaas02-track01-1
 | `npm run build` | frontend | 프로덕션 빌드 |
 | `npm run deploy` | backend | Cloudflare Workers 배포 |
 | `npm run test` | backend | Vitest 테스트 실행 |
+<<<<<<< HEAD
 | `npm run type-check` | backend | TypeScript 타입 체크 |
+=======
+| `npm run type-check` | backend | TypeScript 타입 체크 |
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a

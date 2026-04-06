@@ -9,10 +9,13 @@ export type Env = {
     SUPABASE_JWT_SECRET: string;
     GROQ_API_KEY: string;
     GROQ_MODEL_NAME?: string;
+<<<<<<< HEAD
     GEMINI_API_KEY?: string;
     GEMINI_MODEL_NAME?: string;
     AI_PROVIDER?: 'groq' | 'gemini' | 'workers-ai'; // defaults to 'groq'
     AI?: any; // Cloudflare Workers AI binding
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 };
 
 export function getDb(env: Env) {
@@ -23,4 +26,8 @@ export function getDb(env: Env) {
     });
     // Drizzle ORM으로 타입 안전한 쿼리 작성 가능하게 래핑
     return drizzle(client, { schema });
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a

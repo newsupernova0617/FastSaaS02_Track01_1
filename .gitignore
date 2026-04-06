@@ -13,4 +13,9 @@ android/
 .worktrees/
 *.log
 
+<<<<<<< HEAD
 semgrep-env/
+=======
+semgrep-env/
+wrangler.jsonc
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a

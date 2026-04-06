@@ -195,7 +195,11 @@ describe('POST /api/ai/action', () => {
     // Add environment and variables middleware
     app.use('*', async (c, next) => {
       c.env = {
+<<<<<<< HEAD
         GROQ_API_KEY: 'test-api-key',
+=======
+        GEMINI_API_KEY: 'test-api-key',
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
         TURSO_DB_URL: 'test-url',
         TURSO_AUTH_TOKEN: 'test-token',
         SUPABASE_JWT_SECRET: 'test-secret',
@@ -604,9 +608,15 @@ describe('POST /api/ai/action', () => {
     });
 
     it('handles Gemini API failure gracefully', async () => {
+<<<<<<< HEAD
       const error = new Error('AI service is temporarily unavailable. Please try again shortly.');
       error.name = 'AIServiceError';
       mockAiInstance.parseUserInput.mockRejectedValue(error);
+=======
+      mockAiInstance.parseUserInput.mockRejectedValue(
+        new Error('Failed to process request. Please try again.')
+      );
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
@@ -616,9 +626,15 @@ describe('POST /api/ai/action', () => {
 
       const body = await response.json() as any;
 
+<<<<<<< HEAD
       expect(response.status).toBe(502);
       expect(body.success).toBe(false);
       expect(body.error).toContain('temporarily unavailable');
+=======
+      expect(response.status).toBe(400);
+      expect(body.success).toBe(false);
+      expect(body.error).toContain('Failed');
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     });
 
     it('handles validation failure with error message', async () => {
@@ -916,8 +932,11 @@ describe('POST /api/ai/action', () => {
       expect(body.message).toBeDefined();
       expect(typeof body.message).toBe('string');
       expect(body.message.length).toBeGreaterThan(0);
+<<<<<<< HEAD
       expect(body.content).toBe(body.message);
       expect(body.metadata?.actionType).toBe('create');
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     });
   });
 });

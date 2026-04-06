@@ -18,6 +18,7 @@ app.get('/', (c) => c.text('Hello! FastSaaS Backend is running!'));
 // capacitor://는 모바일 앱, pages.dev는 프로덕션
 app.use('*', cors({
   origin: ['http://localhost:5173', 'http://localhost:3000', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev', 'https://fastsaas2.fastsaas2.workers.dev'],
+
 }));
 
 // /api/* 경로의 모든 요청은 JWT 검증을 거쳐야 함

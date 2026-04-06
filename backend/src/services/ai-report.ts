@@ -1,6 +1,7 @@
 import { eq, gte, lte, and } from 'drizzle-orm';
 import type { ReportPayload, Report } from '../types/ai';
 import { transactions } from '../db/schema';
+<<<<<<< HEAD
 import { callLLM, type LLMConfig } from './llm';
 
 export class AIReportService {
@@ -10,6 +11,16 @@ export class AIReportService {
   constructor(config: LLMConfig, ai?: any) {
     this.config = config;
     this.ai = ai;
+=======
+
+export class AIReportService {
+  private apiKey: string;
+  private modelName: string;
+
+  constructor(apiKey: string, modelName: string = 'llama-3.1-8b-instant') {
+    this.apiKey = apiKey;
+    this.modelName = modelName;
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
   }
 
   /**
@@ -151,6 +162,7 @@ For alert sections, include: message about spending anomaly
 For suggestion sections, include: message with actionable advice
 `;
 
+<<<<<<< HEAD
     const responseText = await callLLM(
       [{ role: 'user', content: prompt }],
       this.config,
@@ -160,6 +172,62 @@ For suggestion sections, include: message with actionable advice
     // Parse JSON from response
     const parsed = JSON.parse(responseText);
     return parsed.sections || [];
+=======
+    // 디버깅용 로그
+    const apiKeyMasked = this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT_SET';
+    console.log('[Groq Report API] Request params:', {
+      apiKey: apiKeyMasked,
+      model: this.modelName,
+      reportType,
+      transactionDataLength: transactionData.length,
+    });
+
+    const requestBody = {
+      model: this.modelName,
+      messages: [{ role: 'user', content: prompt }],
+    };
+
+    console.log('[Groq Report API] Request body model:', requestBody.model);
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('[Groq Report API] Response status:', response.status);
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('[Groq Report API] Error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: err,
+        });
+        throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
+      }
+
+      const data = await response.json() as { choices: { message: { content: string } }[] };
+      const responseText = data.choices[0]?.message?.content;
+      if (!responseText) throw new Error('No response from AI');
+
+      console.log('[Groq Report API] Successfully parsed response');
+      // Parse JSON from response
+      const parsed = JSON.parse(responseText);
+      return parsed.sections || [];
+    } catch (error) {
+      console.error('[Groq Report API] Caught error:', error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      } : error);
+      throw error;
+    }
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
   }
 
   /**
@@ -187,6 +255,15 @@ For suggestion sections, include: message with actionable advice
   }
 }
 
+<<<<<<< HEAD
 export function createAIReportService(config: LLMConfig): AIReportService {
   return new AIReportService(config);
 }
+=======
+export function createAIReportService(apiKey: string): AIReportService {
+  if (!apiKey) {
+    throw new Error('GROQ_API_KEY environment variable is not set');
+  }
+  return new AIReportService(apiKey);
+}
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a

@@ -4,7 +4,10 @@ import { getDb, Env } from '../db/index';
 import { transactions } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { AIService } from '../services/ai';
+<<<<<<< HEAD
 import { getLLMConfig } from '../services/llm';
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -71,7 +74,24 @@ router.post('/action', async (c) => {
   try {
     const db = getDb(c.env);
     const userId = c.get('userId');
+<<<<<<< HEAD
     const { text } = await c.req.json();
+=======
+
+    let requestBody: any;
+    try {
+      requestBody = await c.req.json();
+      console.log('[AI Route] Request body:', requestBody);
+    } catch (parseError) {
+      console.error('[AI Route] JSON parse error:', parseError);
+      return c.json(
+        { success: false, error: 'Invalid JSON request' },
+        400
+      );
+    }
+
+    const { text } = requestBody;
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
     if (!text || typeof text !== 'string') {
       return c.json(
@@ -83,7 +103,29 @@ router.post('/action', async (c) => {
     // Save user message to chat history
     await saveMessage(db, userId, 'user', text);
 
+<<<<<<< HEAD
     const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
+=======
+    // Debug: Check environment variables
+    console.log('[AI Route] Environment check:', {
+      hasGROQ_API_KEY: !!c.env.GROQ_API_KEY,
+      GROQ_API_KEY_length: c.env.GROQ_API_KEY?.length || 0,
+      GROQ_API_KEY_prefix: c.env.GROQ_API_KEY ? c.env.GROQ_API_KEY.substring(0, 10) : 'UNDEFINED',
+      GROQ_API_KEY_suffix: c.env.GROQ_API_KEY ? c.env.GROQ_API_KEY.substring(c.env.GROQ_API_KEY.length - 10) : 'UNDEFINED',
+      GROQ_MODEL_NAME: c.env.GROQ_MODEL_NAME,
+      hasGROQ_MODEL_NAME: !!c.env.GROQ_MODEL_NAME,
+    });
+
+    if (!c.env.GROQ_API_KEY) {
+      console.error('[AI Route] GROQ_API_KEY is not set!');
+      return c.json(
+        { success: false, error: 'AI service is not configured' },
+        500
+      );
+    }
+
+    const aiService = new AIService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
     // Fetch user context
     const recentTransactions = await db
@@ -308,7 +350,11 @@ router.post('/action', async (c) => {
         const reportPayload = validateReportPayload(action.payload);
 
         // Initialize report service
+<<<<<<< HEAD
         const reportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+=======
+        const reportService = new AIReportService(c.env.GROQ_API_KEY, c.env.GROQ_MODEL_NAME);
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
         // Generate report
         const report = await reportService.generateReport(db, userId, reportPayload);
@@ -342,6 +388,18 @@ router.post('/action', async (c) => {
         );
     }
   } catch (error) {
+<<<<<<< HEAD
+=======
+    // Check if it's a ZodError
+    if (error instanceof ZodError) {
+      console.error('[AI Route] ZodError detected:', error.errors);
+      return c.json(
+        { success: false, error: 'Validation error', details: error.errors },
+        400
+      );
+    }
+
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     console.error('AI action error:', error);
     const message = error instanceof Error ? error.message : 'Failed to process request';
     const status = isAIServiceError(error) ? 502 : isClientError(error) ? 400 : 500;
@@ -386,4 +444,8 @@ router.delete('/chat/history', async (c) => {
   }
 });
 
+<<<<<<< HEAD
 export default router;
+=======
+export default router;
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a

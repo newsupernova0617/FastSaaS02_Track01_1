@@ -20,11 +20,15 @@ export const AIResponseSchema = z.object({
  * - Memo: up to 500 characters, optional, trimmed
  * - Date: YYYY-MM-DD format
  */
+<<<<<<< HEAD
 const CreatePayloadSchema = z.preprocess((data: any) => ({
   ...data,
   // type 또는 transactionType 둘 다 허용 (프론트 버전 호환)
   transactionType: data.transactionType ?? data.type,
 }), z.object({
+=======
+const CreatePayloadSchema = z.object({
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
   transactionType: z.enum(['income', 'expense'], { message: 'Transaction type must be either "income" or "expense"' }),
   amount: z.number({ message: 'Amount must be a number' })
     .positive({ message: 'Amount must be greater than 0' })
@@ -40,7 +44,11 @@ const CreatePayloadSchema = z.preprocess((data: any) => ({
     .optional(),
   date: z.string({ message: 'Date must be a string' })
     .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Expected YYYY-MM-DD format' }),
+<<<<<<< HEAD
 }));
+=======
+});
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 /**
  * Schema for update transaction payload validation

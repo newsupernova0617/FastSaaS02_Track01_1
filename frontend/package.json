@@ -7,7 +7,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+<<<<<<< HEAD
     "preview": "vite preview"
+=======
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
@@ -25,18 +33,37 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.2.2",
+<<<<<<< HEAD
+=======
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+<<<<<<< HEAD
+=======
+    "@vitest/ui": "^4.1.2",
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+<<<<<<< HEAD
+=======
+    "jsdom": "^29.0.1",
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     "lucide-react": "^1.0.1",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.57.0",
+<<<<<<< HEAD
     "vite": "^8.0.1"
+=======
+    "vite": "^8.0.1",
+    "vitest": "^4.1.2"
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
   }
 }

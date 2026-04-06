@@ -25,7 +25,11 @@ flowchart TD
         Tx["Transactions Router<br/>(src/routes/transactions.ts)"]
         User["Users Router<br/>(src/routes/users.ts)"]
         AI["AI Router<br/>(src/routes/ai.ts)"]
+<<<<<<< HEAD
         AISvc["Service Layer<br/>ai.ts / ai-report.ts / chat.ts<br/>validation.ts / messages.ts"]
+=======
+        AISvc["Service Layer<br/>ai.ts / validation.ts / messages.ts"]
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
         DBClient["DB Client (src/db/index.ts)<br/>Stateless @libsql/client"]
 
         App --> Cors --> Auth --> RouteMount
@@ -77,7 +81,11 @@ flowchart TD
 | Auth | 커스텀 JWT 검증, Supabase JWKS | `src/middleware/auth.ts` |
 | Database | Turso, `@libsql/client`, Drizzle ORM | `src/db/index.ts`, `src/db/schema.ts`, `drizzle.config.ts` |
 | Route Layer | Transactions, Users, AI 엔드포인트 | `src/routes/transactions.ts`, `src/routes/users.ts`, `src/routes/ai.ts` |
+<<<<<<< HEAD
 | Service Layer | Gemini 연동, 리포트 생성, 채팅 히스토리, 메시지 생성, 검증 | `src/services/ai.ts`, `src/services/ai-report.ts`, `src/services/chat.ts`, `src/services/messages.ts`, `src/services/validation.ts` |
+=======
+| Service Layer | Gemini 연동, 메시지 생성, 검증 | `src/services/ai.ts`, `src/services/messages.ts`, `src/services/validation.ts` |
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 | Type Layer | AI 액션 타입 정의 | `src/types/ai.ts` |
 | Test | Vitest | `vitest.config.ts`, `src/middleware/auth.test.ts`, `tests/*` |
 
@@ -113,8 +121,11 @@ graph TD
     Routes --- AIRoute("ai.ts")
 
     Services --- AISvc("ai.ts")
+<<<<<<< HEAD
     Services --- AIReport("ai-report.ts")
     Services --- ChatSvc("chat.ts")
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     Services --- Messages("messages.ts")
     Services --- Validation("validation.ts")
 
@@ -123,6 +134,7 @@ graph TD
     Drizzle --- SqlFiles("0000_*.sql<br/>0001_*.sql")
     Drizzle --- Meta("meta/")
 
+<<<<<<< HEAD
     Tests --- Fixtures("fixtures/")
     Tests --- RouteTests("routes/")
     Tests --- ServiceTests("services/")
@@ -132,6 +144,12 @@ graph TD
     ServiceTests --- AISvcTest("ai.test.ts")
     ServiceTests --- AIReportTest("ai-report.test.ts")
     ServiceTests --- ChatTest("chat.test.ts")
+=======
+    Tests --- RouteTests("routes/")
+    Tests --- ServiceTests("services/")
+    RouteTests --- RouteTxTest("transactions.test.ts")
+    RouteTests --- RouteAITest("ai.test.ts")
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     ServiceTests --- MsgTest("messages.test.ts")
     ServiceTests --- ValTest("validation.test.ts")
 
@@ -142,8 +160,13 @@ graph TD
 
     class Backend mainFolder;
     class Drizzle,Src,Tests folder;
+<<<<<<< HEAD
     class Db,Middleware,Routes,Services,Types,Fixtures,RouteTests,ServiceTests,Meta subFolder;
     class RootConfig,RootEtc,Index,DbIndex,DbSchema,Auth,AuthTest,TxRoute,UserRoute,AIRoute,AISvc,AIReport,ChatSvc,Messages,Validation,AITypes,SqlFiles,TestData,RouteTxTest,RouteAITest,AISvcTest,AIReportTest,ChatTest,MsgTest,ValTest file;
+=======
+    class Db,Middleware,Routes,Services,Types,RouteTests,ServiceTests,Meta subFolder;
+    class RootConfig,RootEtc,Index,DbIndex,DbSchema,Auth,AuthTest,TxRoute,UserRoute,AIRoute,AISvc,Messages,Validation,AITypes,SqlFiles,RouteTxTest,RouteAITest,MsgTest,ValTest file;
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 ```
 
 ### 3.2 트리 보기
@@ -179,22 +202,31 @@ backend/
 |   |   `-- users.ts
 |   |-- services/
 |   |   |-- ai.ts
+<<<<<<< HEAD
 |   |   |-- ai-report.ts
 |   |   |-- chat.ts
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 |   |   |-- messages.ts
 |   |   `-- validation.ts
 |   `-- types/
 |       `-- ai.ts
 `-- tests/
+<<<<<<< HEAD
     |-- fixtures/
     |   `-- test-data.ts
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     |-- routes/
     |   |-- ai.test.ts
     |   `-- transactions.test.ts
     `-- services/
+<<<<<<< HEAD
         |-- ai.test.ts
         |-- ai-report.test.ts
         |-- chat.test.ts
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
         |-- messages.test.ts
         `-- validation.test.ts
 ```
@@ -212,7 +244,10 @@ backend/
 | `backend/src/services/` | 라우트에서 분리한 재사용 로직 |
 | `backend/src/types/` | AI 액션 관련 타입 정의 |
 | `backend/tests/` | 라우트/서비스 테스트 |
+<<<<<<< HEAD
 | `backend/tests/fixtures/` | 테스트 공용 픽스처 데이터 |
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 ### 3.4 파일 배치 원칙
 
@@ -241,15 +276,22 @@ backend/
 
 #### `src/services/*`
 
+<<<<<<< HEAD
 - `ai.ts`: Gemini 모델 호출 및 자연어 파싱
 - `ai-report.ts`: `AIReportService` — 거래 데이터 집계 후 Gemini로 재무 리포트 생성
 - `chat.ts`: `saveMessage`, `getChatHistory`, `clearChatHistory` — `chat_messages` 테이블 CRUD
+=======
+- `ai.ts`: Gemini 모델 호출
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 - `messages.ts`: 한국어 응답 메시지 생성
 - `validation.ts`: Zod 기반 입력 검증
 
 #### `tests/*`
 
+<<<<<<< HEAD
 - `tests/fixtures/test-data.ts`: 테스트 전용 공용 픽스처 데이터
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 - `tests/routes/*`: 라우트 단위 테스트
 - `tests/services/*`: 서비스 함수 단위 테스트
 
@@ -383,23 +425,35 @@ sequenceDiagram
 
 ### AI 관련 파일 분리 원칙
 
+<<<<<<< HEAD
 - `routes/ai.ts`: 요청 orchestration, 최종 DB 작업, 채팅 히스토리 엔드포인트
 - `services/ai.ts`: Gemini 모델 호출과 JSON 파싱 (`parseUserInput`)
 - `services/ai-report.ts`: `AIReportService` — 거래 집계 + Gemini 2차 호출로 리포트 생성
 - `services/chat.ts`: 채팅 메시지 저장/조회/삭제 (`saveMessage`, `getChatHistory`, `clearChatHistory`)
+=======
+- `routes/ai.ts`: 요청 orchestration과 최종 DB 작업
+- `services/ai.ts`: Gemini 모델 호출과 JSON 파싱
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 - `services/validation.ts`: Zod 기반 구조 검증과 보조 검증
 - `services/messages.ts`: 한국어 응답 포맷 통일
 - `types/ai.ts`: 액션 타입과 payload 타입 정의
 
 ## 8. 데이터 모델
 
+<<<<<<< HEAD
 현재 DB 스키마는 `users`, `transactions`, `chat_messages` 세 테이블입니다.
+=======
+현재 DB 스키마는 `users`, `transactions` 두 테이블입니다.
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 | 테이블 | 주요 컬럼 | 설명 |
 | --- | --- | --- |
 | `users` | `id`, `email`, `name`, `avatar_url`, `provider`, `created_at` | OAuth 로그인 사용자 저장 |
 | `transactions` | `id`, `user_id`, `type`, `amount`, `category`, `memo`, `date`, `created_at`, `deleted_at` | 가계부 거래 저장, soft delete 지원 |
+<<<<<<< HEAD
 | `chat_messages` | `id`, `user_id`, `role`, `content`, `metadata`, `created_at` | AI 대화 기록 저장 |
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 ### 스키마 포인트
 
@@ -407,9 +461,12 @@ sequenceDiagram
 - `transactions.type`은 `income` 또는 `expense`만 허용합니다.
 - 날짜는 문자열 `YYYY-MM-DD` 형식으로 저장합니다.
 - `deletedAt`이 `null`이면 활성 거래, 값이 있으면 삭제된 거래입니다.
+<<<<<<< HEAD
 - `chat_messages.userId`는 `users.id`를 참조합니다.
 - `chat_messages.role`은 `user` 또는 `assistant`만 허용합니다.
 - `chat_messages.metadata`는 JSON 문자열로 저장되며, 리포트 액션의 경우 전체 리포트 데이터를 포함합니다.
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 ## 9. 설정 파일과 환경 변수
 
@@ -438,6 +495,7 @@ sequenceDiagram
 | `src/middleware/auth.test.ts` | `verifyJWT()` 단위 테스트 |
 | `tests/routes/ai.test.ts` | AI 액션 라우트 동작 검증 |
 | `tests/routes/transactions.test.ts` | undo 관련 동작 기대값 검증 |
+<<<<<<< HEAD
 | `tests/services/ai.test.ts` | `AIService.parseUserInput()` 파싱 및 에러 처리 검증 |
 | `tests/services/ai-report.test.ts` | `AIReportService.generateReport()` 리포트 생성 검증 |
 | `tests/services/chat.test.ts` | `saveMessage`, `getChatHistory`, `clearChatHistory` 검증 |
@@ -683,5 +741,11 @@ npm test tests/routes/ai.test.ts  # 특정 파일만
 ---
 
 ## 14. 현재 구조 한 줄 요약
+=======
+| `tests/services/messages.test.ts` | 메시지 생성 함수 검증 |
+| `tests/services/validation.test.ts` | Zod 검증 및 보조 검증 함수 검증 |
+
+## 11. 현재 구조 한 줄 요약
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 현재 FastSaaS 백엔드는 "Cloudflare Workers 위의 Hono 앱" 안에서, 인증된 사용자의 요청을 `routes -> services -> db` 구조로 흘려 보내고, AI 입력은 별도의 `services/ai.ts` 레이어를 통해 Gemini와 연결하는 형태로 정리되어 있습니다.

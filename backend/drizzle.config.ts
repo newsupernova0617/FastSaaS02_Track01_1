@@ -1,4 +1,5 @@
 import { defineConfig } from 'drizzle-kit';
+<<<<<<< HEAD
 import { readFileSync } from 'fs';
 
 // .dev.vars 파일에서 환경변수 로드 (drizzle-kit은 wrangler의 .dev.vars를 자동으로 읽지 않음)
@@ -10,6 +11,8 @@ try {
     });
 } catch { }
 
+=======
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 export default defineConfig({
     dialect: 'turso', // libSQL 방언

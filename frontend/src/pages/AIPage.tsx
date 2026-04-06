@@ -45,7 +45,11 @@ export default function AIPage() {
       const response = await sendAIMessage(text);
 
       if (!response.success) {
+<<<<<<< HEAD
         throw new Error(response.error || 'Failed to get AI response');
+=======
+        throw new Error('Failed to get AI response');
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
       }
 
       // Add assistant response
@@ -53,7 +57,11 @@ export default function AIPage() {
         id: Math.floor(Math.random() * 1000000), // Temporary ID (will be overwritten by server)
         userId: 'current',
         role: 'assistant',
+<<<<<<< HEAD
         content: response.content || response.message || '응답을 생성하지 못했습니다.',
+=======
+        content: response.content,
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
         metadata: response.metadata,
         createdAt: new Date().toISOString(),
       };

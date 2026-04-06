@@ -5,9 +5,17 @@ import {
   validateUpdatePayload,
   validateReadPayload,
   validateDeletePayload,
+<<<<<<< HEAD
   validateAmount,
   validateDate,
 } from '../../src/services/validation';
+=======
+  validateReportPayload,
+  validateAmount,
+  validateDate,
+} from '../../src/services/validation';
+import { ZodError } from 'zod';
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 describe('Validation Schemas', () => {
   describe('validateAIResponse', () => {
@@ -403,4 +411,325 @@ describe('Validation Schemas', () => {
       expect(() => validateDate('2024-13-01')).toThrow();
     });
   });
+<<<<<<< HEAD
+=======
+
+  describe('validateReportPayload', () => {
+    describe('Valid ReportPayload Tests', () => {
+      it('should accept valid reportType (monthly_summary)', () => {
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+        });
+        expect(result.reportType).toBe('monthly_summary');
+      });
+
+      it('should accept valid reportType (category_detail)', () => {
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+        });
+        expect(result.reportType).toBe('category_detail');
+      });
+
+      it('should accept valid reportType (spending_pattern)', () => {
+        const result = validateReportPayload({
+          reportType: 'spending_pattern',
+        });
+        expect(result.reportType).toBe('spending_pattern');
+      });
+
+      it('should accept valid reportType (anomaly)', () => {
+        const result = validateReportPayload({
+          reportType: 'anomaly',
+        });
+        expect(result.reportType).toBe('anomaly');
+      });
+
+      it('should accept valid reportType (suggestion)', () => {
+        const result = validateReportPayload({
+          reportType: 'suggestion',
+        });
+        expect(result.reportType).toBe('suggestion');
+      });
+
+      it('should accept valid reportType with month in YYYY-MM format', () => {
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {
+            month: '2024-03',
+          },
+        });
+        expect(result.reportType).toBe('monthly_summary');
+        expect(result.params?.month).toBe('2024-03');
+      });
+
+      it('should accept valid reportType with category filter', () => {
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+          params: {
+            category: 'food',
+          },
+        });
+        expect(result.reportType).toBe('category_detail');
+        expect(result.params?.category).toBe('food');
+      });
+
+      it('should accept both month and category parameters together', () => {
+        const result = validateReportPayload({
+          reportType: 'spending_pattern',
+          params: {
+            month: '2026-04',
+            category: 'entertainment',
+          },
+        });
+        expect(result.reportType).toBe('spending_pattern');
+        expect(result.params?.month).toBe('2026-04');
+        expect(result.params?.category).toBe('entertainment');
+      });
+
+      it('should accept reportType without params', () => {
+        const result = validateReportPayload({
+          reportType: 'anomaly',
+        });
+        expect(result.reportType).toBe('anomaly');
+        expect(result.params).toEqual({});
+      });
+    });
+
+    describe('Invalid Format Tests', () => {
+      it('should reject invalid month format (YYYY-MM-DD) with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'monthly_summary',
+            params: {
+              month: '2026-04-01',
+            },
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should accept numeric month format (2026-13) even if semantically invalid', () => {
+        // Note: Zod regex only validates YYYY-MM format, not semantic validity
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {
+            month: '2026-13',
+          },
+        });
+        expect(result.params?.month).toBe('2026-13');
+      });
+
+      it('should accept numeric month format (2026-00) even if semantically invalid', () => {
+        // Note: Zod regex only validates YYYY-MM format, not semantic validity
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {
+            month: '2026-00',
+          },
+        });
+        expect(result.params?.month).toBe('2026-00');
+      });
+
+      it('should reject invalid month format (2026/04) with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'monthly_summary',
+            params: {
+              month: '2026/04',
+            },
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should reject incomplete month format (just year) with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'monthly_summary',
+            params: {
+              month: '2026',
+            },
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should reject invalid reportType with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'invalid_report',
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should reject invalid reportType (lowercase) with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'Monthly_Summary',
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should reject missing reportType field with ZodError', () => {
+        expect(() => {
+          validateReportPayload({
+            params: {
+              month: '2026-04',
+            },
+          });
+        }).toThrow(ZodError);
+      });
+    });
+
+    describe('Optional Parameters Tests', () => {
+      it('should accept empty params object', () => {
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {},
+        });
+        expect(result.params).toEqual({});
+      });
+
+      it('should accept undefined params and default to empty object', () => {
+        const result = validateReportPayload({
+          reportType: 'anomaly',
+        });
+        expect(result.params).toEqual({});
+      });
+
+      it('should accept only month parameter without category', () => {
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+          params: {
+            month: '2024-12',
+          },
+        });
+        expect(result.params?.month).toBe('2024-12');
+        expect(result.params?.category).toBeUndefined();
+      });
+
+      it('should accept only category parameter without month', () => {
+        const result = validateReportPayload({
+          reportType: 'spending_pattern',
+          params: {
+            category: 'transport',
+          },
+        });
+        expect(result.params?.category).toBe('transport');
+        expect(result.params?.month).toBeUndefined();
+      });
+    });
+
+    describe('Error Message Tests', () => {
+      it('should throw ZodError with proper message for invalid reportType', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'unknown_type',
+          });
+        }).toThrow();
+      });
+
+      it('should throw ZodError when required reportType is missing', () => {
+        expect(() => {
+          validateReportPayload({
+            params: { month: '2026-04' },
+          });
+        }).toThrow();
+      });
+
+      it('should throw ZodError with proper message for invalid month format', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'monthly_summary',
+            params: {
+              month: '2026-4',
+            },
+          });
+        }).toThrow();
+      });
+    });
+
+    describe('Type Validation Tests', () => {
+      it('should validate non-string reportType correctly', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 123,
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should validate non-string month correctly', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'monthly_summary',
+            params: {
+              month: 202604,
+            },
+          });
+        }).toThrow(ZodError);
+      });
+
+      it('should validate non-string category correctly', () => {
+        expect(() => {
+          validateReportPayload({
+            reportType: 'category_detail',
+            params: {
+              category: 123,
+            },
+          });
+        }).toThrow(ZodError);
+      });
+    });
+
+    describe('Edge Case Tests', () => {
+      it('should accept month with leading zeros in valid format', () => {
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {
+            month: '2026-01',
+          },
+        });
+        expect(result.params?.month).toBe('2026-01');
+      });
+
+      it('should accept month with December (12)', () => {
+        const result = validateReportPayload({
+          reportType: 'monthly_summary',
+          params: {
+            month: '2026-12',
+          },
+        });
+        expect(result.params?.month).toBe('2026-12');
+      });
+
+      it('should accept category with various strings', () => {
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+          params: {
+            category: 'Food & Drinks',
+          },
+        });
+        expect(result.params?.category).toBe('Food & Drinks');
+      });
+
+      it('should accept empty string as category', () => {
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+          params: {
+            category: '',
+          },
+        });
+        expect(result.params?.category).toBe('');
+      });
+
+      it('should accept very long category string', () => {
+        const longCategory = 'a'.repeat(500);
+        const result = validateReportPayload({
+          reportType: 'category_detail',
+          params: {
+            category: longCategory,
+          },
+        });
+        expect(result.params?.category).toBe(longCategory);
+      });
+    });
+  });
+>>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 });
