@@ -197,19 +197,26 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
 
     return Column(
       children: [
-        Expanded(
-          child: allMessages.isEmpty
-              ? _buildEmptyState()
-              : ListView.builder(
-                  controller: _scrollController,
-                  itemCount: allMessages.length,
-                  itemBuilder: (context, index) {
-                    final message = allMessages[index];
-                    return ChatBubble(
-                      message: message,
-                    );
-                  },
-                ),
+        RefreshIndicator(
+          onRefresh: () async {
+            setState(() => _optimisticMessages.clear());
+            ref.invalidate(getChatHistoryProvider);
+            await ref.read(getChatHistoryProvider.future);
+          },
+          child: Expanded(
+            child: allMessages.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    controller: _scrollController,
+                    itemCount: allMessages.length,
+                    itemBuilder: (context, index) {
+                      final message = allMessages[index];
+                      return ChatBubble(
+                        message: message,
+                      );
+                    },
+                  ),
+          ),
         ),
         ChatInput(
           onSend: _handleSendMessage,
