@@ -206,9 +206,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
                   itemBuilder: (context, index) {
                     final message = allMessages[index];
                     return ChatBubble(
-                      message: message.content,
-                      isUser: message.role == 'user',
-                      timestamp: DateTime.parse(message.createdAt),
+                      message: message,
                     );
                   },
                 ),
