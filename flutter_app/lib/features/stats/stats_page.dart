@@ -142,7 +142,21 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             ),
             const SizedBox(height: 12),
             _buildCategoryBreakdown(expenseSummary, totalExpense, categoryColors),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+          ],
+
+          // Income Chart Section
+          if (incomeSummary.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                '수입 내역',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildIncomeChart(incomeSummary, categoryColors),
+            const SizedBox(height: 32),
           ],
 
           // Income Category Breakdown
@@ -150,7 +164,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                '수입 카테고리',
+                '수입 카테고리 상세',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
@@ -262,6 +276,30 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     Map<String, Color> categoryColors,
   ) {
     final pieChartData = _buildPieChartData(expenseSummary, categoryColors);
+
+    return SizedBox(
+      height: 300,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: PieChart(
+            PieChartData(
+              sections: pieChartData,
+              centerSpaceRadius: 60,
+              sectionsSpace: 2,
+              startDegreeOffset: -90,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIncomeChart(
+    List<SummaryRow> incomeSummary,
+    Map<String, Color> categoryColors,
+  ) {
+    final pieChartData = _buildPieChartData(incomeSummary, categoryColors);
 
     return SizedBox(
       height: 300,

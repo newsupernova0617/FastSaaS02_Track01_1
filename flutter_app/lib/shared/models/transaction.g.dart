@@ -9,23 +9,23 @@ part of 'transaction.dart';
 _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
     _$TransactionImpl(
       id: (json['id'] as num).toInt(),
-      userId: json['user_id'] as String,
+      userId: json['userId'] as String,
       type: json['type'] as String,
       amount: json['amount'] as num,
-      category: json['category'] as String,
-      description: json['memo'] as String?,
+      category: json['category'] as String?,
+      memo: json['memo'] as String?,
       date: json['date'] as String,
-      createdAt: json['created_at'] as String,
+      createdAt: json['createdAt'] as String,
     );
 
 Map<String, dynamic> _$$TransactionImplToJson(_$TransactionImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'user_id': instance.userId,
+      'userId': instance.userId,
       'type': instance.type,
       'amount': instance.amount,
       'category': instance.category,
-      'memo': instance.description,
+      'memo': instance.memo,
       'date': instance.date,
-      'created_at': instance.createdAt,
+      'createdAt': instance.createdAt,
     };

@@ -9,19 +9,19 @@ part of 'chat_message.dart';
 _$ChatMessageImpl _$$ChatMessageImplFromJson(Map<String, dynamic> json) =>
     _$ChatMessageImpl(
       id: (json['id'] as num).toInt(),
-      userId: json['user_id'] as String,
+      userId: json['userId'] as String?,
       role: json['role'] as String,
       content: json['content'] as String,
       metadata: json['metadata'] as Map<String, dynamic>?,
-      createdAt: json['created_at'] as String,
+      createdAt: json['createdAt'] as String,
     );
 
 Map<String, dynamic> _$$ChatMessageImplToJson(_$ChatMessageImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'user_id': instance.userId,
+      'userId': instance.userId,
       'role': instance.role,
       'content': instance.content,
       'metadata': instance.metadata,
-      'created_at': instance.createdAt,
+      'createdAt': instance.createdAt,
     };

@@ -22,15 +22,15 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Transaction {
   int get id => throw _privateConstructorUsedError;
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'userId')
   String get userId => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError; // 'income' | 'expense'
   num get amount => throw _privateConstructorUsedError;
-  String get category => throw _privateConstructorUsedError;
+  String? get category => throw _privateConstructorUsedError;
   @JsonKey(name: 'memo')
-  String? get description => throw _privateConstructorUsedError;
+  String? get memo => throw _privateConstructorUsedError;
   String get date => throw _privateConstructorUsedError; // YYYY-MM-DD
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   String get createdAt => throw _privateConstructorUsedError;
 
   /// Serializes this Transaction to a JSON map.
@@ -52,13 +52,13 @@ abstract class $TransactionCopyWith<$Res> {
   @useResult
   $Res call({
     int id,
-    @JsonKey(name: 'user_id') String userId,
+    @JsonKey(name: 'userId') String userId,
     String type,
     num amount,
-    String category,
-    @JsonKey(name: 'memo') String? description,
+    String? category,
+    @JsonKey(name: 'memo') String? memo,
     String date,
-    @JsonKey(name: 'created_at') String createdAt,
+    @JsonKey(name: 'createdAt') String createdAt,
   });
 }
 
@@ -81,8 +81,8 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
     Object? userId = null,
     Object? type = null,
     Object? amount = null,
-    Object? category = null,
-    Object? description = freezed,
+    Object? category = freezed,
+    Object? memo = freezed,
     Object? date = null,
     Object? createdAt = null,
   }) {
@@ -104,13 +104,13 @@ class _$TransactionCopyWithImpl<$Res, $Val extends Transaction>
                 ? _value.amount
                 : amount // ignore: cast_nullable_to_non_nullable
                       as num,
-            category: null == category
+            category: freezed == category
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
-                      as String,
-            description: freezed == description
-                ? _value.description
-                : description // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            memo: freezed == memo
+                ? _value.memo
+                : memo // ignore: cast_nullable_to_non_nullable
                       as String?,
             date: null == date
                 ? _value.date
@@ -137,13 +137,13 @@ abstract class _$$TransactionImplCopyWith<$Res>
   @useResult
   $Res call({
     int id,
-    @JsonKey(name: 'user_id') String userId,
+    @JsonKey(name: 'userId') String userId,
     String type,
     num amount,
-    String category,
-    @JsonKey(name: 'memo') String? description,
+    String? category,
+    @JsonKey(name: 'memo') String? memo,
     String date,
-    @JsonKey(name: 'created_at') String createdAt,
+    @JsonKey(name: 'createdAt') String createdAt,
   });
 }
 
@@ -165,8 +165,8 @@ class __$$TransactionImplCopyWithImpl<$Res>
     Object? userId = null,
     Object? type = null,
     Object? amount = null,
-    Object? category = null,
-    Object? description = freezed,
+    Object? category = freezed,
+    Object? memo = freezed,
     Object? date = null,
     Object? createdAt = null,
   }) {
@@ -188,13 +188,13 @@ class __$$TransactionImplCopyWithImpl<$Res>
             ? _value.amount
             : amount // ignore: cast_nullable_to_non_nullable
                   as num,
-        category: null == category
+        category: freezed == category
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
-                  as String,
-        description: freezed == description
-            ? _value.description
-            : description // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        memo: freezed == memo
+            ? _value.memo
+            : memo // ignore: cast_nullable_to_non_nullable
                   as String?,
         date: null == date
             ? _value.date
@@ -214,13 +214,13 @@ class __$$TransactionImplCopyWithImpl<$Res>
 class _$TransactionImpl implements _Transaction {
   const _$TransactionImpl({
     required this.id,
-    @JsonKey(name: 'user_id') required this.userId,
+    @JsonKey(name: 'userId') required this.userId,
     required this.type,
     required this.amount,
-    required this.category,
-    @JsonKey(name: 'memo') required this.description,
+    this.category,
+    @JsonKey(name: 'memo') this.memo,
     required this.date,
-    @JsonKey(name: 'created_at') required this.createdAt,
+    @JsonKey(name: 'createdAt') required this.createdAt,
   });
 
   factory _$TransactionImpl.fromJson(Map<String, dynamic> json) =>
@@ -229,7 +229,7 @@ class _$TransactionImpl implements _Transaction {
   @override
   final int id;
   @override
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'userId')
   final String userId;
   @override
   final String type;
@@ -237,20 +237,20 @@ class _$TransactionImpl implements _Transaction {
   @override
   final num amount;
   @override
-  final String category;
+  final String? category;
   @override
   @JsonKey(name: 'memo')
-  final String? description;
+  final String? memo;
   @override
   final String date;
   // YYYY-MM-DD
   @override
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   final String createdAt;
 
   @override
   String toString() {
-    return 'Transaction(id: $id, userId: $userId, type: $type, amount: $amount, category: $category, description: $description, date: $date, createdAt: $createdAt)';
+    return 'Transaction(id: $id, userId: $userId, type: $type, amount: $amount, category: $category, memo: $memo, date: $date, createdAt: $createdAt)';
   }
 
   @override
@@ -264,8 +264,7 @@ class _$TransactionImpl implements _Transaction {
             (identical(other.amount, amount) || other.amount == amount) &&
             (identical(other.category, category) ||
                 other.category == category) &&
-            (identical(other.description, description) ||
-                other.description == description) &&
+            (identical(other.memo, memo) || other.memo == memo) &&
             (identical(other.date, date) || other.date == date) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
@@ -280,7 +279,7 @@ class _$TransactionImpl implements _Transaction {
     type,
     amount,
     category,
-    description,
+    memo,
     date,
     createdAt,
   );
@@ -302,13 +301,13 @@ class _$TransactionImpl implements _Transaction {
 abstract class _Transaction implements Transaction {
   const factory _Transaction({
     required final int id,
-    @JsonKey(name: 'user_id') required final String userId,
+    @JsonKey(name: 'userId') required final String userId,
     required final String type,
     required final num amount,
-    required final String category,
-    @JsonKey(name: 'memo') required final String? description,
+    final String? category,
+    @JsonKey(name: 'memo') final String? memo,
     required final String date,
-    @JsonKey(name: 'created_at') required final String createdAt,
+    @JsonKey(name: 'createdAt') required final String createdAt,
   }) = _$TransactionImpl;
 
   factory _Transaction.fromJson(Map<String, dynamic> json) =
@@ -317,21 +316,21 @@ abstract class _Transaction implements Transaction {
   @override
   int get id;
   @override
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'userId')
   String get userId;
   @override
   String get type; // 'income' | 'expense'
   @override
   num get amount;
   @override
-  String get category;
+  String? get category;
   @override
   @JsonKey(name: 'memo')
-  String? get description;
+  String? get memo;
   @override
   String get date; // YYYY-MM-DD
   @override
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'createdAt')
   String get createdAt;
 
   /// Create a copy of Transaction

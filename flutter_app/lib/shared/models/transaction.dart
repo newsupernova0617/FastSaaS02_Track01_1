@@ -7,13 +7,13 @@ part 'transaction.g.dart';
 class Transaction with _$Transaction {
   const factory Transaction({
     required int id,
-    @JsonKey(name: 'user_id') required String userId,
+    @JsonKey(name: 'userId') required String userId,
     required String type, // 'income' | 'expense'
     required num amount,
-    required String category,
-    @JsonKey(name: 'memo') required String? description,
+    String? category,
+    @JsonKey(name: 'memo') String? memo,
     required String date, // YYYY-MM-DD
-    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'createdAt') required String createdAt,
   }) = _Transaction;
 
   factory Transaction.fromJson(Map<String, dynamic> json) =>

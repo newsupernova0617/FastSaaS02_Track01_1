@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
@@ -20,6 +21,18 @@ class App extends StatelessWidget {
             title: 'Mingun',
             theme: AppTheme.lightTheme,
             routerConfig: goRouter,
+            // Disable keyboard animation on web to prevent ViewInsets assertion error
+            builder: (context, child) {
+              if (kIsWeb) {
+                return MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    viewInsets: MediaQuery.of(context).viewInsets,
+                  ),
+                  child: child!,
+                );
+              }
+              return child!;
+            },
           );
         },
       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,11 +27,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     try {
-      // Use Supabase's native OAuth flow - recommended for web
+      // Use Supabase's native OAuth flow with platform-specific redirect URL
       final authService = ref.read(supabaseAuthProvider);
+
+      // 개발: Chrome(웹)과 모바일 에뮬레이터/기기 구분
+      String redirectUrl;
+      if (kIsWeb) {
+        // 웹 브라우저: localhost 주소 사용
+        redirectUrl = 'http://localhost:5173/auth/callback';
+      } else {
+        // 모바일 앱: 커스텀 스킴 사용
+        redirectUrl = 'com.fastsaas02.app://auth/callback';
+      }
+
       await authService.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'http://localhost:3000/#/auth/callback',
+        redirectTo: redirectUrl,
       );
 
       if (mounted) {

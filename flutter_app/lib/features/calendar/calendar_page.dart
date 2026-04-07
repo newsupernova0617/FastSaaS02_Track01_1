@@ -89,7 +89,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   }
 
   /// Get category color based on type and category name
-  Color _getCategoryColor(String type, String category) {
+  Color _getCategoryColor(String type, String? category) {
     if (type == 'expense') {
       return AppTheme.expenseColor;
     } else {
@@ -98,7 +98,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   }
 
   /// Get category emoji/icon representation
-  String _getCategoryEmoji(String category) {
+  String _getCategoryEmoji(String? category) {
     const categoryEmojis = {
       '식비': '🍽️',
       '교통': '🚗',
@@ -283,42 +283,48 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                           },
                           selectedBuilder: (context, day, focusedDay) {
                             final indicators = _getIndicatorColors(day, monthTransactions);
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${day.day}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (indicators.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 4),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: indicators
-                                          .asMap()
-                                          .entries
-                                          .map(
-                                            (e) => Container(
-                                              width: 4,
-                                              height: 4,
-                                              margin: const EdgeInsets.symmetric(
-                                                horizontal: 1,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withValues(alpha: 0.8),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
+                            return Container(
+                              decoration: const BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${day.day}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                              ],
+                                  if (indicators.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: indicators
+                                            .asMap()
+                                            .entries
+                                            .map(
+                                              (e) => Container(
+                                                width: 4,
+                                                height: 4,
+                                                margin: const EdgeInsets.symmetric(
+                                                  horizontal: 1,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white.withValues(alpha: 0.8),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             );
                           },
                           todayBuilder: (context, day, focusedDay) {
@@ -557,7 +563,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                transaction.category,
+                                                transaction.category ?? '기타',
                                                 style: const TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w600,
@@ -579,10 +585,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                           ],
                                         ),
                                         const SizedBox(height: 4),
-                                        if (transaction.description != null &&
-                                            transaction.description!.isNotEmpty)
+                                        if (transaction.memo != null &&
+                                            transaction.memo!.isNotEmpty)
                                           Text(
-                                            transaction.description!,
+                                            transaction.memo!,
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: Colors.black54,

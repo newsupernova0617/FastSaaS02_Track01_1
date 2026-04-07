@@ -143,6 +143,8 @@ async function callWorkersAI(
   ai: any // Cloudflare Workers AI binding from Env
 ): Promise<string> {
   console.log('[Workers AI Call] Starting request to Cloudflare Workers AI');
+  console.log('[Workers AI Call] Model:', config.modelName);
+  console.log('[Workers AI Call] Messages count:', messages.length);
 
   // Format messages for Cloudflare Workers AI
   const formattedMessages = messages.map((m) => ({
@@ -156,16 +158,22 @@ async function callWorkersAI(
       max_tokens: 1024,
     });
 
+    console.log('[Workers AI Call] Raw response:', response);
+
     // Extract text from response
     const text = response.result?.response || response?.response;
     if (!text) {
+      console.error('[Workers AI Error] No text extracted from response:', response);
       throw new Error('No response from Workers AI');
     }
+
+    console.log('[Workers AI Call] Extracted text:', text);
     return text;
   } catch (error) {
     console.error('[Workers AI Error]', {
       model: config.modelName,
       error: error instanceof Error ? error.message : String(error),
+      fullError: error,
     });
     throw new Error(`Workers AI error: ${error instanceof Error ? error.message : String(error)}`);
   }
