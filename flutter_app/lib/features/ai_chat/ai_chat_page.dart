@@ -31,7 +31,7 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
 
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
+      if (_scrollController.hasClients && _scrollController.position != null) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
@@ -197,13 +197,13 @@ class _AIChatPageState extends ConsumerState<AIChatPage> {
 
     return Column(
       children: [
-        RefreshIndicator(
-          onRefresh: () async {
-            setState(() => _optimisticMessages.clear());
-            ref.invalidate(getChatHistoryProvider);
-            await ref.read(getChatHistoryProvider.future);
-          },
-          child: Expanded(
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              setState(() => _optimisticMessages.clear());
+              ref.invalidate(getChatHistoryProvider);
+              await ref.read(getChatHistoryProvider.future);
+            },
             child: allMessages.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(

@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class LoggingInterceptor extends Interceptor {
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final fullUrl = '${options.baseUrl}${options.path}';
     _log('REQUEST', options.method, options.path,
-        headers: options.headers, data: options.data);
+        headers: options.headers, data: options.data, fullUrl: fullUrl);
     handler.next(options);
   }
 
@@ -26,9 +27,10 @@ class LoggingInterceptor extends Interceptor {
   }
 
   void _log(String type, String method, String path,
-      {int? statusCode, Map<String, dynamic>? headers, dynamic data, String? error}) {
+      {int? statusCode, Map<String, dynamic>? headers, dynamic data, String? error, String? fullUrl}) {
     final buffer = StringBuffer();
     buffer.writeln('[\t$type\t] $method $path');
+    if (fullUrl != null) buffer.writeln('Full URL: $fullUrl');
     if (statusCode != null) buffer.writeln('Status Code: $statusCode');
     if (headers != null && headers.isNotEmpty) {
       buffer.writeln('Headers:');

@@ -206,9 +206,12 @@ class ApiClient {
 
 /// Provider for Dio instance
 final dioProvider = Provider<Dio>((ref) {
+  final baseUrl = AppConstants.apiBaseUrl;
+  print('[DIO] Base URL: $baseUrl');
+
   final dio = Dio(
     BaseOptions(
-      baseUrl: AppConstants.apiBaseUrl,
+      baseUrl: baseUrl,
       connectTimeout: Duration(seconds: AppConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: AppConstants.apiTimeoutSeconds),
       contentType: Headers.jsonContentType,

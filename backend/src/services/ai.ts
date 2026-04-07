@@ -6,7 +6,8 @@ import { callLLM, type LLMConfig } from './llm';
 const SYSTEM_PROMPT = `You are a budget transaction assistant. Users write in natural language (Korean),
 and you extract/modify financial transactions or request financial analysis.
 
-Always respond with valid JSON. No explanations, no markdown.
+CRITICAL: Return ONLY a valid JSON object. Do not wrap the JSON in quotes. Do not return JSON as a string.
+Output must be parseable by JSON.parse(). No explanations, no markdown, no extra text.
 
 Payload schemas for each type:
 
@@ -62,7 +63,7 @@ export class AIService {
     const recentTxsFormatted = recentTransactions
       .map(
         (t) =>
-          `- ${t.date}: ${t.type === 'income' ? '수입' : '지출'} ₩${t.amount} (${t.category}) - ${t.memo || 'no memo'}`
+          `- [id:${t.id}] ${t.date}: ${t.type === 'income' ? '수입' : '지출'} ₩${t.amount} (${t.category}) - ${t.memo || 'no memo'}`
       )
       .join('\n');
 
@@ -83,11 +84,14 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
         this.ai
       );
 
-      const parsed = JSON.parse(responseText);
+      // Extract first JSON object from response (model may return extra text)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found in response');
+      const parsed = JSON.parse(jsonMatch[0]);
 
       // Ensure confidence field is present (some models may not include it)
       if (!parsed.confidence) {
-        parsed.confidence = 0.9; // Default confidence if not provided
+        parsed.confidence = 0.9;
       }
 
       return validateAIResponse(parsed);

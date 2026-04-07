@@ -1,5 +1,0 @@
-@import "tailwindcss";
-
-/* Preflight에 없는 것만 추가 */
-button { cursor: pointer; }     /* Preflight 미포함 */
-body { background: #f0f0f5; }   /* 앱 배경색 */
