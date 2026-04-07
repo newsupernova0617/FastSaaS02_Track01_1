@@ -301,6 +301,85 @@ class ApiClient {
     }
   }
 
+  /// Get all sessions for the current user
+  /// GET /api/sessions
+  Future<Map<String, dynamic>> getSessions() async {
+    try {
+      final response = await _dio.get('/sessions');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Create a new session
+  /// POST /api/sessions
+  /// Returns the ID of the created session
+  Future<int> createSession(String title) async {
+    try {
+      final response = await _dio.post(
+        '/sessions',
+        data: {'title': title},
+      );
+
+      if (response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final sessionData = responseData['session'] as Map<String, dynamic>;
+        return sessionData['id'] as int;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Rename an existing session
+  /// PATCH /api/sessions/:id
+  Future<void> renameSession(int sessionId, String newTitle) async {
+    try {
+      final response = await _dio.patch(
+        '/sessions/$sessionId',
+        data: {'title': newTitle},
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Delete a session
+  /// DELETE /api/sessions/:id
+  Future<void> deleteSession(int sessionId) async {
+    try {
+      final response = await _dio.delete('/sessions/$sessionId');
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Format DateTime to YYYY-MM-DD
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
