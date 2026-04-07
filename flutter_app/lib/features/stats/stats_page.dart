@@ -66,7 +66,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         elevation: 0,
       ),
       body: summaryAsync.when(
-        data: (summary) => _buildContent(context, summary),
+        data: (summary) => _buildContent(context, summary, ref, monthString),
         loading: () => const Center(
           child: CircularProgressIndicator(),
         ),
@@ -90,7 +90,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     );
   }
 
-  Widget _buildContent(BuildContext context, List<SummaryRow> summary) {
+  Widget _buildContent(BuildContext context, List<SummaryRow> summary, WidgetRef ref, String monthString) {
     // Calculate totals
     final expenseSummary = summary.where((s) => s.type == 'expense').toList();
     final incomeSummary = summary.where((s) => s.type == 'income').toList();
@@ -102,8 +102,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     // Get category colors
     final categoryColors = _getCategoryColors();
 
-    return SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(summaryProvider(monthString));
+        await ref.read(summaryProvider(monthString).future);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
         children: [
           // Month Navigation
           _buildMonthNavigation(context),
@@ -214,6 +220,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             ),
         ],
       ),
+        ),
     );
   }
 
