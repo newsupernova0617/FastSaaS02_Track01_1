@@ -67,14 +67,6 @@ function buildMetadata(
   };
 }
 
-async function saveAssistantReply(
-  db: any,
-  userId: string,
-  message: string,
-  metadata?: Record<string, unknown>
-): Promise<void> {
-  await saveMessage(db, userId, 'assistant', message, metadata);
-}
 
 // POST /api/ai/action
 router.post('/action', async (c) => {
@@ -180,7 +172,7 @@ router.post('/action', async (c) => {
             totalAmount: results.reduce((sum, t) => sum + t.amount, 0),
           },
         });
-        await saveAssistantReply(db, userId, message, metadata);
+        await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);
 
         return c.json({
           success: true,
@@ -258,7 +250,7 @@ router.post('/action', async (c) => {
             totalAmount: results.reduce((sum, t) => sum + t.amount, 0),
           },
         });
-        await saveAssistantReply(db, userId, message, metadata);
+        await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);
 
         return c.json({
           success: true,
@@ -306,7 +298,7 @@ router.post('/action', async (c) => {
             count: results.length,
           },
         });
-        await saveAssistantReply(db, userId, message, metadata);
+        await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);
 
         return c.json({
           success: true,
@@ -362,7 +354,7 @@ router.post('/action', async (c) => {
             totalAmount: existing.reduce((sum, t) => sum + t.amount, 0),
           },
         });
-        await saveAssistantReply(db, userId, message, metadata);
+        await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);
 
         return c.json({
           success: true,
@@ -395,7 +387,7 @@ router.post('/action', async (c) => {
         };
 
         // Save assistant message to database
-        await saveAssistantReply(db, userId, content, responseMetadata);
+        await saveMessageToSession(db, userId, sessionId, 'assistant', content, responseMetadata);
 
         return c.json({
           success: true,
