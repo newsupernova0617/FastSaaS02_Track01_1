@@ -380,6 +380,53 @@ class ApiClient {
     }
   }
 
+  /// Get chat messages for a session
+  /// GET /api/sessions/:sessionId/messages
+  Future<List<ChatMessage>> getSessionMessages(int sessionId) async {
+    try {
+      final response = await _dio.get('/sessions/$sessionId/messages');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final messages = (data['messages'] as List)
+            .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
+            .toList();
+        return messages;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Send a chat message in a session
+  /// POST /api/sessions/:sessionId/messages
+  Future<ChatMessage> sendSessionMessage(
+    int sessionId,
+    String message,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/sessions/$sessionId/messages',
+        data: {'content': message},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final messageData = response.data as Map<String, dynamic>;
+        return ChatMessage.fromJson(messageData);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Format DateTime to YYYY-MM-DD
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';

@@ -9,6 +9,7 @@ import 'package:flutter_app/features/calendar/calendar_page.dart';
 import 'package:flutter_app/features/stats/stats_page.dart';
 import 'package:flutter_app/features/ai_chat/ai_chat_page.dart';
 import 'package:flutter_app/features/reports/report_detail_page.dart';
+import 'package:flutter_app/features/chat/screens/chat_screen.dart';
 
 
 /// Go Router configuration
@@ -52,6 +53,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         redirect: (context, state) => '/login',
+      ),
+
+      // Chat route
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) => const ChatScreen(),
       ),
 
       // Report detail route
