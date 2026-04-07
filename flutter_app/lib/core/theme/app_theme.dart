@@ -9,9 +9,10 @@ class AppTheme {
   static const Color errorColor = Color(0xFFEF4444);
 
   // Border radius
-  static const double borderRadiusCards = 16.0;
   static const double borderRadiusSmall = 8.0;
   static const double borderRadiusMedium = 12.0;
+  static const double borderRadiusCards = 16.0;
+  static const double borderRadiusLarge = 20.0;
 
   // ThemeData
   static ThemeData lightTheme = ThemeData(

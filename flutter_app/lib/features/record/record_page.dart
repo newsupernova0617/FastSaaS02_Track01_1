@@ -264,24 +264,27 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                     ),
               ),
               const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: const <ButtonSegment<String>>[
-                  ButtonSegment<String>(
-                    value: 'expense',
-                    label: Text('지출'), // Expense
-                  ),
-                  ButtonSegment<String>(
-                    value: 'income',
-                    label: Text('수입'), // Income
-                  ),
-                ],
-                selected: <String>{_transactionType},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _transactionType = newSelection.first;
-                    _selectedCategory = null; // Reset category on type change
-                  });
-                },
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<String>(
+                  segments: const <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: 'expense',
+                      label: Text('지출'), // Expense
+                    ),
+                    ButtonSegment<String>(
+                      value: 'income',
+                      label: Text('수입'), // Income
+                    ),
+                  ],
+                  selected: <String>{_transactionType},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    setState(() {
+                      _transactionType = newSelection.first;
+                      _selectedCategory = null; // Reset category on type change
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 24),
 

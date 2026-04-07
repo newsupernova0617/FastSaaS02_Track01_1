@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_app/shared/widgets/user_profile_button.dart';
 
 /// Shell widget that provides bottom navigation for authenticated routes
 /// Maintains bottom nav state across navigation while using ShellRoute
@@ -32,6 +33,13 @@ class _BottomNavShellState extends State<BottomNavShell> {
     final int selectedIndex = _getSelectedIndex(location);
 
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: const [
+          UserProfileButton(),
+        ],
+      ),
       body: widget.child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
