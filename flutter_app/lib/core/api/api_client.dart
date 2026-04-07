@@ -121,10 +121,7 @@ class ApiClient {
   /// POST /api/ai/action
   Future<AIActionResponse> sendAIMessage(String text) async {
     try {
-      final response = await _dio.post(
-        '/ai/action',
-        data: {'text': text},
-      );
+      final response = await _dio.post('/ai/action', data: {'text': text});
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
@@ -162,7 +159,8 @@ class ApiClient {
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
-        final messages = (responseData['messages'] as List<dynamic>?)
+        final messages =
+            (responseData['messages'] as List<dynamic>?)
                 ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [];
