@@ -35,8 +35,25 @@ export const chatMessages = sqliteTable('chat_messages', {
     createdAt: text('created_at').default(sql`(datetime('now'))`), // 메시지 생성 시간 (자동)
 });
 
+// AI 생성 리포트
+export const reports = sqliteTable('reports', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id').notNull().references(() => users.id),
+    reportType: text('report_type', {
+        enum: ['monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']
+    }).notNull(),
+    title: text('title').notNull(),
+    subtitle: text('subtitle'),
+    reportData: text('report_data').notNull(), // JSON string
+    params: text('params').notNull(), // JSON string
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type NewChatMessage = typeof chatMessages.$inferInsert;
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;
