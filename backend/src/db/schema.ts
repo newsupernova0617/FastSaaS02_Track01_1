@@ -66,7 +66,7 @@ export interface ClarificationState {
     memo?: string;
     date?: string;
   };
-  messageId: number;                // ID of AI's clarification message
+  messageId: string;                // ID of AI's clarification message
 }
 
 // AI 생성 리포트
