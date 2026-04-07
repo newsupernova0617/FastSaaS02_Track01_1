@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
+import '../../shared/providers/report_provider.dart';
+import '../reports/report_list_item.dart';
 
 class StatsPage extends ConsumerStatefulWidget {
   const StatsPage({Key? key}) : super(key: key);
@@ -60,31 +62,47 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final monthString = _formatMonthYear(_selectedDate);
     final summaryAsync = ref.watch(summaryProvider(monthString));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('통계'),
-        elevation: 0,
-      ),
-      body: summaryAsync.when(
-        data: (summary) => _buildContent(context, summary, ref, monthString),
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('오류가 발생했습니다'),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('통계'),
+          elevation: 0,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: '생성'),
+              Tab(text: '저장됨'),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            // 생성 tab - existing stats content
+            summaryAsync.when(
+              data: (summary) => _buildContent(context, summary, ref, monthString),
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('오류가 발생했습니다'),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // 저장됨 tab - saved reports
+            const SavedReportsTab(),
+          ],
         ),
       ),
     );
@@ -467,5 +485,69 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       '부업': const Color(0xFF10B981),
       '용돈': const Color(0xFF8B5CF6),
     };
+  }
+}
+
+class SavedReportsTab extends ConsumerWidget {
+  const SavedReportsTab({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reportsAsync = ref.watch(getReportsProvider(
+      (month: null, limit: 50),
+    ));
+
+    return reportsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('오류: $error'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.refresh(getReportsProvider(
+                (month: null, limit: 50),
+              )),
+              child: const Text('재시도'),
+            ),
+          ],
+        ),
+      ),
+      data: (reports) {
+        if (reports.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.bookmark_outline,
+                  size: 64,
+                  color: Theme.of(context).disabledColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '저장된 리포트가 없습니다',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Chat에서 리포트를 생성하고 저장해보세요',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: reports.length,
+          itemBuilder: (context, index) => ReportListItem(
+            report: reports[index],
+          ),
+        );
+      },
+    );
   }
 }
