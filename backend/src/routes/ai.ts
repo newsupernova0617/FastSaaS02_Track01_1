@@ -6,6 +6,7 @@ import type { Variables } from '../middleware/auth';
 import type { Transaction } from '../db/schema';
 import { AIService } from '../services/ai';
 import { getLLMConfig } from '../services/llm';
+import { ContextService } from '../services/context';
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -115,6 +116,9 @@ router.post('/action', async (c) => {
 
     const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
 
+    // Initialize context service for RAG enhancement
+    const contextService = new ContextService(c.env.VECTORIZE);
+
     // Fetch user context
     const recentTransactions = await db
       .select()
@@ -176,8 +180,15 @@ router.post('/action', async (c) => {
       await clarificationService.deleteClarification(db, userId, sessionId);
     }
 
-    // Parse user input with AI
-    const action = await aiService.parseUserInput(text, recentTransactions, userCategories);
+    // Parse user input with AI and context enrichment
+    const action = await aiService.parseUserInput(
+      text,
+      recentTransactions,
+      userCategories,
+      userId,
+      contextService,
+      db
+    );
 
     // Check if AI detected a plain text query (non-financial)
     if (action.type === 'plain_text') {

@@ -84,6 +84,24 @@ export const reports = sqliteTable('reports', {
     updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
 
+// User notes for personalized context
+export const userNotes = sqliteTable('user_notes', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    userId:    text('user_id').notNull().references(() => users.id),
+    content:   text('content').notNull(),
+    embeddingId: text('embedding_id'),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+// Financial knowledge base (static, shared across users)
+export const knowledgeBase = sqliteTable('knowledge_base', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    content:   text('content').notNull(),
+    category:  text('category'),
+    embeddingId: text('embedding_id'),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -93,3 +111,7 @@ export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
+export type UserNote = typeof userNotes.$inferSelect;
+export type NewUserNote = typeof userNotes.$inferInsert;
+export type KnowledgeBaseItem = typeof knowledgeBase.$inferSelect;
+export type NewKnowledgeBaseItem = typeof knowledgeBase.$inferInsert;
