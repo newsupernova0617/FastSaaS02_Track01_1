@@ -5,6 +5,7 @@ import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/chat_message.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'package:flutter_app/shared/models/ai_action_response.dart';
+import 'package:flutter_app/shared/models/report.dart';
 import 'api_interceptor.dart';
 
 /// API Client for handling all API requests
@@ -191,6 +192,110 @@ class ApiClient {
         requestOptions: response.requestOptions,
         response: response,
       );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Save a new report to the backend
+  /// POST /api/reports
+  /// Returns the ID of the created report
+  Future<int> saveReport({
+    required String reportType,
+    required String title,
+    String? subtitle,
+    required Map<String, dynamic> reportData,
+    required Map<String, dynamic> params,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/reports',
+        data: {
+          'reportType': reportType,
+          'title': title,
+          'subtitle': subtitle,
+          'reportData': reportData,
+          'params': params,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return response.data['id'] as int;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Get list of saved reports with optional month filter
+  /// GET /api/reports?limit=50&month=YYYY-MM (optional)
+  Future<List<ReportSummary>> getReports({
+    String? month,
+    int limit = 50,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'limit': limit,
+      };
+      if (month != null) {
+        params['month'] = month;
+      }
+
+      final response = await _dio.get(
+        '/reports',
+        queryParameters: params,
+      );
+
+      if (response.statusCode == 200) {
+        final reports = (response.data['reports'] as List)
+            .map((json) => ReportSummary.fromJson(json as Map<String, dynamic>))
+            .toList();
+        return reports;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Get full details of a specific report
+  /// GET /api/reports/:id
+  Future<ReportDetail> getReportDetail(int reportId) async {
+    try {
+      final response = await _dio.get('/reports/$reportId');
+
+      if (response.statusCode == 200) {
+        final reportJson = response.data['report'] as Map<String, dynamic>;
+        return ReportDetail.fromJson(reportJson);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Delete a report by ID
+  /// DELETE /api/reports/:id
+  Future<void> deleteReport(int reportId) async {
+    try {
+      final response = await _dio.delete('/reports/$reportId');
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
     } on DioException {
       rethrow;
     }
