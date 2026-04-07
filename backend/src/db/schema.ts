@@ -50,7 +50,7 @@ export const clarificationSessions = sqliteTable('clarification_sessions', {
     id:        text('id').primaryKey(),                    // UUID, generated
     userId:    text('user_id').notNull().references(() => users.id),
     chatSessionId: integer('chat_session_id').notNull().references(() => sessions.id),
-    state:     text('state').notNull(),                    // JSON string
+    state:     text('state').notNull(),                    // JSON string: ClarificationState
     createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
