@@ -4,7 +4,9 @@ import { cors } from 'hono/cors';
 import transactions from './routes/transactions';
 import usersRoute from './routes/users';
 import aiRouter from './routes/ai';
+import reportsRouter from './routes/reports';
 import { authMiddleware } from './middleware/auth';
+import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
 import type { Variables } from './middleware/auth';
 
@@ -21,6 +23,9 @@ app.use('*', cors({
 
 }));
 
+// 로깅 미들웨어: 모든 요청/응답 기록
+app.use('*', loggingMiddleware);
+
 // /api/* 경로의 모든 요청은 JWT 검증을 거쳐야 함
 // 검증에 실패하면 401 Unauthorized 반환
 app.use('/api/*', authMiddleware);
@@ -29,6 +34,7 @@ app.use('/api/*', authMiddleware);
 app.route('/api/transactions', transactions);
 app.route('/api/users', usersRoute);
 app.route('/api/ai', aiRouter);
+app.route('/api/reports', reportsRouter);
 
 // 전역 에러 핸들러: 모든 라우트에서 발생하는 에러를 JSON으로 통일
 // ZodError (입력값 검증 실패) → 400 Bad Request
