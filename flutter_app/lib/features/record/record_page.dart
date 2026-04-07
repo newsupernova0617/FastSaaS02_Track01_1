@@ -237,12 +237,25 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         title: const Text('거래 기록'), // Record Transaction
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {
+            _transactionType = 'expense';
+            _selectedDate = DateTime.now();
+            _amountText = '';
+            _selectedCategory = null;
+            _memo = '';
+            _amountController.clear();
+            _memoController.clear();
+          });
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Type toggle (Expense/Income)
               Text(
                 '유형', // Type
@@ -464,6 +477,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               ),
               const SizedBox(height: 20),
             ],
+          ),
           ),
         ),
       ),
