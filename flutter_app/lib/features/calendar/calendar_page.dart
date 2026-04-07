@@ -204,8 +204,14 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               .toList();
           final dailyTotals = _getDailyTotals(transactions, _selectedDate);
 
-          return SingleChildScrollView(
-            child: Column(
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(transactionsProvider);
+              await ref.read(transactionsProvider(null).future);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
               children: [
                 // Calendar widget
                 Padding(
@@ -631,6 +637,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
                 const SizedBox(height: 24),
               ],
+            ),
             ),
           );
         },
