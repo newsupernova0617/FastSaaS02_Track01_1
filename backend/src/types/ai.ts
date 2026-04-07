@@ -1,15 +1,28 @@
 /** AI action types corresponding to CRUD operations and report generation */
-export type ActionType = 'create' | 'update' | 'read' | 'delete' | 'report' | 'plain_text';
+export type ActionType = 'create' | 'update' | 'read' | 'delete' | 'report' | 'clarify' | 'plain_text';
 
 /** Payload for plain text responses (non-financial queries) */
 export interface PlainTextPayload {
   // Empty - no structured data needed for plain text
 }
 
+/** Payload for clarifying ambiguous user input */
+export interface ClarifyPayload {
+  message: string;
+  missingFields: string[];
+  partialData: {
+    transactionType?: 'income' | 'expense';
+    amount?: number;
+    category?: string;
+    memo?: string;
+    date?: string;
+  };
+}
+
 /** Parsed action from AI model with confidence score */
 export interface TransactionAction {
   type: ActionType;
-  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload | ReportPayload | PlainTextPayload;
+  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload | ReportPayload | ClarifyPayload | PlainTextPayload;
   /** Confidence score 0.0-1.0 (higher = more confident) */
   confidence: number;
 }
