@@ -5,6 +5,7 @@ import { transactions } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { AIService } from '../services/ai';
 import { getLLMConfig } from '../services/llm';
+import { ContextService } from '../services/context';
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -85,6 +86,9 @@ router.post('/action', async (c) => {
 
     const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
 
+    // Initialize context service for RAG enhancement
+    const contextService = new ContextService(c.env.VECTORIZE);
+
     // Fetch user context
     const recentTransactions = await db
       .select()
@@ -100,8 +104,15 @@ router.post('/action', async (c) => {
 
     const userCategories = categoryRows.map((r: { category: string }) => r.category);
 
-    // Parse user input with AI
-    const action = await aiService.parseUserInput(text, recentTransactions, userCategories);
+    // Parse user input with AI and context enrichment
+    const action = await aiService.parseUserInput(
+      text,
+      recentTransactions,
+      userCategories,
+      userId,
+      contextService,
+      db
+    );
 
     // Execute action based on type
     switch (action.type) {

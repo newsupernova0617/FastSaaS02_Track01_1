@@ -58,7 +58,10 @@ export class AIService {
   async parseUserInput(
     userText: string,
     recentTransactions: Transaction[],
-    userCategories: string[]
+    userCategories: string[],
+    userId?: string,
+    contextService?: any,
+    db?: any
   ): Promise<TransactionAction> {
     const recentTxsFormatted = recentTransactions
       .map(
@@ -67,7 +70,7 @@ export class AIService {
       )
       .join('\n');
 
-    const contextMessage = `User said: "${userText}"
+    const baseContextMessage = `User said: "${userText}"
 
 Recent transactions (for context):
 ${recentTxsFormatted || '(none)'}
@@ -75,19 +78,61 @@ ${recentTxsFormatted || '(none)'}
 User's categories: ${userCategories.join(', ') || '(none)'}`;
 
     try {
-      const responseText = await callLLM(
+      // First, determine the action type
+      const actionDeterminationResponse = await callLLM(
         [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: contextMessage },
+          { role: 'user', content: baseContextMessage },
         ],
         this.config,
         this.ai
       );
 
-      // Extract first JSON object from response (model may return extra text)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      const jsonMatch = actionDeterminationResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON found in response');
-      const parsed = JSON.parse(jsonMatch[0]);
+      const actionResult = JSON.parse(jsonMatch[0]);
+      const actionType = actionResult.type;
+
+      // Get context for the determined action type if all dependencies available
+      let contextData = null;
+      if (contextService && userId && db) {
+        try {
+          contextData = await contextService.getContextForAction(db, userId, actionType, userText);
+        } catch (error) {
+          console.error('Failed to fetch context:', error);
+          // Continue without context on error (graceful fallback)
+        }
+      }
+
+      // Build messages array with context if available
+      const messages: any[] = [
+        { role: 'system', content: SYSTEM_PROMPT },
+      ];
+
+      // Add context as a separate system message if available
+      if (contextData?.formatted) {
+        messages.push({
+          role: 'system',
+          content: contextData.formatted,
+        });
+      }
+
+      messages.push({
+        role: 'user',
+        content: baseContextMessage,
+      });
+
+      // Make LLM call with context-enhanced messages
+      const responseText = await callLLM(
+        messages,
+        this.config,
+        this.ai
+      );
+
+      // Extract first JSON object from response (model may return extra text)
+      const finalJsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!finalJsonMatch) throw new Error('No JSON found in response');
+      const parsed = JSON.parse(finalJsonMatch[0]);
 
       // Ensure confidence field is present (some models may not include it)
       if (!parsed.confidence) {
