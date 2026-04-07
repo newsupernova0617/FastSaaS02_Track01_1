@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { getDb, Env } from '../db/index';
-import { transactions } from '../db/schema';
+import { transactions, chatMessages } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import type { Transaction } from '../db/schema';
 import { AIService } from '../services/ai';
@@ -21,6 +21,7 @@ import { saveMessage, getChatHistory, clearChatHistory, saveMessageToSession } f
 import { AIReportService } from '../services/ai-report';
 import type { ActionType } from '../types/ai';
 import { and, eq, isNull, desc, inArray, sql } from 'drizzle-orm';
+import { clarificationService } from '../services/clarifications';
 
 const PLAIN_TEXT_FALLBACK = `Hey! 👋 I'm here to help with your expense management.
 
@@ -67,6 +68,26 @@ function buildMetadata(
   };
 }
 
+/**
+ * Generate clarification question based on missing fields
+ */
+function generateClarificationQuestion(
+  partialData: Record<string, unknown>,
+  missingFields: string[]
+): string {
+  const questions: Record<string, string> = {
+    amount: '얼마를 썼나요?',
+    category: '어떤 카테고리인가요? (음식, 교통, 쇼핑, 엔터테인먼트, 유틸리티, 의료, 일, 기타)',
+    transactionType: '지출인가요, 수입인가요?',
+    date: '어느 날짜인가요?',
+  };
+
+  if (missingFields.length === 1) {
+    return questions[missingFields[0]] || `${missingFields[0]}를(을) 알려주세요.`;
+  }
+
+  return `다음 정보를 알려주세요: ${missingFields.map(f => questions[f] || f).join(', ')}`;
+}
 
 // POST /api/ai/action
 router.post('/action', async (c) => {
@@ -108,6 +129,52 @@ router.post('/action', async (c) => {
       .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)));
 
     const userCategories = categoryRows.map((r: { category: string }) => r.category);
+
+    // Check for active clarification and merge response if exists
+    let processedUserText = text;
+    const activeClarification = await clarificationService.getClarification(db, userId, sessionId);
+
+    if (activeClarification) {
+      // User is replying to a clarification question
+      const { mergedData, stillMissingFields } = await clarificationService.mergeClarificationResponse(
+        text,
+        activeClarification
+      );
+
+      // If some fields still missing, ask for another clarification
+      if (stillMissingFields.length > 0) {
+        const nextQuestion = generateClarificationQuestion(mergedData, stillMissingFields);
+
+        // Save updated clarification state
+        const updatedState = {
+          ...activeClarification,
+          missingFields: stillMissingFields,
+          partialData: mergedData,
+        };
+        await clarificationService.deleteClarification(db, userId, sessionId);
+        const newClarId = await clarificationService.saveClarification(db, userId, sessionId, updatedState);
+
+        // Add AI clarification message to chat
+        const aiMessage = await db.insert(chatMessages).values({
+          userId,
+          sessionId,
+          role: 'assistant',
+          content: nextQuestion,
+          metadata: JSON.stringify({ actionType: 'clarify', clarificationId: newClarId }),
+        }).returning();
+
+        return c.json({
+          success: true,
+          message: aiMessage[0],
+          type: 'clarify',
+          content: nextQuestion,
+          metadata: { actionType: 'clarify', clarificationId: newClarId },
+        });
+      }
+
+      // All fields provided, clear clarification and continue with normal processing
+      await clarificationService.deleteClarification(db, userId, sessionId);
+    }
 
     // Parse user input with AI
     const action = await aiService.parseUserInput(text, recentTransactions, userCategories);
@@ -395,6 +462,43 @@ router.post('/action', async (c) => {
           message: content,
           content,
           metadata: responseMetadata,
+        });
+      }
+
+      case 'clarify': {
+        // Type guard for clarify payload
+        const payload = action.payload as any;
+
+        // Save clarification state
+        const clarId = await clarificationService.saveClarification(db, userId, sessionId, {
+          missingFields: payload.missingFields,
+          partialData: payload.partialData,
+          messageId: '',
+        });
+
+        // Add AI's clarification message to chat
+        const aiMessage = await db.insert(chatMessages).values({
+          userId,
+          sessionId,
+          role: 'assistant',
+          content: payload.message,
+          metadata: JSON.stringify({
+            actionType: 'clarify',
+            clarificationId: clarId,
+            missingFields: payload.missingFields,
+          }),
+        }).returning();
+
+        return c.json({
+          success: true,
+          type: 'clarify',
+          message: payload.message,
+          content: payload.message,
+          metadata: {
+            actionType: 'clarify',
+            clarificationId: clarId,
+            missingFields: payload.missingFields,
+          },
         });
       }
 
