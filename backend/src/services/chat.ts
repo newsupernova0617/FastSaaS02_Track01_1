@@ -28,13 +28,14 @@ export async function saveMessage(
 }
 
 /**
- * Saves a user or assistant message to chat history with session tracking
+ * Saves a message to a specific session
+ * Session-aware variant of saveMessage
  * @param db - Database instance
  * @param userId - User ID
- * @param sessionId - Session ID for tracking conversation context
+ * @param sessionId - Session ID
  * @param role - 'user' or 'assistant'
  * @param content - Message content
- * @param metadata - Optional metadata (for assistant messages with report data, etc.)
+ * @param metadata - Optional metadata (for reports, etc.)
  */
 export async function saveMessageToSession(
   db: any,
@@ -44,12 +45,16 @@ export async function saveMessageToSession(
   content: string,
   metadata?: Record<string, unknown>
 ): Promise<void> {
-  // For now, sessionId is tracked in metadata to maintain compatibility with current schema
-  const sessionMetadata = {
-    sessionId,
-    ...(metadata || {}),
-  };
-  await saveMessage(db, userId, role, content, sessionMetadata);
+  await db
+    .insert(chatMessages)
+    .values({
+      userId,
+      sessionId,
+      role,
+      content,
+      metadata: metadata ? JSON.stringify(metadata) : null,
+    })
+    .run();
 }
 
 /**
@@ -108,5 +113,57 @@ export async function clearChatHistory(
     .run();
 
   // Return the number of rows deleted if available, otherwise 0
+  return result.rowsAffected || 0;
+}
+
+/**
+ * Get chat history for a specific session
+ * Ordered by creation time (ascending for chat display)
+ * @param db - Database instance
+ * @param sessionId - Session ID
+ * @param limit - Maximum number of messages (default 50)
+ * @returns Array of messages ordered by oldest first
+ */
+export async function getChatHistoryBySession(
+  db: any,
+  sessionId: number,
+  limit: number = 50
+): Promise<Array<{ id: number; role: 'user' | 'assistant'; content: string; metadata?: Record<string, unknown>; createdAt: string }>> {
+  const messages = await db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(limit)
+    .all();
+
+  // Reverse to show oldest first (normal chat display order)
+  return messages
+    .reverse()
+    .map((msg: any) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      metadata: msg.metadata ? JSON.parse(msg.metadata) : undefined,
+      createdAt: msg.createdAt,
+    }));
+}
+
+/**
+ * Delete all messages in a session
+ * Called when a session is deleted (hard delete cascade)
+ * @param db - Database instance
+ * @param sessionId - Session ID
+ * @returns Number of messages deleted
+ */
+export async function deleteSessionMessages(
+  db: any,
+  sessionId: number
+): Promise<number> {
+  const result = await db
+    .delete(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId))
+    .run();
+
   return result.rowsAffected || 0;
 }

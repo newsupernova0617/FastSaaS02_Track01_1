@@ -29,6 +29,7 @@ export const transactions = sqliteTable('transactions', {
 export const chatMessages = sqliteTable('chat_messages', {
     id:        integer('id').primaryKey({ autoIncrement: true }), // 자동 증가 ID
     userId:    text('user_id').notNull().references(() => users.id), // 어느 사용자의 메시지인지
+    sessionId: integer('session_id').references(() => sessions.id), // 대화 세션 ID (선택사항)
     role:      text('role', { enum: ['user', 'assistant'] }).notNull(), // 사용자 또는 어시스턴트
     content:   text('content').notNull(),     // 메시지 내용
     metadata:  text('metadata'),              // JSON 형식의 추가 메타데이터 (리포트 데이터 등)
