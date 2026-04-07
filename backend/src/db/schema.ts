@@ -45,6 +45,30 @@ export const sessions = sqliteTable('sessions', {
     updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
 
+// Clarification sessions for handling ambiguous user input
+export const clarificationSessions = sqliteTable('clarification_sessions', {
+    id:        text('id').primaryKey(),                    // UUID, generated
+    userId:    text('user_id').notNull().references(() => users.id),
+    chatSessionId: integer('chat_session_id').notNull().references(() => sessions.id),
+    state:     text('state').notNull(),                    // JSON string
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+export type ClarificationSession = typeof clarificationSessions.$inferSelect;
+export type NewClarificationSession = typeof clarificationSessions.$inferInsert;
+
+export interface ClarificationState {
+  missingFields: string[];          // ['amount', 'category']
+  partialData: {
+    transactionType?: 'income' | 'expense';
+    amount?: number;
+    category?: string;
+    memo?: string;
+    date?: string;
+  };
+  messageId: number;                // ID of AI's clarification message
+}
+
 // AI 생성 리포트
 export const reports = sqliteTable('reports', {
     id: integer('id').primaryKey({ autoIncrement: true }),
