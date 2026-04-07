@@ -34,6 +34,7 @@ vi.mock('../../src/services/chat', () => {
     saveMessage: vi.fn().mockResolvedValue(undefined),
     getChatHistory: vi.fn().mockResolvedValue([]),
     clearChatHistory: vi.fn().mockResolvedValue(0),
+    saveMessageToSession: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -195,11 +196,6 @@ describe('POST /api/ai/action', () => {
     // Add environment and variables middleware
     app.use('*', async (c, next) => {
       c.env = {
-<<<<<<< HEAD
-        GROQ_API_KEY: 'test-api-key',
-=======
-        GEMINI_API_KEY: 'test-api-key',
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
         TURSO_DB_URL: 'test-url',
         TURSO_AUTH_TOKEN: 'test-token',
         SUPABASE_JWT_SECRET: 'test-secret',
@@ -233,7 +229,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent 15000 won on lunch' }),
+        body: JSON.stringify({ text: 'I spent 15000 won on lunch', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -263,7 +259,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent 15000 won on lunch' }),
+        body: JSON.stringify({ text: 'I spent 15000 won on lunch', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -287,7 +283,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Update transaction 1 to 20000 won' }),
+        body: JSON.stringify({ text: 'Update transaction 1 to 20000 won', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -342,7 +338,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Update non-existent transaction' }),
+        body: JSON.stringify({ text: 'Update non-existent transaction', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -367,7 +363,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Show my food expenses in March' }),
+        body: JSON.stringify({ text: 'Show my food expenses in March', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -429,7 +425,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Show all transactions' }),
+        body: JSON.stringify({ text: 'Show all transactions', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -484,7 +480,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Delete transaction 1' }),
+        body: JSON.stringify({ text: 'Delete transaction 1', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -534,7 +530,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Delete transaction 1' }),
+        body: JSON.stringify({ text: 'Delete transaction 1', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -568,7 +564,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Delete non-existent transaction' }),
+        body: JSON.stringify({ text: 'Delete non-existent transaction', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -584,7 +580,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -598,7 +594,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: '' }),
+        body: JSON.stringify({ text: '', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -608,33 +604,15 @@ describe('POST /api/ai/action', () => {
     });
 
     it('handles Gemini API failure gracefully', async () => {
-<<<<<<< HEAD
-      const error = new Error('AI service is temporarily unavailable. Please try again shortly.');
-      error.name = 'AIServiceError';
-      mockAiInstance.parseUserInput.mockRejectedValue(error);
-=======
-      mockAiInstance.parseUserInput.mockRejectedValue(
-        new Error('Failed to process request. Please try again.')
-      );
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Some text' }),
+        body: JSON.stringify({ text: 'Some text', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
 
-<<<<<<< HEAD
-      expect(response.status).toBe(502);
-      expect(body.success).toBe(false);
-      expect(body.error).toContain('temporarily unavailable');
-=======
-      expect(response.status).toBe(400);
-      expect(body.success).toBe(false);
-      expect(body.error).toContain('Failed');
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     });
 
     it('handles validation failure with error message', async () => {
@@ -652,7 +630,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Negative amount' }),
+        body: JSON.stringify({ text: 'Negative amount', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -680,7 +658,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent 15000 won on lunch' }),
+        body: JSON.stringify({ text: 'I spent 15000 won on lunch', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -705,7 +683,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent 15000 won on lunch' }),
+        body: JSON.stringify({ text: 'I spent 15000 won on lunch', sessionId: 1 }),
       }));
 
       expect(mockAiInstance.parseUserInput).toHaveBeenCalled();
@@ -725,7 +703,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Show my transactions' }),
+        body: JSON.stringify({ text: 'Show my transactions', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -775,7 +753,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Update transaction 1' }),
+        body: JSON.stringify({ text: 'Update transaction 1', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -822,7 +800,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'Delete transaction 1' }),
+        body: JSON.stringify({ text: 'Delete transaction 1', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -849,7 +827,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent money' }),
+        body: JSON.stringify({ text: 'I spent money', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -874,7 +852,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent money' }),
+        body: JSON.stringify({ text: 'I spent money', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -898,7 +876,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent money' }),
+        body: JSON.stringify({ text: 'I spent money', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -924,7 +902,7 @@ describe('POST /api/ai/action', () => {
       const response = await app.request(new Request('http://localhost/api/ai/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: 'I spent money' }),
+        body: JSON.stringify({ text: 'I spent money', sessionId: 1 }),
       }));
 
       const body = await response.json() as any;
@@ -932,11 +910,6 @@ describe('POST /api/ai/action', () => {
       expect(body.message).toBeDefined();
       expect(typeof body.message).toBe('string');
       expect(body.message.length).toBeGreaterThan(0);
-<<<<<<< HEAD
-      expect(body.content).toBe(body.message);
-      expect(body.metadata?.actionType).toBe('create');
-=======
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
     });
   });
 });

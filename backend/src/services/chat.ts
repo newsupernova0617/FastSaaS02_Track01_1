@@ -28,6 +28,31 @@ export async function saveMessage(
 }
 
 /**
+ * Saves a user or assistant message to chat history with session tracking
+ * @param db - Database instance
+ * @param userId - User ID
+ * @param sessionId - Session ID for tracking conversation context
+ * @param role - 'user' or 'assistant'
+ * @param content - Message content
+ * @param metadata - Optional metadata (for assistant messages with report data, etc.)
+ */
+export async function saveMessageToSession(
+  db: any,
+  userId: string,
+  sessionId: number,
+  role: 'user' | 'assistant',
+  content: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  // For now, sessionId is tracked in metadata to maintain compatibility with current schema
+  const sessionMetadata = {
+    sessionId,
+    ...(metadata || {}),
+  };
+  await saveMessage(db, userId, role, content, sessionMetadata);
+}
+
+/**
  * Retrieves chat history for a user with optional pagination
  * @param db - Database instance
  * @param userId - User ID

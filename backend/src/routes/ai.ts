@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { getDb, Env } from '../db/index';
 import { transactions } from '../db/schema';
 import type { Variables } from '../middleware/auth';
+import type { Transaction } from '../db/schema';
 import { AIService } from '../services/ai';
 import { getLLMConfig } from '../services/llm';
 import {
@@ -16,10 +17,19 @@ import {
   validateCategory,
 } from '../services/validation';
 import * as messages from '../services/messages';
-import { saveMessage, getChatHistory, clearChatHistory } from '../services/chat';
+import { saveMessage, getChatHistory, clearChatHistory, saveMessageToSession } from '../services/chat';
 import { AIReportService } from '../services/ai-report';
 import type { ActionType } from '../types/ai';
-import { and, eq, isNull, desc, sql } from 'drizzle-orm';
+import { and, eq, isNull, desc, inArray, sql } from 'drizzle-orm';
+
+const PLAIN_TEXT_FALLBACK = `Hey! 👋 I'm here to help with your expense management.
+
+Try asking me things like:
+• "지출 5000원 커피로 추가" (Add expenses)
+• "지난달 식비" (View spending)
+• "이번달 분석해줘" (Generate report)
+
+What would you like to do?`;
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -71,7 +81,7 @@ router.post('/action', async (c) => {
   try {
     const db = getDb(c.env);
     const userId = c.get('userId');
-    const { text } = await c.req.json();
+    const { text, sessionId } = await c.req.json();
 
     if (!text || typeof text !== 'string') {
       return c.json(
@@ -80,8 +90,15 @@ router.post('/action', async (c) => {
       );
     }
 
-    // Save user message to chat history
-    await saveMessage(db, userId, 'user', text);
+    if (!sessionId || typeof sessionId !== 'number') {
+      return c.json(
+        { success: false, error: 'Session ID is required' },
+        400
+      );
+    }
+
+    // Save user message to session
+    await saveMessageToSession(db, userId, sessionId, 'user', text);
 
     const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
 
@@ -103,35 +120,64 @@ router.post('/action', async (c) => {
     // Parse user input with AI
     const action = await aiService.parseUserInput(text, recentTransactions, userCategories);
 
+    // Check if AI detected a plain text query (non-financial)
+    if (action.type === 'plain_text') {
+      const messageToSave = PLAIN_TEXT_FALLBACK;
+      await saveMessageToSession(db, userId, sessionId, 'assistant', messageToSave);
+      return c.json(
+        {
+          success: true,
+          type: 'plain_text',
+          message: messageToSave,
+        },
+        200
+      );
+    }
+
     // Execute action based on type
     switch (action.type) {
       case 'create': {
         const payload = validateCreatePayload(action.payload);
-        validateAmount(payload.amount);
-        validateDate(payload.date);
-        validateCategory(payload.category, userCategories);
 
-        const result = await db
+        // Determine if single or multiple create
+        const items = payload.items || [{
+          transactionType: payload.transactionType!,
+          amount: payload.amount!,
+          category: payload.category!,
+          memo: payload.memo,
+          date: payload.date!,
+        }];
+
+        // Validate all items
+        for (const item of items) {
+          validateAmount(item.amount);
+          validateDate(item.date);
+          validateCategory(item.category, userCategories);
+        }
+
+        // Create all transactions
+        const results = await db
           .insert(transactions)
-          .values({
+          .values(items.map(item => ({
             userId,
-            type: payload.transactionType,
-            amount: payload.amount,
-            category: payload.category,
-            memo: payload.memo || null,
-            date: payload.date,
-          })
+            type: item.transactionType,
+            amount: item.amount,
+            category: item.category,
+            memo: item.memo || null,
+            date: item.date,
+          })))
           .returning();
 
-        const tx = result[0];
-        const message = messages.generateCreateMessage(tx);
+        // Generate message
+        const message = items.length === 1
+          ? messages.generateCreateMessage(results[0])
+          : messages.generateCreateMultipleMessage(results);
+
         const metadata = buildMetadata('create', {
           action: {
-            id: tx.id,
-            date: tx.date,
-            category: tx.category,
-            amount: tx.amount,
-            type: tx.type,
+            count: results.length,
+            ids: results.map(t => t.id),
+            totalAmount: results.reduce((sum, t) => sum + t.amount, 0),
           },
         });
         await saveAssistantReply(db, userId, message, metadata);
@@ -139,7 +185,7 @@ router.post('/action', async (c) => {
         return c.json({
           success: true,
           type: 'create',
-          result: tx,
+          result: items.length === 1 ? results[0] : results,
           message,
           content: message,
           metadata,
@@ -148,50 +194,68 @@ router.post('/action', async (c) => {
 
       case 'update': {
         const payload = validateUpdatePayload(action.payload);
-        if (!payload.id) {
-          throw new Error('Transaction ID is required for update');
-        }
 
-        // Verify ownership
+        // Determine if single or multiple updates
+        const updates = payload.updates || [{
+          id: payload.id!,
+          transactionType: payload.transactionType,
+          amount: payload.amount,
+          category: payload.category,
+          memo: payload.memo,
+          date: payload.date,
+        }];
+
+        // Verify ownership for all updates
+        const updateIds = updates.map(u => u.id);
         const existing = await db
           .select()
           .from(transactions)
-          .where(and(eq(transactions.id, payload.id), eq(transactions.userId, userId)));
+          .where(and(
+            inArray(transactions.id, updateIds),
+            eq(transactions.userId, userId)
+          ));
 
-        if (!existing.length) {
+        if (existing.length !== updateIds.length) {
           return c.json(
-            { success: false, error: 'Transaction not found' },
+            { success: false, error: 'Some transactions not found or unauthorized' },
             404
           );
         }
 
-        // Validate new values if provided
-        if (payload.amount) validateAmount(payload.amount);
-        if (payload.date) validateDate(payload.date);
-        if (payload.category) validateCategory(payload.category, userCategories);
+        // Validate and apply all updates
+        const results: Transaction[] = [];
+        for (const update of updates) {
+          // Validate new values if provided
+          if (update.amount) validateAmount(update.amount);
+          if (update.date) validateDate(update.date);
+          if (update.category) validateCategory(update.category, userCategories);
 
-        const updateValues: any = {};
-        if (payload.transactionType) updateValues.type = payload.transactionType;
-        if (payload.amount) updateValues.amount = payload.amount;
-        if (payload.category) updateValues.category = payload.category;
-        if (payload.memo !== undefined) updateValues.memo = payload.memo || null;
-        if (payload.date) updateValues.date = payload.date;
+          const updateValues: any = {};
+          if (update.transactionType) updateValues.type = update.transactionType;
+          if (update.amount) updateValues.amount = update.amount;
+          if (update.category) updateValues.category = update.category;
+          if (update.memo !== undefined) updateValues.memo = update.memo || null;
+          if (update.date) updateValues.date = update.date;
 
-        const result = await db
-          .update(transactions)
-          .set(updateValues)
-          .where(eq(transactions.id, payload.id))
-          .returning();
+          const result = await db
+            .update(transactions)
+            .set(updateValues)
+            .where(eq(transactions.id, update.id))
+            .returning();
 
-        const tx = result[0];
-        const message = messages.generateUpdateMessage(tx);
+          results.push(result[0]);
+        }
+
+        // Generate message
+        const message = updates.length === 1
+          ? messages.generateUpdateMessage(results[0])
+          : messages.generateUpdateMultipleMessage(results);
+
         const metadata = buildMetadata('update', {
           action: {
-            id: tx.id,
-            date: tx.date,
-            category: tx.category,
-            amount: tx.amount,
-            type: tx.type,
+            count: results.length,
+            ids: results.map(t => t.id),
+            totalAmount: results.reduce((sum, t) => sum + t.amount, 0),
           },
         });
         await saveAssistantReply(db, userId, message, metadata);
@@ -199,7 +263,7 @@ router.post('/action', async (c) => {
         return c.json({
           success: true,
           type: 'update',
-          result: tx,
+          result: updates.length === 1 ? results[0] : results,
           message,
           content: message,
           metadata,
@@ -256,39 +320,46 @@ router.post('/action', async (c) => {
 
       case 'delete': {
         const payload = validateDeletePayload(action.payload);
-        if (!payload.id) {
-          throw new Error('Transaction ID is required for delete');
+        const ids = payload.items || (payload.id ? [payload.id] : []);
+
+        if (!ids.length) {
+          throw new Error('Transaction ID(s) required for delete');
         }
 
-        // Verify ownership
+        // Verify ownership for all transactions
         const existing = await db
           .select()
           .from(transactions)
-          .where(and(eq(transactions.id, payload.id), eq(transactions.userId, userId)));
+          .where(and(
+            inArray(transactions.id, ids),
+            eq(transactions.userId, userId)
+          ));
 
         if (!existing.length) {
           return c.json(
-            { success: false, error: 'Transaction not found' },
+            { success: false, error: 'No transactions found' },
             404
           );
         }
 
-        const tx = existing[0];
-
-        // Soft delete
+        // Soft delete all matching transactions
         await db
           .update(transactions)
           .set({ deletedAt: new Date().toISOString() })
-          .where(eq(transactions.id, payload.id));
+          .where(and(
+            inArray(transactions.id, ids),
+            eq(transactions.userId, userId)
+          ));
 
-        const message = messages.generateDeleteMessage(tx);
+        const message = existing.length === 1
+          ? messages.generateDeleteMessage(existing[0])
+          : messages.generateDeleteMultipleMessage(existing);
+
         const metadata = buildMetadata('delete', {
           action: {
-            id: tx.id,
-            date: tx.date,
-            category: tx.category,
-            amount: tx.amount,
-            type: tx.type,
+            ids: existing.map(t => t.id),
+            count: existing.length,
+            totalAmount: existing.reduce((sum, t) => sum + t.amount, 0),
           },
         });
         await saveAssistantReply(db, userId, message, metadata);
@@ -296,7 +367,7 @@ router.post('/action', async (c) => {
         return c.json({
           success: true,
           type: 'delete',
-          result: { id: tx.id },
+          result: { ids: existing.map(t => t.id), count: existing.length },
           message,
           content: message,
           metadata,
