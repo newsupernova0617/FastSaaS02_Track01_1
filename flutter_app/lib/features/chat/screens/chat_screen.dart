@@ -118,6 +118,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     setState(() => _isSending = true);
 
+    // Scroll to show the loading bubble immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+
     try {
       await ref.read(
         sendChatMessageProvider((text, activeSessionId)).future,
@@ -307,8 +318,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 data: (messages) => ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: messages.length,
+                  itemCount: messages.length + (_isSending ? 1 : 0),
                   itemBuilder: (context, index) {
+                    // Show loading bubble while waiting for AI response
+                    if (_isSending && index == messages.length) {
+                      return _buildLoadingBubble();
+                    }
                     final msg = messages[index];
                     return _buildChatBubble(msg);
                   },
@@ -482,5 +497,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildLoadingBubble() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxBubbleWidth = screenWidth * 0.75;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Text(
+              '잠시만 기다려 주세요...',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
