@@ -237,88 +237,375 @@ describe('VectorizeService', () => {
       expect(result[1]).toBeCloseTo(0.987654321, 8);
       expect(result[2]).toBeCloseTo(0.111111111, 8);
     });
+
+    it('should retry with exponential backoff on failure', async () => {
+      const mockEmbedding = [0.1, 0.2, 0.3];
+
+      fetchSpy
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            embedding: mockEmbedding,
+            model: 'bge-base-en-v1.5',
+            usage: { input_tokens: 10 },
+          }),
+        });
+
+      const startTime = Date.now();
+      const result = await service.embedText('test text');
+      const elapsed = Date.now() - startTime;
+
+      expect(result).toEqual(mockEmbedding);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(elapsed).toBeGreaterThanOrEqual(350);
+    });
+
+    it('should return empty array after all retries fail', async () => {
+      fetchSpy
+        .mockRejectedValueOnce(new Error('Network error 1'))
+        .mockRejectedValueOnce(new Error('Network error 2'))
+        .mockRejectedValueOnce(new Error('Network error 3'));
+
+      const result = await service.embedText('test text');
+
+      expect(result).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    });
+
+    it('should succeed on second retry attempt', async () => {
+      const mockEmbedding = [0.5, 0.6, 0.7];
+
+      fetchSpy
+        .mockRejectedValueOnce(new Error('First attempt failed'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            embedding: mockEmbedding,
+            model: 'bge-base-en-v1.5',
+            usage: { input_tokens: 10 },
+          }),
+        });
+
+      const result = await service.embedText('test text');
+
+      expect(result).toEqual(mockEmbedding);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('searchVectors', () => {
-    it('should return empty array (placeholder implementation)', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 10);
+    it('should search vectors and return results with scores', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+          {
+            id: '2',
+            score: 0.87,
+            values: embedding,
+            metadata: { content: 'Result 2', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        id: '1',
+        content: 'Result 1',
+        score: 0.95,
+      });
+      expect(result[1]).toEqual({
+        id: '2',
+        content: 'Result 2',
+        score: 0.87,
+      });
+    });
+
+    it('should filter results by userId when provided', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+          {
+            id: '2',
+            score: 0.87,
+            values: embedding,
+            metadata: { content: 'Result 2', userId: 'user-456' },
+          },
+          {
+            id: '3',
+            score: 0.76,
+            values: embedding,
+            metadata: { content: 'Result 3', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10, 'user-123');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('1');
+      expect(result[1].id).toBe('3');
+    });
+
+    it('should respect the limit parameter', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+          {
+            id: '2',
+            score: 0.87,
+            values: embedding,
+            metadata: { content: 'Result 2', userId: 'user-123' },
+          },
+          {
+            id: '3',
+            score: 0.76,
+            values: embedding,
+            metadata: { content: 'Result 3', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 2);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('1');
+      expect(result[1].id).toBe('2');
+    });
+
+    it('should return empty array on API error', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
 
       expect(result).toEqual([]);
-      expect(Array.isArray(result)).toBe(true);
     });
 
-    it('should accept userId parameter', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 5, 'user-123');
+    it('should return empty array for empty embedding', async () => {
+      const result = await service.searchVectors([], 'user_notes', 10);
+
+      expect(result).toEqual([]);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('should retry on network failure with exponential backoff', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockResults,
+        });
+
+      const startTime = Date.now();
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
+      const elapsed = Date.now() - startTime;
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('1');
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(elapsed).toBeGreaterThanOrEqual(350);
+    });
+
+    it('should normalize scores to 0-1 range', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 1.5,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+          {
+            id: '2',
+            score: -0.2,
+            values: embedding,
+            metadata: { content: 'Result 2', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
+
+      expect(result[0].score).toBe(1);
+      expect(result[1].score).toBe(0);
+    });
+
+    it('should handle missing metadata gracefully', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        id: '1',
+        content: '',
+        score: 0.95,
+      });
+    });
+
+    it('should return empty array when API returns no matches', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
 
       expect(result).toEqual([]);
     });
 
-    it('should handle different table names', async () => {
-      const tables = ['documents', 'messages', 'articles', 'custom_table'];
+    it('should handle malformed API response gracefully', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
 
-      for (const table of tables) {
-        const result = await service.searchVectors([0.1, 0.2], table, 10);
-        expect(Array.isArray(result)).toBe(true);
-        expect(result.length).toBe(0);
-      }
-    });
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      });
 
-    it('should handle different limit values', async () => {
-      const limits = [1, 5, 10, 100, 1000];
-
-      for (const limit of limits) {
-        const result = await service.searchVectors([0.1, 0.2], 'test_table', limit);
-        expect(Array.isArray(result)).toBe(true);
-      }
-    });
-
-    it('should handle empty embedding vector', async () => {
-      const result = await service.searchVectors([], 'test_table', 10);
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
 
       expect(result).toEqual([]);
+    });
+
+    it('should return empty array after all retries fail', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+
+      fetchSpy
+        .mockRejectedValueOnce(new Error('Error 1'))
+        .mockRejectedValueOnce(new Error('Error 2'))
+        .mockRejectedValueOnce(new Error('Error 3'));
+
+      const result = await service.searchVectors(embedding, 'user_notes', 10);
+
+      expect(result).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
     });
 
     it('should handle high-dimensional vectors', async () => {
       const highDimVector = Array.from({ length: 768 }, (_, i) => i / 768);
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: highDimVector,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+        ],
+      };
+
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
+
       const result = await service.searchVectors(highDimVector, 'test_table', 10);
 
-      expect(result).toEqual([]);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('1');
     });
 
-    it('should handle undefined userId', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 10, undefined);
+    it('should handle empty userId string (no filtering)', async () => {
+      const embedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      const mockResults = {
+        matches: [
+          {
+            id: '1',
+            score: 0.95,
+            values: embedding,
+            metadata: { content: 'Result 1', userId: 'user-123' },
+          },
+        ],
+      };
 
-      expect(result).toEqual([]);
-    });
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResults,
+      });
 
-    it('should handle empty userId string', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 10, '');
+      const result = await service.searchVectors(embedding, 'test_table', 10, '');
 
-      expect(result).toEqual([]);
-    });
-
-    it('should handle negative limit gracefully', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', -1);
-
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('should handle zero limit', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 0);
-
-      expect(Array.isArray(result)).toBe(true);
-    });
-
-    it('should accept special characters in table name', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table_$special', 10);
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle numeric userId', async () => {
-      const result = await service.searchVectors([0.1, 0.2], 'test_table', 10, '12345');
-
-      expect(result).toEqual([]);
+      expect(result).toHaveLength(1);
     });
   });
 
@@ -371,9 +658,13 @@ describe('VectorizeService', () => {
   });
 
   describe('Error Handling Integration', () => {
-    it('should continue operation after error', async () => {
+    it('should continue operation after error and recovery', async () => {
+      // First embedText call: 3 retries, all fail
       fetchSpy
         .mockRejectedValueOnce(new Error('First call failed'))
+        .mockRejectedValueOnce(new Error('First call retry 2'))
+        .mockRejectedValueOnce(new Error('First call retry 3'))
+        // Second embedText call: succeeds immediately
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({ embedding: [0.1, 0.2] }),
@@ -387,7 +678,9 @@ describe('VectorizeService', () => {
     });
 
     it('should handle multiple consecutive errors', async () => {
-      fetchSpy.mockRejectedValue(new Error('Persistent error'));
+      // 9 rejections total (3 retries per call × 3 calls)
+      fetchSpy
+        .mockRejectedValue(new Error('Persistent error'));
 
       const result1 = await service.embedText('text1');
       const result2 = await service.embedText('text2');
@@ -396,6 +689,8 @@ describe('VectorizeService', () => {
       expect(result1).toEqual([]);
       expect(result2).toEqual([]);
       expect(result3).toEqual([]);
+      // Each call makes 3 fetch attempts
+      expect(fetchSpy).toHaveBeenCalledTimes(9);
     });
   });
 

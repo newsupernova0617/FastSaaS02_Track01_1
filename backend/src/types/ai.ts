@@ -1,5 +1,5 @@
 /** AI action types corresponding to CRUD operations and report generation */
-export type ActionType = 'create' | 'update' | 'read' | 'delete' | 'report' | 'clarify' | 'plain_text';
+export type ActionType = 'create' | 'update' | 'read' | 'delete' | 'report' | 'clarify' | 'plain_text' | 'undo';
 
 /** Payload for plain text responses (non-financial queries) */
 export interface PlainTextPayload {
@@ -19,10 +19,16 @@ export interface ClarifyPayload {
   };
 }
 
+/** Payload for undoing a recent action */
+export interface UndoPayload {
+  targetActionType: 'delete' | 'create' | 'update';
+  hint?: string;  // Optional detail for better error messages
+}
+
 /** Parsed action from AI model with confidence score */
 export interface TransactionAction {
   type: ActionType;
-  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload | ReportPayload | ClarifyPayload | PlainTextPayload;
+  payload: CreatePayload | UpdatePayload | ReadPayload | DeletePayload | ReportPayload | ClarifyPayload | PlainTextPayload | UndoPayload;
   /** Confidence score 0.0-1.0 (higher = more confident) */
   confidence: number;
 }

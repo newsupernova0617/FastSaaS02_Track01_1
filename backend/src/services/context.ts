@@ -1,5 +1,5 @@
 import { knowledgeBase, userNotes, transactions } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, isNull, and } from 'drizzle-orm';
 import type { ActionType } from '../types/ai';
 import type { ContextData, ContextItem, RetrievalStrategy } from '../types/rag';
 
@@ -91,6 +91,13 @@ export class ContextService {
         noteItems: 0,
         totalItems: 2,
       },
+      undo: {
+        action: 'undo',
+        knowledgeItems: 0,
+        transactionItems: 0,
+        noteItems: 0,
+        totalItems: 0,
+      },
     };
 
     return strategies[actionType] || {
@@ -131,7 +138,7 @@ export class ContextService {
     const items = await db
       .select()
       .from(transactions)
-      .where(eq(transactions.userId, userId))
+      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)))
       .limit(limit);
 
     return items.map((item: any) => ({

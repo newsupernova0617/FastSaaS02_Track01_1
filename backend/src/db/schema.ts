@@ -23,6 +23,7 @@ export const transactions = sqliteTable('transactions', {
     date:      text('date').notNull(),        // YYYY-MM-DD 형식의 거래 날짜
     createdAt: text('created_at').default(sql`(datetime('now'))`), // 기록 생성 시간 (자동)
     deletedAt: text('deleted_at'),            // 소프트 삭제 타임스탬프 (선택사항, null이면 활성 상태)
+    previousState: text('previous_state'),    // 수정 전 상태 JSON (undo용, 1단계만 지원)
 });
 
 // Chat sessions for organizing conversations (forward declare)
@@ -102,6 +103,14 @@ export const knowledgeBase = sqliteTable('knowledge_base', {
     embeddingId: text('embedding_id'),
     createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
+export interface TransactionSnapshot {
+  type: 'income' | 'expense';
+  amount: number;
+  category: string;
+  memo: string | null;
+  date: string;
+}
+
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type User = typeof users.$inferSelect;

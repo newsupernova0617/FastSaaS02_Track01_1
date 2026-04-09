@@ -1,4 +1,4 @@
-import { eq, gte, lte, and } from 'drizzle-orm';
+import { eq, gte, lte, and, isNull } from 'drizzle-orm';
 import type { ReportPayload, Report } from '../types/ai';
 import { transactions } from '../db/schema';
 import { callLLM, type LLMConfig } from './llm';
@@ -68,7 +68,7 @@ export class AIReportService {
     params?: Record<string, unknown>
   ): Promise<string> {
     // Build query filters
-    const filters = [eq(transactions.userId, userId)];
+    const filters = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
 
     if (params?.month) {
       const month = params.month as string;

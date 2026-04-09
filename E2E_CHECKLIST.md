@@ -41,10 +41,10 @@
   - [v ] 트랜잭션이 생성되지 않았는지 확인
 
 - [ ] **금융 쿼리와 Plain Text 구분**
-  - [ ] "5000원 커피 사줬어" → actionType='create'
+  - [v ] "5000원 커피 사줬어" → actionType='create'
   - [ ] "지난달 식비는?" → actionType='read'
   - [ ] "리포트 만들어줘" → actionType='report'
-  - [ ] "안녕, 뭐해?" → actionType='plain_text'
+  - [ v] "안녕, 뭐해?" → actionType='plain_text'
 
 ---
 
@@ -53,25 +53,25 @@
 ### 2.1 리포트 생성 및 저장
 
 - [ ] **리포트 생성 (Chat에서)**
-  - [ ] 사용자가 "이번달 분석해줘" 등으로 리포트 요청
-  - [ ] AI가 reportType='monthly_summary' 등을 반환
-  - [ ] 리포트가 Chat 메시지의 metadata에 저장됨
-  - [ ] 리포트 sections 확인 (최소 1개 이상)
+  - [ v] 사용자가 "이번달 분석해줘" 등으로 리포트 요청
+  - [v ] AI가 reportType='monthly_summary' 등을 반환
+  - [v ] 리포트가 Chat 메시지의 metadata에 저장됨
+  - [v ] 리포트 sections 확인 (최소 1개 이상)
 
 - [ ] **리포트 저장**
-  - [ ] Chat에서 리포트 상세 페이지 오픈
-  - [ ] "저장하기" 버튼 클릭 (POST /api/reports)
-  - [ ] 리포트가 reports 테이블에 저장됨
-  - [ ] 저장 후 성공 메시지 표시
-  - [ ] 동일한 리포트 중복 저장 가능 확인
+  - [v ] Chat에서 리포트 상세 페이지 오픈
+  - [v ] "저장하기" 버튼 클릭 (POST /api/reports)
+  - [v ] 리포트가 reports 테이블에 저장됨
+  - [ v] 저장 후 성공 메시지 표시
+  - [ v] 동일한 리포트 중복 저장 가능 확인
 
 ### 2.2 리포트 목록 조회
 
 - [ ] **저장된 리포트 목록 조회**
-  - [ ] Stats 페이지의 "저장됨" 탭 오픈
-  - [ ] 저장된 리포트 목록 표시 (GET /api/reports)
-  - [ ] 최신순(DESC) 정렬 확인
-  - [ ] 각 리포트의 제목, 부제목, 생성일 표시
+  - [ v] Stats 페이지의 "저장됨" 탭 오픈
+  - [ v] 저장된 리포트 목록 표시 (GET /api/reports)
+  - [v ] 최신순(DESC) 정렬 확인
+  - [ v] 각 리포트의 제목, 부제목, 생성일 표시
 
 - [ ] **월별 필터링**
   - [ ] 쿼리 파라미터로 month=YYYY-MM 지정

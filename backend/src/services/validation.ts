@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload, ReportPayload } from '../types/ai';
+import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload, ReportPayload, UndoPayload } from '../types/ai';
 
 /**
  * Schema for AI model response validation
@@ -7,7 +7,7 @@ import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, Dele
  * required action type, payload, and confidence score
  */
 export const AIResponseSchema = z.object({
-  type: z.enum(['create', 'update', 'read', 'delete', 'report', 'plain_text']),
+  type: z.enum(['create', 'update', 'read', 'delete', 'report', 'plain_text', 'undo', 'clarify']),
   payload: z.record(z.string(), z.any()),
   confidence: z.number().min(0).max(1),
 });
@@ -298,4 +298,25 @@ export function validateCategory(category: string, userCategories: string[]): vo
     // Don't throw, just log — allow new categories
     console.warn(`Uncommon category: ${category}`);
   }
+}
+
+/**
+ * Schema for undo payload validation
+ * Validates undo request to reverse a recent action
+ */
+const UndoPayloadSchema = z.object({
+  targetActionType: z.enum(['delete', 'create', 'update'], {
+    message: 'targetActionType must be "delete", "create", or "update"'
+  }),
+  hint: z.string().optional(),
+});
+
+/**
+ * Validates undo payload
+ * @param payload - The raw payload to validate against UndoPayloadSchema
+ * @returns Parsed and typed UndoPayload
+ * @throws {z.ZodError} If payload fails schema validation
+ */
+export function validateUndoPayload(payload: unknown): UndoPayload {
+  return UndoPayloadSchema.parse(payload);
 }

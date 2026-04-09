@@ -1,17 +1,19 @@
 import { Hono } from 'hono';
 import { getDb, Env } from '../db/index';
 import type { Variables } from '../middleware/auth';
-import { chatMessages, transactions, reports } from '../db/schema';
+import { chatMessages, transactions, reports, type TransactionSnapshot } from '../db/schema';
 import { eq, desc, isNull, and, inArray, sql } from 'drizzle-orm';
 import { AIService } from '../services/ai';
 import { getLLMConfig, callLLM } from '../services/llm';
 import { ContextService } from '../services/context';
+import { VectorizeService } from '../services/vectorize';
 import {
   validateCreatePayload,
   validateUpdatePayload,
   validateReadPayload,
   validateDeletePayload,
   validateReportPayload,
+  validateUndoPayload,
   validateAmount,
   validateDate,
   validateCategory,
@@ -355,7 +357,11 @@ router.post('/:sessionId/messages', async (c) => {
 
     // Initialize AI service and context service
     const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
-    const contextService = new ContextService(c.env.VECTORIZE);
+    const vectorizeService = new VectorizeService(
+      c.env.CLOUDFLARE_ACCOUNT_ID || '',
+      c.env.CLOUDFLARE_API_TOKEN || ''
+    );
+    const contextService = new ContextService(vectorizeService);
 
     // Fetch user context
     const transactions_ = await db
@@ -597,6 +603,17 @@ How can I help with your finances?`;
             );
           }
 
+          // Build previousState map from existing rows (for undo support)
+          const previousStateMap = new Map(
+            existing.map(tx => [tx.id, JSON.stringify({
+              type: tx.type,
+              amount: tx.amount,
+              category: tx.category,
+              memo: tx.memo,
+              date: tx.date,
+            })])
+          );
+
           // Validate and apply all updates
           const results: any[] = [];
           for (const update of updates) {
@@ -605,7 +622,9 @@ How can I help with your finances?`;
             if (update.date) validateDate(update.date);
             if (update.category) validateCategory(update.category, userCategories);
 
-            const updateValues: any = {};
+            const updateValues: any = {
+              previousState: previousStateMap.get(update.id) ?? null,  // Store pre-update snapshot
+            };
             if (update.transactionType) updateValues.type = update.transactionType;
             if (update.amount) updateValues.amount = update.amount;
             if (update.category) updateValues.category = update.category;
@@ -665,6 +684,9 @@ How can I help with your finances?`;
             conditions.push(eq(transactions.type, payload.type));
           }
 
+          // Filter out soft-deleted transactions
+          conditions.push(isNull(transactions.deletedAt));
+
           const results = await db
             .select()
             .from(transactions)
@@ -701,13 +723,14 @@ How can I help with your finances?`;
             throw new Error('Transaction ID(s) required for delete');
           }
 
-          // Verify ownership for all transactions
+          // Verify ownership for all transactions (excluding soft-deleted ones)
           const existing = await db
             .select()
             .from(transactions)
             .where(and(
               inArray(transactions.id, ids),
-              eq(transactions.userId, userId)
+              eq(transactions.userId, userId),
+              isNull(transactions.deletedAt)
             ));
 
           if (!existing.length) {
@@ -815,6 +838,183 @@ How can I help with your finances?`;
           }).returning().get();
 
           break;
+        }
+
+        case 'undo': {
+          const payload = validateUndoPayload(action.payload);
+
+          // Find the most recent assistant message with matching actionType in this session
+          const recentMessages = await db
+            .select()
+            .from(chatMessages)
+            .where(and(
+              eq(chatMessages.sessionId, sessionId),
+              eq(chatMessages.role, 'assistant'),
+            ))
+            .orderBy(desc(chatMessages.createdAt))
+            .limit(20);
+
+          // Find the most recent message with targetActionType
+          let targetMessage: any = null;
+          for (const msg of recentMessages) {
+            if (!msg.metadata) continue;
+            const meta = JSON.parse(msg.metadata);
+            if (meta.actionType === payload.targetActionType) {
+              targetMessage = msg;
+              break;
+            }
+          }
+
+          if (!targetMessage) {
+            // No matching prior action found
+            const notFoundMsg = payload.targetActionType === 'delete'
+              ? '최근에 삭제된 거래를 찾을 수 없습니다'
+              : payload.targetActionType === 'create'
+              ? '최근에 추가된 거래를 찾을 수 없습니다'
+              : '최근에 수정된 거래를 찾을 수 없습니다';
+
+            aiMessage = await db.insert(chatMessages).values({
+              userId,
+              sessionId,
+              role: 'assistant',
+              content: notFoundMsg,
+              metadata: JSON.stringify({ actionType: 'plain_text' }),
+            }).returning().get();
+            break;
+          }
+
+          const targetMeta = JSON.parse(targetMessage.metadata);
+          const ids: number[] = targetMeta.action?.ids ?? [];
+
+          if (!ids.length) {
+            throw new Error('Could not determine which transactions to undo');
+          }
+
+          // UNDO DELETE: Restore soft-deleted rows
+          if (payload.targetActionType === 'delete') {
+            const restored = await db
+              .update(transactions)
+              .set({ deletedAt: null })
+              .where(and(
+                inArray(transactions.id, ids),
+                eq(transactions.userId, userId)
+              ))
+              .returning();
+
+            const msg = restored.length === 1
+              ? messages.generateUndoMessage(restored[0])
+              : messages.generateUndoDeleteMultipleMessage(restored);
+
+            const metadata = buildMetadata('undo', {
+              action: { targetActionType: 'delete', ids, count: restored.length },
+            });
+
+            aiMessage = await db.insert(chatMessages).values({
+              userId, sessionId, role: 'assistant',
+              content: msg,
+              metadata: JSON.stringify(metadata),
+            }).returning().get();
+            break;
+          }
+
+          // UNDO CREATE: Hard delete rows
+          if (payload.targetActionType === 'create') {
+            // Fetch before deleting to build message
+            const toDelete = await db
+              .select()
+              .from(transactions)
+              .where(and(
+                inArray(transactions.id, ids),
+                eq(transactions.userId, userId),
+                isNull(transactions.deletedAt)  // Only delete non-deleted transactions
+              ));
+
+            const totalAmount = toDelete.reduce((sum, t) => sum + t.amount, 0);
+
+            if (toDelete.length > 0) {
+              await db
+                .delete(transactions)
+                .where(and(
+                  inArray(transactions.id, ids),
+                  eq(transactions.userId, userId)
+                ));
+            }
+
+            const msg = messages.generateUndoCreateMessage(toDelete.length, totalAmount);
+            const metadata = buildMetadata('undo', {
+              action: { targetActionType: 'create', ids, count: toDelete.length },
+            });
+
+            aiMessage = await db.insert(chatMessages).values({
+              userId, sessionId, role: 'assistant',
+              content: msg,
+              metadata: JSON.stringify(metadata),
+            }).returning().get();
+            break;
+          }
+
+          // UNDO UPDATE: Restore previousState
+          if (payload.targetActionType === 'update') {
+            // Fetch transactions with their previousState
+            const toRestore = await db
+              .select()
+              .from(transactions)
+              .where(and(
+                inArray(transactions.id, ids),
+                eq(transactions.userId, userId),
+                isNull(transactions.deletedAt)
+              ));
+
+            if (!toRestore.length) {
+              throw new Error('Transactions to restore not found');
+            }
+
+            const restoredResults: any[] = [];
+            for (const tx of toRestore) {
+              if (!tx.previousState) {
+                // No snapshot means this tx was never updated — skip
+                continue;
+              }
+              const snap: TransactionSnapshot = JSON.parse(tx.previousState);
+              const result = await db
+                .update(transactions)
+                .set({
+                  type: snap.type,
+                  amount: snap.amount,
+                  category: snap.category,
+                  memo: snap.memo,
+                  date: snap.date,
+                  previousState: null,  // Clear after restoring (prevent undo-of-undo)
+                })
+                .where(eq(transactions.id, tx.id))
+                .returning();
+              restoredResults.push(result[0]);
+            }
+
+            if (!restoredResults.length) {
+              const noSnapMsg = '되돌릴 수 있는 이전 상태가 없습니다 (이미 복원되었거나 처음 입력된 거래입니다)';
+              aiMessage = await db.insert(chatMessages).values({
+                userId, sessionId, role: 'assistant',
+                content: noSnapMsg,
+                metadata: JSON.stringify({ actionType: 'plain_text' }),
+              }).returning().get();
+              break;
+            }
+
+            const msg = messages.generateUndoUpdateMessage(restoredResults);
+            const metadata = buildMetadata('undo', {
+              action: { targetActionType: 'update', ids, count: restoredResults.length },
+            });
+
+            aiMessage = await db.insert(chatMessages).values({
+              userId, sessionId, role: 'assistant',
+              content: msg,
+              metadata: JSON.stringify(metadata),
+            }).returning().get();
+            break;
+          }
+
+          break;  // unreachable but satisfies TypeScript
         }
 
         default:

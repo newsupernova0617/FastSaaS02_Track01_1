@@ -14,6 +14,8 @@ export type Env = {
     AI_PROVIDER?: 'gemini' | 'workers-ai'; // defaults to 'workers-ai'
     AI?: any; // Cloudflare Workers AI binding
     VECTORIZE?: any; // Cloudflare Vectorize binding (optional)
+    CLOUDFLARE_ACCOUNT_ID?: string; // For Vectorize API calls
+    CLOUDFLARE_API_TOKEN?: string; // For Vectorize API authentication
 };
 
 export function getDb(env: Env) {

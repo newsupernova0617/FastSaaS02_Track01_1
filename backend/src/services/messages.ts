@@ -45,6 +45,31 @@ export function generateUndoMessage(tx: Transaction): string {
   return `${formatType(tx.type)} ${formatAmount(tx.amount)} ${tx.memo || tx.category} (${tx.date}) 복원되었습니다`;
 }
 
+export function generateUndoDeleteMultipleMessage(transactions: Transaction[]): string {
+  const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  const summary = transactions
+    .slice(0, 2)
+    .map(tx => `${formatType(tx.type)} ${formatAmount(tx.amount)}`)
+    .join(', ');
+  const more = transactions.length > 2 ? ` 외 ${transactions.length - 2}개` : '';
+  return `${summary}${more} 등 ${transactions.length}개 거래가 복원되었습니다 (총 ${formatAmount(totalAmount)})`;
+}
+
+export function generateUndoCreateMessage(count: number, totalAmount: number): string {
+  return count === 1
+    ? `방금 추가한 거래가 취소되었습니다`
+    : `방금 추가한 ${count}개 거래가 취소되었습니다 (총 ${formatAmount(totalAmount)})`;
+}
+
+export function generateUndoUpdateMessage(transactions: Transaction[]): string {
+  if (transactions.length === 1) {
+    const tx = transactions[0];
+    return `거래가 이전 상태로 복원되었습니다. ${formatType(tx.type)} ${formatAmount(tx.amount)} ${tx.memo || tx.category} (${tx.date})`;
+  }
+  const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  return `${transactions.length}개 거래가 이전 상태로 복원되었습니다 (총액: ${formatAmount(totalAmount)})`;
+}
+
 export function generateReadMessage(
   transactions: Transaction[],
   totalAmount: number,

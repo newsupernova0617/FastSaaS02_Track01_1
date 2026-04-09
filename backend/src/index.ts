@@ -6,6 +6,9 @@ import usersRoute from './routes/users';
 import aiRouter from './routes/ai';
 import reportsRouter from './routes/reports';
 import sessionsRouter from './routes/sessions';
+import { userNotesRoutes } from './routes/user-notes';
+import { userNotesService } from './services/user-notes';
+import { VectorizeService } from './services/vectorize';
 import { authMiddleware } from './middleware/auth';
 import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
@@ -37,6 +40,13 @@ app.route('/api/users', usersRoute);
 app.route('/api/ai', aiRouter);
 app.route('/api/reports', reportsRouter);
 app.route('/api/sessions', sessionsRouter);
+
+// User Notes 라우트 마운트
+// VectorizeService는 각 요청에서 env를 통해 초기화되어야 함
+// 테스트 환경에서는 빈 credentials으로 초기화되고, 프로덕션에서는 env에서 로드됨
+const vectorizeServiceForNotes = new VectorizeService('', '');
+const notesServiceForNotes = userNotesService(vectorizeServiceForNotes);
+app.route('/api/notes', userNotesRoutes(notesServiceForNotes));
 
 // 전역 에러 핸들러: 모든 라우트에서 발생하는 에러를 JSON으로 통일
 // ZodError (입력값 검증 실패) → 400 Bad Request

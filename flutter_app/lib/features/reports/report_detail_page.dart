@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../shared/models/report.dart';
 import '../../shared/providers/report_provider.dart';
 import '../ai_chat/widgets/report_card.dart';
@@ -54,10 +55,10 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('리포트가 저장되었습니다')),
         );
-        // Use post-frame callback to pop after build completes
+        // Use post-frame callback to navigate after build completes
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            Navigator.of(context).pop();
+            context.go('/chat');
           }
         });
       }
@@ -113,10 +114,10 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('리포트가 삭제되었습니다')),
         );
-        // Use post-frame callback to pop after build completes
+        // Use post-frame callback to navigate after build completes
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            Navigator.of(context).pop();
+            context.go('/stats');
           }
         });
       }
@@ -248,7 +249,7 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => context.go('/stats'),
                           child: const Text('닫기'),
                         ),
                       ),

@@ -12,6 +12,14 @@ const KNOWLEDGE_ITEMS = [
     content: 'Track your spending regularly to identify areas where you can reduce expenses and increase savings.',
   },
   {
+    category: 'budgeting',
+    content: 'Zero-based budgeting: allocate every dollar you earn to specific categories.',
+  },
+  {
+    category: 'budgeting',
+    content: '50/30/20 rule alternative: use 70/20/10 (70% needs, 20% wants, 10% goals) if your income is variable or lower.',
+  },
+  {
     category: 'savings',
     content: 'Emergency fund best practice: keep 3-6 months of living expenses in an easily accessible savings account.',
   },
@@ -50,6 +58,62 @@ const KNOWLEDGE_ITEMS = [
   {
     category: 'tax',
     content: 'Keep receipts and documents for deductible expenses to maximize tax deductions when filing.',
+  },
+  {
+    category: 'spending_analysis',
+    content: 'Track your top spending categories monthly to identify patterns and opportunities to save.',
+  },
+  {
+    category: 'spending_analysis',
+    content: 'Anomaly detection: spending 2x or more above your average in a category signals unusual behavior.',
+  },
+  {
+    category: 'spending_analysis',
+    content: 'Weekly spending reviews: spend 15 minutes each Sunday reviewing the past week\'s expenses.',
+  },
+  {
+    category: 'spending_analysis',
+    content: 'Compare month-to-month spending trends to understand seasonal patterns and adjust your budget accordingly.',
+  },
+  {
+    category: 'transaction_tips',
+    content: 'Always categorize transactions immediately to maintain accurate financial records.',
+  },
+  {
+    category: 'transaction_tips',
+    content: 'Use descriptive memos for large or unclear transactions to understand spending habits.',
+  },
+  {
+    category: 'transaction_tips',
+    content: 'Round amounts up slightly when budgeting to account for unexpected costs.',
+  },
+  {
+    category: 'goal_setting',
+    content: 'SMART goals: make your financial goals Specific, Measurable, Achievable, Relevant, Time-bound.',
+  },
+  {
+    category: 'goal_setting',
+    content: 'Break large financial goals into monthly or weekly targets for better progress tracking.',
+  },
+  {
+    category: 'goal_setting',
+    content: 'Review financial goals quarterly and adjust based on income changes or life events.',
+  },
+  {
+    category: 'income_management',
+    content: 'Income stability: if self-employed, average income over 3 months for more realistic budgeting.',
+  },
+  {
+    category: 'income_management',
+    content: 'Bonus handling: allocate 50% to savings, 30% to debt payoff, 20% to discretionary spending.',
+  },
+  {
+    category: 'seasonal_planning',
+    content: 'Plan for seasonal expenses in advance: holidays, insurance renewals, vacation.',
+  },
+  {
+    category: 'seasonal_planning',
+    content: 'Create a sinking fund by setting aside small amounts monthly for annual or irregular expenses.',
   },
   {
     category: 'general',

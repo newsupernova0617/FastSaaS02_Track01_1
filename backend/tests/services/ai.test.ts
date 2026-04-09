@@ -1,112 +1,97 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AIService } from '../../src/services/ai';
+import { ContextService } from '../../src/services/context';
+import * as llm from '../../src/services/llm';
 
 describe('AIService', () => {
+  let mockDb: any;
+  let mockContextService: any;
+  let callLLMSpy: any;
+
   beforeEach(() => {
     vi.restoreAllMocks();
+
+    // Setup mock database
+    mockDb = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
+      all: vi.fn().mockResolvedValue([]),
+    };
+
+    // Setup mock context service
+    mockContextService = {
+      getContextForAction: vi.fn().mockResolvedValue({
+        knowledge: [],
+        transactions: [],
+        notes: [],
+        formatted: '',
+      }),
+    };
+
+    callLLMSpy = vi.spyOn(llm, 'callLLM');
   });
 
-  it('parses valid JSON response from Groq API', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: '{"type":"read","payload":{"month":"2024-03"},"confidence":0.95}',
-          },
-        }],
-      }),
-    }));
+  it('parses valid JSON response with required parameters', async () => {
+    callLLMSpy.mockResolvedValue('{"type":"read","payload":{"month":"2024-03"},"confidence":0.95}');
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    const result = await service.parseUserInput('3월 내역 보여줘', [], []);
+    const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
+    const result = await service.parseUserInput('3월 내역 보여줘', [], [], 'user-123', mockContextService, mockDb);
 
     expect(result.type).toBe('read');
     expect(result.payload).toEqual({ month: '2024-03' });
   });
 
-  it('sends request to Groq API endpoint with correct headers', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: '{"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"food","date":"2024-03-15"},"confidence":0.9}',
-          },
-        }],
-      }),
-    });
-    vi.stubGlobal('fetch', mockFetch);
+  it('requires userId parameter', async () => {
+    callLLMSpy.mockResolvedValue('{"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"food","date":"2024-03-15"},"confidence":0.9}');
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'my-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    await service.parseUserInput('점심 12000원 썼어', [], []);
+    const service = new AIService({ provider: 'gemini', apiKey: 'my-api-key', modelName: 'gemini-pro' });
+    const result = await service.parseUserInput('점심 12000원 썼어', [], [], 'user-456', mockContextService, mockDb);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.groq.com/openai/v1/chat/completions',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          'Authorization': 'Bearer my-api-key',
-        }),
-      })
+    expect(result.type).toBe('create');
+    expect(mockContextService.getContextForAction).toHaveBeenCalledWith(
+      mockDb,
+      'user-456',
+      'create',
+      '점심 12000원 썼어'
     );
   });
 
-  it('uses custom model name when provided', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: '{"type":"read","payload":{},"confidence":0.8}',
-          },
-        }],
-      }),
-    });
-    vi.stubGlobal('fetch', mockFetch);
+  it('requires contextService parameter', async () => {
+    callLLMSpy.mockResolvedValue('{"type":"read","payload":{},"confidence":0.8}');
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    await service.parseUserInput('내역 보여줘', [], []);
+    const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
+    const result = await service.parseUserInput('내역 보여줘', [], [], 'user-123', mockContextService, mockDb);
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.model).toBe('mixtral-8x7b-32768');
+    expect(mockContextService.getContextForAction).toHaveBeenCalled();
   });
 
-  it('uses default model when model name not provided', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: '{"type":"read","payload":{},"confidence":0.8}',
-          },
-        }],
-      }),
-    });
-    vi.stubGlobal('fetch', mockFetch);
+  it('requires db parameter', async () => {
+    callLLMSpy.mockResolvedValue('{"type":"read","payload":{},"confidence":0.8}');
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    await service.parseUserInput('내역 보여줘', [], []);
+    const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
+    const result = await service.parseUserInput('내역 보여줘', [], [], 'user-123', mockContextService, mockDb);
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.model).toBe('llama-3.3-70b-versatile');
+    expect(mockContextService.getContextForAction).toHaveBeenCalledWith(
+      mockDb,
+      expect.any(String),
+      expect.any(String),
+      expect.any(String)
+    );
   });
 
-  it('throws error when API response is not ok', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: { message: 'Invalid API key' } }),
-    }));
+  it('throws error when API response fails', async () => {
+    callLLMSpy.mockRejectedValue(new Error('API error'));
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'bad-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow();
+    const service = new AIService({ provider: 'gemini', apiKey: 'bad-api-key', modelName: 'gemini-pro' });
+    await expect(service.parseUserInput('테스트', [], [], 'user-123', mockContextService, mockDb)).rejects.toThrow('Failed to process request');
   });
 
   it('throws error when fetch fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+    callLLMSpy.mockRejectedValue(new Error('network error'));
 
-    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
-    await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow('Failed to process request');
+    const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
+    await expect(service.parseUserInput('테스트', [], [], 'user-123', mockContextService, mockDb)).rejects.toThrow('Failed to process request');
   });
 });

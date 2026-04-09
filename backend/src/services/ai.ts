@@ -68,6 +68,18 @@ Payload schemas for each type:
    - For off-topic questions not about finances
    - Set confidence to 0.95 (very certain this is a plain text message)
 
+8. UNDO: User wants to reverse the most recent create, update, or delete action
+   {"type":"undo","payload":{"targetActionType":"delete"},"confidence":0.92}
+   {"type":"undo","payload":{"targetActionType":"create"},"confidence":0.90}
+   {"type":"undo","payload":{"targetActionType":"update"},"confidence":0.88}
+   - targetActionType: what kind of action to reverse
+     - "delete" → user says "그 거래 되돌려줘", "삭제 취소", "복원해줘"
+     - "create" → user says "방금 추가한 거 없애줘", "그 거래 취소해줘" (after just creating)
+     - "update" → user says "아까 수정한 거 되돌려줘", "원래대로 해줘"
+   - hint: (optional) any identifying detail the user mentions, e.g. "커피", "5000원"
+   - Only return UNDO when context clearly indicates reversal of a prior AI action
+   - Do NOT return UNDO for a fresh delete request — use DELETE instead
+
 Rules:
 - For currency, assume Korean Won (원)
 - If date is not specified, use today's date (YYYY-MM-DD format)
@@ -84,10 +96,11 @@ Confidence Score Guidelines:
 - 0.1-0.3: Very uncertain—use CLARIFY with lower confidence (0.2-0.3)
 
 Decision Tree:
-1. Can you extract all required fields (transactionType, amount, category) with high confidence (≥0.7)? → CREATE/UPDATE/DELETE
-2. Is this clearly a non-financial message? → PLAIN_TEXT
-3. Is the message financial but missing fields or ambiguous? → CLARIFY with message asking for missing data
-4. Is the user asking for analysis or reports? → REPORT
+1. Is the user asking to undo/reverse a recent action? → UNDO
+2. Can you extract all required fields (transactionType, amount, category) with high confidence (≥0.7)? → CREATE/UPDATE/DELETE
+3. Is this clearly a non-financial message? → PLAIN_TEXT
+4. Is the message financial but missing fields or ambiguous? → CLARIFY with message asking for missing data
+5. Is the user asking for analysis or reports? → REPORT
 
 Only return valid JSON. No explanations.`;
 }
@@ -105,9 +118,9 @@ export class AIService {
     userText: string,
     recentTransactions: Transaction[],
     userCategories: string[],
-    userId?: string,
-    contextService?: any,
-    db?: any
+    userId: string,
+    contextService: any,
+    db: any
   ): Promise<TransactionAction> {
     const recentTxsFormatted = recentTransactions
       .map(
@@ -142,15 +155,13 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
       const actionResult = JSON.parse(jsonMatch[0]);
       const actionType = actionResult.type;
 
-      // Get context for the determined action type if all dependencies available
+      // Get context for the determined action type
       let contextData = null;
-      if (contextService && userId && db) {
-        try {
-          contextData = await contextService.getContextForAction(db, userId, actionType, userText);
-        } catch (error) {
-          console.error('Failed to fetch context:', error);
-          // Continue without context on error (graceful fallback)
-        }
+      try {
+        contextData = await contextService.getContextForAction(db, userId, actionType, userText);
+      } catch (error) {
+        console.error('Failed to fetch context:', error);
+        // Continue without context on error (graceful fallback)
       }
 
       // Build messages array with context if available
