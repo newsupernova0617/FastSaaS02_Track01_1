@@ -3,7 +3,12 @@ import type { Transaction } from '../db/schema';
 import { validateAIResponse } from './validation';
 import { callLLM, type LLMConfig } from './llm';
 
-const SYSTEM_PROMPT = `You are a budget transaction assistant. Users write in natural language (Korean),
+function getSystemPrompt(userCategories: string[]): string {
+  const categoryList = userCategories.length > 0
+    ? userCategories.join(', ')
+    : 'food, transport, work, shopping, entertainment, utilities, medicine, other';
+
+  return `You are a budget transaction assistant. Users write in natural language (Korean),
 and you extract/modify financial transactions or request financial analysis.
 
 CRITICAL: Return ONLY a valid JSON object. Do not wrap the JSON in quotes. Do not return JSON as a string.
@@ -13,27 +18,27 @@ Payload schemas for each type:
 
 1. CREATE: User records a new transaction or multiple transactions
    Single:
-   {"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"food","memo":"lunch","date":"YYYY-MM-DD"},"confidence":0.95}
+   {"type":"create","payload":{"transactionType":"expense","amount":12000,"category":"식비","memo":"lunch","date":"YYYY-MM-DD"},"confidence":0.95}
    Multiple:
-   {"type":"create","payload":{"items":[{"transactionType":"expense","amount":12000,"category":"food","date":"YYYY-MM-DD"},{"transactionType":"income","amount":50000,"category":"salary","date":"YYYY-MM-DD"}]},"confidence":0.9}
+   {"type":"create","payload":{"items":[{"transactionType":"expense","amount":12000,"category":"식비","date":"YYYY-MM-DD"},{"transactionType":"income","amount":50000,"category":"월급","date":"YYYY-MM-DD"}]},"confidence":0.9}
    - transactionType MUST be exactly "income" or "expense" (English, lowercase)
    - Infer from context: spent/bought/paid → "expense", earned/received/salary → "income"
    - amount: positive integer (Korean Won, no commas)
-   - category: one of food, transport, work, shopping, entertainment, utilities, medicine, other
+   - category: one of ${categoryList} (use EXACT category name from user's existing categories)
    - memo: short description (optional, omit if not provided)
    - date: YYYY-MM-DD, use today if not specified
 
 2. UPDATE: User modifies one or more existing transactions
    Single:
-   {"type":"update","payload":{"id":123,"amount":15000,"category":"food"},"confidence":0.9}
+   {"type":"update","payload":{"id":123,"amount":15000,"category":"식비"},"confidence":0.9}
    Multiple:
-   {"type":"update","payload":{"updates":[{"id":123,"amount":15000},{"id":124,"category":"food"}]},"confidence":0.9}
+   {"type":"update","payload":{"updates":[{"id":123,"amount":15000},{"id":124,"category":"식비"}]},"confidence":0.9}
    - id: transaction ID from recent transactions context (for single update)
    - updates: array of updates with id + fields to change (for multiple updates)
    - Only include fields that change; transactionType must be "income" or "expense" if provided
 
 3. READ: User asks to view transactions
-   {"type":"read","payload":{"month":"YYYY-MM","category":"food","type":"expense"},"confidence":0.9}
+   {"type":"read","payload":{"month":"YYYY-MM","category":"식비","type":"expense"},"confidence":0.9}
    - All fields optional; month format YYYY-MM
 
 4. DELETE: User removes one or more transactions
@@ -47,10 +52,10 @@ Payload schemas for each type:
 5. REPORT: User asks for financial analysis or summary
    {"type":"report","payload":{"reportType":"monthly_summary","params":{"month":"YYYY-MM"}},"confidence":0.9}
    - reportType: one of monthly_summary, category_detail, spending_pattern, anomaly, suggestion
-   - params: {month: "YYYY-MM"} or {category: "food"} if specified
+   - params: {month: "YYYY-MM"} or {category: "식비"} if specified
 
 6. CLARIFY: User input is ambiguous or missing critical fields (confidence < 0.7)
-   {"type":"clarify","payload":{"message":"커피를 찾았어요! 얼마를 썼나요?","missingFields":["amount"],"partialData":{"transactionType":"expense","category":"food","memo":"커피"},"confidence":0.65}
+   {"type":"clarify","payload":{"message":"커피를 찾았어요! 얼마를 썼나요?","missingFields":["amount"],"partialData":{"transactionType":"expense","category":"식비","memo":"커피"},"confidence":0.65}
    - message: natural Korean question asking for the missing field(s)
    - missingFields: array of field names user needs to provide (e.g., ["amount"], ["category"], ["amount","category"])
    - partialData: object with fields already extracted (transactionType, category, memo, date, amount - only include what you extracted)
@@ -85,6 +90,7 @@ Decision Tree:
 4. Is the user asking for analysis or reports? → REPORT
 
 Only return valid JSON. No explanations.`;
+}
 
 export class AIService {
   private config: LLMConfig;
@@ -118,10 +124,13 @@ ${recentTxsFormatted || '(none)'}
 User's categories: ${userCategories.join(', ') || '(none)'}`;
 
     try {
+      // Get dynamic system prompt with user's actual categories
+      const systemPrompt = getSystemPrompt(userCategories);
+
       // First, determine the action type
       const actionDeterminationResponse = await callLLM(
         [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: baseContextMessage },
         ],
         this.config,
@@ -146,7 +155,7 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
 
       // Build messages array with context if available
       const messages: any[] = [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
       ];
 
       // Add context as a separate system message if available
