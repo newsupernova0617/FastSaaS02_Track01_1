@@ -19,6 +19,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scrollController = ScrollController();
   bool _isSending = false;
   bool _isInputEmpty = true;
+  final List<ChatMessage> _optimisticMessages = [];
 
   @override
   void initState() {
@@ -107,6 +108,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _sendMessage(String text) async {
+    if (text.isEmpty) return;
+
     final activeSessionId = ref.read(activeSessionIdProvider);
 
     if (activeSessionId == null) {
@@ -116,7 +119,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
 
-    setState(() => _isSending = true);
+    // Create optimistic user message (show immediately)
+    final userMessage = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch,
+      userId: '',
+      role: 'user',
+      content: text,
+      metadata: null,
+      createdAt: DateTime.now().toIso8601String(),
+    );
+
+    setState(() {
+      _optimisticMessages.add(userMessage);
+      _isSending = true;
+    });
+
+    // Clear input immediately
+    _messageController.clear();
+    _isInputEmpty = true;
 
     // Scroll to show the loading bubble immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -133,7 +153,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await ref.read(
         sendChatMessageProvider((text, activeSessionId)).future,
       );
-      _messageController.clear();
+
+      // Refresh messages from server (will include user message + AI response)
+      ref.refresh(chatMessagesProvider(activeSessionId));
+
+      _optimisticMessages.clear();
 
       Future.delayed(const Duration(milliseconds: 100), () {
         if (_scrollController.hasClients) {
@@ -149,6 +173,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
+        // Remove optimistic message on error
+        setState(() {
+          _optimisticMessages.removeWhere((m) => m.id == userMessage.id);
+        });
       }
     } finally {
       if (mounted) {
@@ -315,19 +343,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ref.watch(chatMessagesProvider(activeSessionId));
 
               return messagesAsync.when(
-                data: (messages) => ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: messages.length + (_isSending ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    // Show loading bubble while waiting for AI response
-                    if (_isSending && index == messages.length) {
-                      return _buildLoadingBubble();
-                    }
-                    final msg = messages[index];
-                    return _buildChatBubble(msg);
-                  },
-                ),
+                data: (messages) {
+                  // Combine server messages with optimistic messages
+                  final allMessages = [...messages, ..._optimisticMessages];
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: allMessages.length + (_isSending ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // Show loading bubble while waiting for AI response
+                      if (_isSending && index == allMessages.length) {
+                        return _buildLoadingBubble();
+                      }
+                      final msg = allMessages[index];
+                      return _buildChatBubble(msg);
+                    },
+                  );
+                },
                 loading: () => const Center(
                   child: CircularProgressIndicator(),
                 ),
