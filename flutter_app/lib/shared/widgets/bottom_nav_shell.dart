@@ -23,7 +23,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
     if (location.startsWith('/record')) return 0;
     if (location.startsWith('/calendar')) return 1;
     if (location.startsWith('/stats')) return 2;
-    if (location.startsWith('/ai')) return 3;
+    if (location.startsWith('/chat')) return 3;
     return 0; // Default to record page
   }
 
@@ -55,7 +55,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
               context.go('/stats');
               break;
             case 3:
-              context.go('/ai');
+              context.go('/chat');
               break;
           }
         },
@@ -76,9 +76,9 @@ class _BottomNavShellState extends State<BottomNavShell> {
             label: '통계',
           ),
           NavigationDestination(
-            icon: Icon(Icons.smart_toy_outlined),
-            selectedIcon: Icon(Icons.smart_toy),
-            label: 'AI',
+            icon: Icon(Icons.chat_outlined),
+            selectedIcon: Icon(Icons.chat),
+            label: 'Chat',
           ),
         ],
       ),

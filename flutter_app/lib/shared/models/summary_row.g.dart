@@ -10,7 +10,7 @@ _$SummaryRowImpl _$$SummaryRowImplFromJson(Map<String, dynamic> json) =>
     _$SummaryRowImpl(
       type: json['type'] as String,
       category: json['category'] as String,
-      total: json['total'] as num,
+      total: _totalFromJson(json['total']),
     );
 
 Map<String, dynamic> _$$SummaryRowImplToJson(_$SummaryRowImpl instance) =>

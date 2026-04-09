@@ -55,13 +55,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         redirect: (context, state) => '/login',
       ),
 
-      // Chat route
-      GoRoute(
-        path: '/chat',
-        name: 'chat',
-        builder: (context, state) => const ChatScreen(),
-      ),
-
       // Report detail route
       GoRoute(
         path: '/report/:id',
@@ -102,11 +95,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const StatsPage(),
           ),
 
-          // AI Chat route
+          // AI Chat route (legacy)
           GoRoute(
             path: '/ai',
             name: 'ai',
             builder: (context, state) => const AIChatPage(),
+          ),
+
+          // Session-based Chat route
+          GoRoute(
+            path: '/chat',
+            name: 'chat',
+            builder: (context, state) => const ChatScreen(),
           ),
         ],
       ),

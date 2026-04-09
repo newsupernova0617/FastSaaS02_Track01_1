@@ -22,10 +22,13 @@ ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$ChatMessage {
   int get id => throw _privateConstructorUsedError;
+  @JsonKey(name: 'sessionId')
+  int? get sessionId => throw _privateConstructorUsedError;
   @JsonKey(name: 'userId')
   String? get userId => throw _privateConstructorUsedError;
   String get role => throw _privateConstructorUsedError; // 'user' | 'assistant'
   String get content => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
   Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
   @JsonKey(name: 'createdAt')
   String get createdAt => throw _privateConstructorUsedError;
@@ -49,9 +52,11 @@ abstract class $ChatMessageCopyWith<$Res> {
   @useResult
   $Res call({
     int id,
+    @JsonKey(name: 'sessionId') int? sessionId,
     @JsonKey(name: 'userId') String? userId,
     String role,
     String content,
+    @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
     Map<String, dynamic>? metadata,
     @JsonKey(name: 'createdAt') String createdAt,
   });
@@ -73,6 +78,7 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
   @override
   $Res call({
     Object? id = null,
+    Object? sessionId = freezed,
     Object? userId = freezed,
     Object? role = null,
     Object? content = null,
@@ -85,6 +91,10 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as int,
+            sessionId: freezed == sessionId
+                ? _value.sessionId
+                : sessionId // ignore: cast_nullable_to_non_nullable
+                      as int?,
             userId: freezed == userId
                 ? _value.userId
                 : userId // ignore: cast_nullable_to_non_nullable
@@ -122,9 +132,11 @@ abstract class _$$ChatMessageImplCopyWith<$Res>
   @useResult
   $Res call({
     int id,
+    @JsonKey(name: 'sessionId') int? sessionId,
     @JsonKey(name: 'userId') String? userId,
     String role,
     String content,
+    @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
     Map<String, dynamic>? metadata,
     @JsonKey(name: 'createdAt') String createdAt,
   });
@@ -145,6 +157,7 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? sessionId = freezed,
     Object? userId = freezed,
     Object? role = null,
     Object? content = null,
@@ -157,6 +170,10 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as int,
+        sessionId: freezed == sessionId
+            ? _value.sessionId
+            : sessionId // ignore: cast_nullable_to_non_nullable
+                  as int?,
         userId: freezed == userId
             ? _value.userId
             : userId // ignore: cast_nullable_to_non_nullable
@@ -187,9 +204,11 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
 class _$ChatMessageImpl implements _ChatMessage {
   const _$ChatMessageImpl({
     required this.id,
+    @JsonKey(name: 'sessionId') this.sessionId,
     @JsonKey(name: 'userId') this.userId,
     required this.role,
     required this.content,
+    @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
     final Map<String, dynamic>? metadata,
     @JsonKey(name: 'createdAt') required this.createdAt,
   }) : _metadata = metadata;
@@ -200,6 +219,9 @@ class _$ChatMessageImpl implements _ChatMessage {
   @override
   final int id;
   @override
+  @JsonKey(name: 'sessionId')
+  final int? sessionId;
+  @override
   @JsonKey(name: 'userId')
   final String? userId;
   @override
@@ -209,6 +231,7 @@ class _$ChatMessageImpl implements _ChatMessage {
   final String content;
   final Map<String, dynamic>? _metadata;
   @override
+  @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
   Map<String, dynamic>? get metadata {
     final value = _metadata;
     if (value == null) return null;
@@ -223,7 +246,7 @@ class _$ChatMessageImpl implements _ChatMessage {
 
   @override
   String toString() {
-    return 'ChatMessage(id: $id, userId: $userId, role: $role, content: $content, metadata: $metadata, createdAt: $createdAt)';
+    return 'ChatMessage(id: $id, sessionId: $sessionId, userId: $userId, role: $role, content: $content, metadata: $metadata, createdAt: $createdAt)';
   }
 
   @override
@@ -232,6 +255,8 @@ class _$ChatMessageImpl implements _ChatMessage {
         (other.runtimeType == runtimeType &&
             other is _$ChatMessageImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.sessionId, sessionId) ||
+                other.sessionId == sessionId) &&
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.role, role) || other.role == role) &&
             (identical(other.content, content) || other.content == content) &&
@@ -245,6 +270,7 @@ class _$ChatMessageImpl implements _ChatMessage {
   int get hashCode => Object.hash(
     runtimeType,
     id,
+    sessionId,
     userId,
     role,
     content,
@@ -269,9 +295,11 @@ class _$ChatMessageImpl implements _ChatMessage {
 abstract class _ChatMessage implements ChatMessage {
   const factory _ChatMessage({
     required final int id,
+    @JsonKey(name: 'sessionId') final int? sessionId,
     @JsonKey(name: 'userId') final String? userId,
     required final String role,
     required final String content,
+    @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
     final Map<String, dynamic>? metadata,
     @JsonKey(name: 'createdAt') required final String createdAt,
   }) = _$ChatMessageImpl;
@@ -282,6 +310,9 @@ abstract class _ChatMessage implements ChatMessage {
   @override
   int get id;
   @override
+  @JsonKey(name: 'sessionId')
+  int? get sessionId;
+  @override
   @JsonKey(name: 'userId')
   String? get userId;
   @override
@@ -289,6 +320,7 @@ abstract class _ChatMessage implements ChatMessage {
   @override
   String get content;
   @override
+  @JsonKey(fromJson: _metadataFromJson, toJson: _metadataToJson)
   Map<String, dynamic>? get metadata;
   @override
   @JsonKey(name: 'createdAt')

@@ -1,4 +1,5 @@
 import { and, eq, desc } from 'drizzle-orm';
+import { sessions as sessionsTable, chatMessages } from '../db/schema';
 
 /**
  * Create a new session for a user
@@ -15,7 +16,7 @@ export async function createSession(
   // Note: User will create the sessions table via migration
   // This function assumes the table exists
   const result = await db
-    .insert(db.sessions)
+    .insert(sessionsTable)
     .values({
       userId,
       title,
@@ -44,14 +45,14 @@ export async function listSessions(
     updatedAt: string;
   }>
 > {
-  const sessions = await db
+  const sessionList = await db
     .select()
-    .from(db.sessions)
-    .where(eq(db.sessions.userId, userId))
-    .orderBy(desc(db.sessions.updatedAt))
+    .from(sessionsTable)
+    .where(eq(sessionsTable.userId, userId))
+    .orderBy(desc(sessionsTable.updatedAt))
     .all();
 
-  return sessions;
+  return sessionList;
 }
 
 /**
@@ -74,11 +75,11 @@ export async function getSession(
 } | null> {
   const session = await db
     .select()
-    .from(db.sessions)
+    .from(sessionsTable)
     .where(
       and(
-        eq(db.sessions.id, sessionId),
-        eq(db.sessions.userId, userId)
+        eq(sessionsTable.id, sessionId),
+        eq(sessionsTable.userId, userId)
       )
     )
     .get();
@@ -107,15 +108,15 @@ export async function renameSession(
   updatedAt: string;
 } | null> {
   const result = await db
-    .update(db.sessions)
+    .update(sessionsTable)
     .set({
       title: newTitle,
       updatedAt: new Date().toISOString(),
     })
     .where(
       and(
-        eq(db.sessions.id, sessionId),
-        eq(db.sessions.userId, userId)
+        eq(sessionsTable.id, sessionId),
+        eq(sessionsTable.userId, userId)
       )
     )
     .returning()
@@ -136,25 +137,34 @@ export async function deleteSession(
   sessionId: number,
   userId: string
 ): Promise<boolean> {
-  // First verify ownership
-  const session = await getSession(db, sessionId, userId);
-  if (!session) {
-    return false;
+  try {
+    // First verify ownership
+    const session = await getSession(db, sessionId, userId);
+    if (!session) {
+      console.log('[deleteSession] Session not found:', { sessionId, userId });
+      return false;
+    }
+
+    console.log('[deleteSession] Deleting messages for sessionId:', sessionId);
+    // Delete all messages in this session first (cascade)
+    await db
+      .delete(chatMessages)
+      .where(eq(chatMessages.sessionId, sessionId))
+      .run();
+
+    console.log('[deleteSession] Deleting session:', sessionId);
+    // Delete the session
+    await db
+      .delete(sessionsTable)
+      .where(eq(sessionsTable.id, sessionId))
+      .run();
+
+    console.log('[deleteSession] Successfully deleted session:', sessionId);
+    return true;
+  } catch (error) {
+    console.error('[deleteSession] Error:', error);
+    throw error;
   }
-
-  // Delete all messages in this session first (cascade)
-  await db
-    .delete(db.chatMessages)
-    .where(eq(db.chatMessages.sessionId, sessionId))
-    .run();
-
-  // Delete the session
-  await db
-    .delete(db.sessions)
-    .where(eq(db.sessions.id, sessionId))
-    .run();
-
-  return true;
 }
 
 /**

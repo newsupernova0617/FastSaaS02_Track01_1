@@ -11,7 +11,7 @@ _$TransactionImpl _$$TransactionImplFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       userId: json['userId'] as String,
       type: json['type'] as String,
-      amount: json['amount'] as num,
+      amount: _amountFromJson(json['amount']),
       category: json['category'] as String?,
       memo: json['memo'] as String?,
       date: json['date'] as String,

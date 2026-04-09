@@ -23,6 +23,7 @@ SummaryRow _$SummaryRowFromJson(Map<String, dynamic> json) {
 mixin _$SummaryRow {
   String get type => throw _privateConstructorUsedError; // 'income' | 'expense'
   String get category => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _totalFromJson)
   num get total => throw _privateConstructorUsedError;
 
   /// Serializes this SummaryRow to a JSON map.
@@ -42,7 +43,11 @@ abstract class $SummaryRowCopyWith<$Res> {
     $Res Function(SummaryRow) then,
   ) = _$SummaryRowCopyWithImpl<$Res, SummaryRow>;
   @useResult
-  $Res call({String type, String category, num total});
+  $Res call({
+    String type,
+    String category,
+    @JsonKey(fromJson: _totalFromJson) num total,
+  });
 }
 
 /// @nodoc
@@ -93,7 +98,11 @@ abstract class _$$SummaryRowImplCopyWith<$Res>
   ) = __$$SummaryRowImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String type, String category, num total});
+  $Res call({
+    String type,
+    String category,
+    @JsonKey(fromJson: _totalFromJson) num total,
+  });
 }
 
 /// @nodoc
@@ -139,7 +148,7 @@ class _$SummaryRowImpl implements _SummaryRow {
   const _$SummaryRowImpl({
     required this.type,
     required this.category,
-    required this.total,
+    @JsonKey(fromJson: _totalFromJson) required this.total,
   });
 
   factory _$SummaryRowImpl.fromJson(Map<String, dynamic> json) =>
@@ -151,6 +160,7 @@ class _$SummaryRowImpl implements _SummaryRow {
   @override
   final String category;
   @override
+  @JsonKey(fromJson: _totalFromJson)
   final num total;
 
   @override
@@ -191,7 +201,7 @@ abstract class _SummaryRow implements SummaryRow {
   const factory _SummaryRow({
     required final String type,
     required final String category,
-    required final num total,
+    @JsonKey(fromJson: _totalFromJson) required final num total,
   }) = _$SummaryRowImpl;
 
   factory _SummaryRow.fromJson(Map<String, dynamic> json) =
@@ -202,6 +212,7 @@ abstract class _SummaryRow implements SummaryRow {
   @override
   String get category;
   @override
+  @JsonKey(fromJson: _totalFromJson)
   num get total;
 
   /// Create a copy of SummaryRow

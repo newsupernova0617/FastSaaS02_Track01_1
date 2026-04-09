@@ -13,6 +13,7 @@ export type Env = {
     GEMINI_MODEL_NAME?: string;
     AI_PROVIDER?: 'gemini' | 'workers-ai'; // defaults to 'workers-ai'
     AI?: any; // Cloudflare Workers AI binding
+    VECTORIZE?: any; // Cloudflare Vectorize binding (optional)
 };
 
 export function getDb(env: Env) {

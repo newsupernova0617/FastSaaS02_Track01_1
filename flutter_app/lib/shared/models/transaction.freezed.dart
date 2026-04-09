@@ -25,6 +25,7 @@ mixin _$Transaction {
   @JsonKey(name: 'userId')
   String get userId => throw _privateConstructorUsedError;
   String get type => throw _privateConstructorUsedError; // 'income' | 'expense'
+  @JsonKey(fromJson: _amountFromJson)
   num get amount => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
   @JsonKey(name: 'memo')
@@ -54,7 +55,7 @@ abstract class $TransactionCopyWith<$Res> {
     int id,
     @JsonKey(name: 'userId') String userId,
     String type,
-    num amount,
+    @JsonKey(fromJson: _amountFromJson) num amount,
     String? category,
     @JsonKey(name: 'memo') String? memo,
     String date,
@@ -139,7 +140,7 @@ abstract class _$$TransactionImplCopyWith<$Res>
     int id,
     @JsonKey(name: 'userId') String userId,
     String type,
-    num amount,
+    @JsonKey(fromJson: _amountFromJson) num amount,
     String? category,
     @JsonKey(name: 'memo') String? memo,
     String date,
@@ -216,7 +217,7 @@ class _$TransactionImpl implements _Transaction {
     required this.id,
     @JsonKey(name: 'userId') required this.userId,
     required this.type,
-    required this.amount,
+    @JsonKey(fromJson: _amountFromJson) required this.amount,
     this.category,
     @JsonKey(name: 'memo') this.memo,
     required this.date,
@@ -235,6 +236,7 @@ class _$TransactionImpl implements _Transaction {
   final String type;
   // 'income' | 'expense'
   @override
+  @JsonKey(fromJson: _amountFromJson)
   final num amount;
   @override
   final String? category;
@@ -303,7 +305,7 @@ abstract class _Transaction implements Transaction {
     required final int id,
     @JsonKey(name: 'userId') required final String userId,
     required final String type,
-    required final num amount,
+    @JsonKey(fromJson: _amountFromJson) required final num amount,
     final String? category,
     @JsonKey(name: 'memo') final String? memo,
     required final String date,
@@ -321,6 +323,7 @@ abstract class _Transaction implements Transaction {
   @override
   String get type; // 'income' | 'expense'
   @override
+  @JsonKey(fromJson: _amountFromJson)
   num get amount;
   @override
   String? get category;

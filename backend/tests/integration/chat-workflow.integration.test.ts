@@ -326,9 +326,10 @@ describe('Chat Workflow Integration', () => {
       // Assert: Metadata should be fully preserved and parseable
       const history = await getChatHistory(db, testUserId, 100);
       expect(history).toHaveLength(1);
-      expect(history[0].metadata).toEqual(complexMetadata);
-      expect(history[0].metadata?.sections).toHaveLength(2);
-      expect(history[0].metadata?.sections[0].type).toBe('card');
+      const metadata = history[0].metadata as any;
+      expect(metadata).toEqual(complexMetadata);
+      expect(metadata?.sections).toHaveLength(2);
+      expect(metadata?.sections[0].type).toBe('card');
     });
   });
 
@@ -359,9 +360,11 @@ describe('Chat Workflow Integration', () => {
       const history2 = await getChatHistory(db, testUserId, 100);
 
       // Assert: Metadata should be identical on both retrievals
-      expect(history1[0].metadata).toEqual(metadata);
-      expect(history2[0].metadata).toEqual(metadata);
-      expect(history1[0].metadata).toEqual(history2[0].metadata);
+      const metadata1 = history1[0].metadata as any;
+      const metadata2 = history2[0].metadata as any;
+      expect(metadata1).toEqual(metadata);
+      expect(metadata2).toEqual(metadata);
+      expect(metadata1).toEqual(metadata2);
     });
   });
 });

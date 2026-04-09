@@ -7,6 +7,7 @@ class SessionSidebar extends ConsumerWidget {
   final int? activeSessionId;
   final Function(int) onSessionSelect;
   final Function() onNewSession;
+  final Function(int)? onDeleteSession;
   final bool isLoading;
   final List<SessionItem> sessions;
 
@@ -15,6 +16,7 @@ class SessionSidebar extends ConsumerWidget {
     required this.activeSessionId,
     required this.onSessionSelect,
     required this.onNewSession,
+    this.onDeleteSession,
     required this.sessions,
     this.isLoading = false,
   });
@@ -96,7 +98,7 @@ class SessionSidebar extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              // onDeleteSession would be called from parent
+              onDeleteSession?.call(session.id);
               Navigator.pop(context);
             },
             style: TextButton.styleFrom(
@@ -189,8 +191,12 @@ class SessionSidebar extends ConsumerWidget {
                                 ),
                               ),
                               onTap: () => onSessionSelect(session.id),
-                              onLongPress: () =>
-                                  _showSessionMenu(context, session),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                onPressed: () => _showDeleteConfirmation(context, session),
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                padding: EdgeInsets.zero,
+                              ),
                               dense: true,
                             ),
                           );

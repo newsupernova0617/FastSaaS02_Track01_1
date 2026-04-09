@@ -9,7 +9,7 @@ class Transaction with _$Transaction {
     required int id,
     @JsonKey(name: 'userId') required String userId,
     required String type, // 'income' | 'expense'
-    required num amount,
+    @JsonKey(fromJson: _amountFromJson) required num amount,
     String? category,
     @JsonKey(name: 'memo') String? memo,
     required String date, // YYYY-MM-DD
@@ -18,4 +18,18 @@ class Transaction with _$Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) =>
       _$TransactionFromJson(json);
+}
+
+// Helper to safely convert amount from JSON
+num _amountFromJson(dynamic json) {
+  if (json == null) return 0;
+  if (json is num) return json;
+  if (json is String) {
+    try {
+      return num.parse(json);
+    } catch (e) {
+      return 0;
+    }
+  }
+  return 0;
 }

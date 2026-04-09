@@ -537,97 +537,92 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                         final categoryEmoji = _getCategoryEmoji(transaction.category);
                         final isExpense = transaction.type == 'expense';
 
-                        return Dismissible(
-                          key: ValueKey('transaction_${transaction.id}'),
-                          direction: DismissDirection.endToStart,
-                          onDismissed: (direction) {
-                            _deleteTransaction(transaction.id.toString());
-                          },
-                          background: Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.errorColor,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.borderRadiusCards,
-                              ),
-                            ),
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 16),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                            ),
-                          ),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                children: [
-                                  // Category indicator
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      color: categoryColor.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        categoryEmoji,
-                                        style: const TextStyle(fontSize: 24),
-                                      ),
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // Category indicator
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      categoryEmoji,
+                                      style: const TextStyle(fontSize: 24),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
+                                ),
+                                const SizedBox(width: 12),
 
-                                  // Transaction details
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                transaction.category ?? '기타',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black87,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              '${isExpense ? '-' : '+'} ${_formatCurrency(transaction.amount.toDouble())}',
-                                              style: TextStyle(
+                                // Transaction details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              transaction.category ?? '기타',
+                                              style: const TextStyle(
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.bold,
-                                                color: categoryColor,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
                                               ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        if (transaction.memo != null &&
-                                            transaction.memo!.isNotEmpty)
-                                          Text(
-                                            transaction.memo!,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.black54,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                      ],
-                                    ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '${isExpense ? '-' : '+'} ${_formatCurrency(transaction.amount.toDouble())}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: categoryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      if (transaction.memo != null &&
+                                          transaction.memo!.isNotEmpty)
+                                        Text(
+                                          transaction.memo!,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+
+                                // Delete button
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline),
+                                  color: AppTheme.errorColor,
+                                  iconSize: 20,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 40,
+                                    minHeight: 40,
+                                  ),
+                                  onPressed: () {
+                                    _deleteTransaction(transaction.id.toString());
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );

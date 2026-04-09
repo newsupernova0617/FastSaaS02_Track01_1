@@ -25,6 +25,15 @@ export const transactions = sqliteTable('transactions', {
     deletedAt: text('deleted_at'),            // 소프트 삭제 타임스탬프 (선택사항, null이면 활성 상태)
 });
 
+// Chat sessions for organizing conversations (forward declare)
+export const sessions = sqliteTable('sessions', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    userId:    text('user_id').notNull().references(() => users.id),
+    title:     text('title').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
 // AI 챗 메시지 기록
 export const chatMessages = sqliteTable('chat_messages', {
     id:        integer('id').primaryKey({ autoIncrement: true }), // 자동 증가 ID
@@ -34,15 +43,6 @@ export const chatMessages = sqliteTable('chat_messages', {
     content:   text('content').notNull(),     // 메시지 내용
     metadata:  text('metadata'),              // JSON 형식의 추가 메타데이터 (리포트 데이터 등)
     createdAt: text('created_at').default(sql`(datetime('now'))`), // 메시지 생성 시간 (자동)
-});
-
-// Chat sessions for organizing conversations
-export const sessions = sqliteTable('sessions', {
-    id:        integer('id').primaryKey({ autoIncrement: true }),
-    userId:    text('user_id').notNull().references(() => users.id),
-    title:     text('title').notNull(),
-    createdAt: text('created_at').default(sql`(datetime('now'))`),
-    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
 
 // Clarification sessions for handling ambiguous user input

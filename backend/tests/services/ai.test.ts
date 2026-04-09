@@ -18,7 +18,7 @@ describe('AIService', () => {
       }),
     }));
 
-    const service = new AIService({ provider: 'groq', apiKey: 'test-api-key', modelName: 'llama-3.1-8b-instant' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     const result = await service.parseUserInput('3월 내역 보여줘', [], []);
 
     expect(result.type).toBe('read');
@@ -38,7 +38,7 @@ describe('AIService', () => {
     });
     vi.stubGlobal('fetch', mockFetch);
 
-    const service = new AIService({ provider: 'groq', apiKey: 'my-api-key', modelName: 'llama-3.1-8b-instant' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'my-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     await service.parseUserInput('점심 12000원 썼어', [], []);
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -65,7 +65,7 @@ describe('AIService', () => {
     });
     vi.stubGlobal('fetch', mockFetch);
 
-    const service = new AIService({ provider: 'groq', apiKey: 'test-api-key', modelName: 'mixtral-8x7b-32768' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     await service.parseUserInput('내역 보여줘', [], []);
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
@@ -85,7 +85,7 @@ describe('AIService', () => {
     });
     vi.stubGlobal('fetch', mockFetch);
 
-    const service = new AIService({ provider: 'groq', apiKey: 'test-api-key', modelName: 'llama-3.1-8b-instant' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     await service.parseUserInput('내역 보여줘', [], []);
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
@@ -99,14 +99,14 @@ describe('AIService', () => {
       json: async () => ({ error: { message: 'Invalid API key' } }),
     }));
 
-    const service = new AIService({ provider: 'groq', apiKey: 'bad-api-key', modelName: 'llama-3.1-8b-instant' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'bad-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow();
   });
 
   it('throws error when fetch fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
 
-    const service = new AIService({ provider: 'groq', apiKey: 'test-api-key', modelName: 'llama-3.1-8b-instant' });
+    const service = new AIService({ provider: 'workers-ai', apiKey: 'test-api-key', modelName: '@cf/meta/llama-2-7b-chat-int8' });
     await expect(service.parseUserInput('테스트', [], [])).rejects.toThrow('Failed to process request');
   });
 });

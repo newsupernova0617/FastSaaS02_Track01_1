@@ -5,6 +5,9 @@ import {
   validateUpdatePayload,
   validateReadPayload,
   validateDeletePayload,
+  validateAmount,
+  validateDate,
+  validateCategory,
 } from '../../src/services/validation';
 
 describe('Validation Schemas', () => {

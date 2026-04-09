@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Hono } from 'hono';
+import type { Variables } from '../../src/middleware/auth';
+import type { Env } from '../../src/db/index';
 import sessionsRouter from '../../src/routes/sessions';
 
 describe('Sessions Routes', () => {
-  let app: Hono;
+  let app: Hono<{ Bindings: Env; Variables: Variables }>;
 
   beforeEach(() => {
-    app = new Hono();
+    app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
     // Add auth middleware mock
     app.use('*', async (c, next) => {
@@ -37,7 +39,7 @@ describe('Sessions Routes', () => {
 
       expect(response.status).toBeOneOf([400, 500]);
       if (response.status === 400) {
-        const data = await response.json();
+        const data = await response.json() as any;
         expect(data.error).toContain('Title');
       }
     });
@@ -51,7 +53,7 @@ describe('Sessions Routes', () => {
 
       expect(response.status).toBeOneOf([200, 500]);
       if (response.status === 200) {
-        const data = await response.json();
+        const data = await response.json() as any;
         expect(Array.isArray(data.sessions)).toBe(true);
       }
     });
@@ -73,7 +75,7 @@ describe('Sessions Routes', () => {
 
       expect(response.status).toBeOneOf([400, 500]);
       if (response.status === 400) {
-        const data = await response.json();
+        const data = await response.json() as any;
         expect(data.error).toContain('Invalid');
       }
     });

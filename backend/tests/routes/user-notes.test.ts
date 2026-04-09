@@ -65,7 +65,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(201);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.id).toBe(1);
       expect(data.content).toBe('My financial goal');
     });
@@ -78,7 +78,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Content is required');
     });
 
@@ -112,7 +112,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(500);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Failed to create note');
     });
 
@@ -134,7 +134,7 @@ describe('User Notes Routes', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.embeddingId).toBe('emb-2');
       expect(data.createdAt).toBe('2026-04-08T10:00:00Z');
     });
@@ -152,7 +152,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes', { method: 'GET' });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(Array.isArray(data)).toBe(true);
       expect(data.length).toBe(2);
     });
@@ -171,7 +171,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes', { method: 'GET' });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data).toEqual([]);
     });
 
@@ -181,7 +181,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes', { method: 'GET' });
 
       expect(res.status).toBe(500);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Failed to list notes');
     });
 
@@ -196,7 +196,7 @@ describe('User Notes Routes', () => {
 
       const res = await app.request('/api/notes', { method: 'GET' });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.length).toBe(3);
     });
   });
@@ -215,7 +215,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/1', { method: 'GET' });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.id).toBe(1);
       expect(data.content).toBe('My note');
     });
@@ -226,7 +226,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/999', { method: 'GET' });
 
       expect(res.status).toBe(404);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Note not found');
     });
 
@@ -244,7 +244,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/1', { method: 'GET' });
 
       expect(res.status).toBe(500);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Failed to get note');
     });
 
@@ -275,7 +275,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.content).toBe('Updated content');
     });
 
@@ -287,7 +287,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Content is required');
     });
 
@@ -303,7 +303,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(404);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Note not found');
     });
 
@@ -334,7 +334,7 @@ describe('User Notes Routes', () => {
       });
 
       expect(res.status).toBe(500);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Failed to update note');
     });
 
@@ -363,7 +363,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/1', { method: 'DELETE' });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.success).toBe(true);
     });
 
@@ -375,7 +375,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/999', { method: 'DELETE' });
 
       expect(res.status).toBe(404);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Note not found');
     });
 
@@ -393,7 +393,7 @@ describe('User Notes Routes', () => {
       const res = await app.request('/api/notes/1', { method: 'DELETE' });
 
       expect(res.status).toBe(500);
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBe('Failed to delete note');
     });
 
@@ -512,7 +512,7 @@ describe('User Notes Routes', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.error).toBeDefined();
       expect(typeof data.error).toBe('string');
     });
@@ -534,7 +534,7 @@ describe('User Notes Routes', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data).toHaveProperty('id');
     });
 
@@ -545,7 +545,7 @@ describe('User Notes Routes', () => {
 
       const res = await app.request('/api/notes', { method: 'GET' });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(Array.isArray(data)).toBe(true);
     });
 
@@ -554,7 +554,7 @@ describe('User Notes Routes', () => {
 
       const res = await app.request('/api/notes/1', { method: 'DELETE' });
 
-      const data = await res.json();
+      const data = await res.json() as any;
       expect(data.success).toBe(true);
     });
   });

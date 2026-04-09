@@ -55,6 +55,21 @@ vi.mock('../../src/services/ai-report', () => {
   };
 });
 
+// Mock clarifications service
+vi.mock('../../src/services/clarifications', () => {
+  return {
+    clarificationService: {
+      getClarification: vi.fn().mockResolvedValue(null),
+      saveClarification: vi.fn().mockResolvedValue('clarification-id-123'),
+      deleteClarification: vi.fn().mockResolvedValue(undefined),
+      mergeClarificationResponse: vi.fn().mockResolvedValue({
+        mergedData: {},
+        stillMissingFields: [],
+      }),
+    },
+  };
+});
+
 const { AIService } = await import('../../src/services/ai');
 const { getDb } = await import('../../src/db/index');
 const { saveMessage } = await import('../../src/services/chat');

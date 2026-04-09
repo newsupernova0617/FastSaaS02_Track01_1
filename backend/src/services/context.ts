@@ -77,6 +77,20 @@ export class ContextService {
         noteItems: 4,
         totalItems: 20,
       },
+      clarify: {
+        action: 'clarify',
+        knowledgeItems: 1,
+        transactionItems: 3,
+        noteItems: 1,
+        totalItems: 5,
+      },
+      plain_text: {
+        action: 'plain_text',
+        knowledgeItems: 2,
+        transactionItems: 0,
+        noteItems: 0,
+        totalItems: 2,
+      },
     };
 
     return strategies[actionType] || {
@@ -97,7 +111,7 @@ export class ContextService {
       .from(knowledgeBase)
       .limit(limit);
 
-    return items.map((item) => ({
+    return items.map((item: any) => ({
       type: 'knowledge' as const,
       content: item.content,
       source: item.category || 'general',
@@ -120,7 +134,7 @@ export class ContextService {
       .where(eq(transactions.userId, userId))
       .limit(limit);
 
-    return items.map((item) => ({
+    return items.map((item: any) => ({
       type: 'transaction' as const,
       content: `${item.memo || item.category} - $${item.amount} (${item.type})`,
       source: `${item.date}`,
@@ -142,7 +156,7 @@ export class ContextService {
       .where(eq(userNotes.userId, userId))
       .limit(limit);
 
-    return items.map((item) => ({
+    return items.map((item: any) => ({
       type: 'note' as const,
       content: item.content,
       source: `note-${item.id}`,

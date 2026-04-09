@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/api/api_client.dart';
 
@@ -37,14 +38,28 @@ final sessionProvider = FutureProvider.autoDispose<List<SessionItem>>((ref) asyn
 
     // Sort by most recent first
     sessions.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+    // Auto-select first session if none is currently selected
+    final activeId = ref.read(activeSessionIdProvider);
+    if (activeId == null && sessions.isNotEmpty) {
+      // Use addPostFrameCallback to update state after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(activeSessionIdProvider.notifier).state = sessions[0].id;
+      });
+    }
+
     return sessions;
   } catch (e) {
     throw Exception('Error loading sessions: $e');
   }
 });
 
-/// Currently active session ID (nullable if none selected)
-final activeSessionIdProvider = StateProvider<int?>((ref) => null);
+/// Currently active session ID - persists across navigation
+/// Does NOT reset when widget rebuilds
+final activeSessionIdProvider = StateProvider<int?>((ref) {
+  // This value is preserved and not reset during rebuilds
+  return null;
+});
 
 /// Create a new session with given title
 final createSessionProvider = FutureProvider.family<int, String>((ref, title) async {

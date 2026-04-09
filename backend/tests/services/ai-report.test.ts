@@ -3,74 +3,6 @@ import { AIReportService } from '../../src/services/ai-report';
 import type { ReportPayload } from '../../src/types/ai';
 import { TEST_USER_ID } from '../fixtures/test-data';
 
-<<<<<<< HEAD
-const mockGroqResponse = {
-  sections: [
-    {
-      type: 'card',
-      title: 'Monthly Summary',
-      subtitle: 'Apr 2026',
-      metric: '₩1,250,000',
-      trend: 'down',
-    },
-    {
-      type: 'pie',
-      title: 'Spending by Category',
-      data: [{ name: '식비', value: 500000 }],
-    },
-  ],
-};
-
-vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-  ok: true,
-  json: async () => ({
-    choices: [{
-      message: {
-        content: JSON.stringify(mockGroqResponse),
-      },
-    }],
-  }),
-}));
-=======
-/**
- * Mock setup for Google Generative AI
- * Mocks the GoogleGenerativeAI class and its methods
- */
-vi.mock('@google/generative-ai', () => {
-  class MockGoogleGenerativeAI {
-    getGenerativeModel() {
-      return {
-        generateContent: vi.fn().mockResolvedValue({
-          response: {
-            text: vi.fn().mockReturnValue(
-              JSON.stringify({
-                sections: [
-                  {
-                    type: 'card',
-                    title: 'Monthly Summary',
-                    subtitle: 'Apr 2026',
-                    metric: '₩1,250,000',
-                    trend: 'down',
-                  },
-                  {
-                    type: 'pie',
-                    title: 'Spending by Category',
-                    data: [{ name: '식비', value: 500000 }],
-                  },
-                ],
-              })
-            ),
-          },
-        }),
-      };
-    }
-  }
-
-  return {
-    GoogleGenerativeAI: MockGoogleGenerativeAI,
-  };
-});
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
 
 /**
  * Factory function to create a mock database
@@ -95,11 +27,11 @@ describe('AIReportService', () => {
 
   beforeEach(() => {
     // Initialize service with fake API key
-<<<<<<< HEAD
-    service = new AIReportService({ provider: 'groq', apiKey: 'fake-api-key-test', modelName: 'llama-3.1-8b-instant' });
-=======
-    service = new AIReportService('fake-api-key-test');
->>>>>>> 63fba07758528cfcda93dfe5abdc09497aca712a
+    service = new AIReportService({
+      provider: 'workers-ai',
+      apiKey: 'test-api-key',
+      modelName: '@cf/meta/llama-2-7b-chat-int8'
+    });
     // Reset all mocks
     vi.clearAllMocks();
   });

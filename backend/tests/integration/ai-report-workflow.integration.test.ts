@@ -98,7 +98,11 @@ describe('AI Report Workflow Integration', () => {
     db = drizzle(client, { schema });
 
     // Create report service with mock API
-    reportService = new AIReportService(process.env.GEMINI_API_KEY || 'test-key');
+    reportService = new AIReportService({
+      provider: 'gemini',
+      apiKey: process.env.GEMINI_API_KEY || 'test-key',
+      modelName: 'gemini-pro'
+    });
 
     // Clean up any existing test data
     await db
@@ -418,8 +422,9 @@ describe('AI Report Workflow Integration', () => {
 
       // Assert: Full data should be preserved
       const history = await getChatHistory(db, testUserId, 100);
-      expect(history[0].metadata?.report).toBeDefined();
-      expect(history[0].metadata?.report.sections).toHaveLength(6);
+      const metadata = history[0].metadata as any;
+      expect(metadata?.report).toBeDefined();
+      expect(metadata?.report.sections).toHaveLength(6);
     });
   });
 

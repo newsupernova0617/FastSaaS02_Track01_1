@@ -50,7 +50,11 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
-      const id = parseInt(c.req.param('id'));
+      const idParam = c.req.param('id');
+      if (!idParam) {
+        return c.json({ error: 'Note ID is required' }, 400);
+      }
+      const id = parseInt(idParam);
 
       const note = await userNotesService.getNote(db, id, userId);
       if (!note) {
@@ -71,7 +75,11 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
-      const id = parseInt(c.req.param('id'));
+      const idParam = c.req.param('id');
+      if (!idParam) {
+        return c.json({ error: 'Note ID is required' }, 400);
+      }
+      const id = parseInt(idParam);
       const { content } = await c.req.json();
 
       if (!content) {
@@ -96,7 +104,11 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
-      const id = parseInt(c.req.param('id'));
+      const idParam = c.req.param('id');
+      if (!idParam) {
+        return c.json({ error: 'Note ID is required' }, 400);
+      }
+      const id = parseInt(idParam);
 
       await userNotesService.deleteNote(db, id, userId);
       return c.json({ success: true });

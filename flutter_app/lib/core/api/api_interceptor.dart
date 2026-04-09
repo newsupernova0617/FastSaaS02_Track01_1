@@ -1,51 +1,33 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/logger/network_logger.dart';
+import 'package:flutter_app/core/logger/logger.dart';
 
 /// Logging Interceptor for Dio
-/// Logs request and response information for debugging
+/// Logs request and response information with timing and masking
 class LoggingInterceptor extends Interceptor {
+  final NetworkLogger _networkLogger = NetworkLogger();
+
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final fullUrl = '${options.baseUrl}${options.path}';
-    _log('REQUEST', options.method, options.path,
-        headers: options.headers, data: options.data, fullUrl: fullUrl);
+    final startTime = DateTime.now();
+    _networkLogger.logRequest(options, startTime: startTime);
     handler.next(options);
   }
 
   @override
   Future<void> onResponse(Response response, ResponseInterceptorHandler handler) async {
-    _log('RESPONSE', response.requestOptions.method, response.requestOptions.path,
-        statusCode: response.statusCode, data: response.data);
+    final startTime = DateTime.now();
+    _networkLogger.logResponse(response, startTime: startTime);
     handler.next(response);
   }
 
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
-    _log('ERROR', err.requestOptions.method, err.requestOptions.path,
-        statusCode: err.response?.statusCode, error: err.message);
+    final startTime = DateTime.now();
+    _networkLogger.logError(err, startTime: startTime);
     handler.next(err);
-  }
-
-  void _log(String type, String method, String path,
-      {int? statusCode, Map<String, dynamic>? headers, dynamic data, String? error, String? fullUrl}) {
-    final buffer = StringBuffer();
-    buffer.writeln('[\t$type\t] $method $path');
-    if (fullUrl != null) buffer.writeln('Full URL: $fullUrl');
-    if (statusCode != null) buffer.writeln('Status Code: $statusCode');
-    if (headers != null && headers.isNotEmpty) {
-      buffer.writeln('Headers:');
-      headers.forEach((key, value) {
-        buffer.writeln('  $key: $value');
-      });
-    }
-    if (data != null) {
-      buffer.writeln('Data: $data');
-    }
-    if (error != null) {
-      buffer.writeln('Error: $error');
-    }
-    print(buffer.toString());
   }
 }
 
@@ -76,9 +58,16 @@ class AuthInterceptor extends Interceptor {
     // Get the JWT token from Supabase session
     final token = await getToken();
 
+    print('[AuthInterceptor] onRequest called');
+    print('[AuthInterceptor] Token: ${token != null ? 'EXISTS (${token.length} chars)' : 'NULL'}');
+    print('[AuthInterceptor] URL: ${options.path}');
+
     if (token != null && token.isNotEmpty) {
       // Attach Bearer token to Authorization header
       options.headers['Authorization'] = 'Bearer $token';
+      print('[AuthInterceptor] Authorization header added');
+    } else {
+      print('[AuthInterceptor] No token, skipping Authorization header');
     }
 
     handler.next(options);
@@ -124,11 +113,12 @@ class AuthInterceptor extends Interceptor {
     // First 401 request: attempt token refresh
     _refreshCompleter = Completer<String?>();
     try {
-      print('[AUTH] Refreshing token...');
+      final logger = _getLogger();
+      logger.info('[AUTH] Refreshing token...');
       await refreshToken();
 
       final newToken = await getToken();
-      print('[AUTH] Token refreshed successfully');
+      logger.info('[AUTH] Token refreshed successfully');
       _refreshCompleter!.complete(newToken);
 
       if (newToken != null) {
@@ -148,7 +138,8 @@ class AuthInterceptor extends Interceptor {
         }
       }
     } catch (e) {
-      print('[AUTH] Token refresh failed: $e');
+      final logger = _getLogger();
+      logger.error('[AUTH] Token refresh failed: $e', error: e);
       _refreshCompleter!.completeError(e);
 
       // Refresh failed, attempt logout
@@ -162,6 +153,8 @@ class AuthInterceptor extends Interceptor {
       _refreshCompleter = null;
     }
   }
+
+  Logger _getLogger() => Logger();
 }
 
 // Placeholder for dioProvider (will be injected from api_provider.dart)

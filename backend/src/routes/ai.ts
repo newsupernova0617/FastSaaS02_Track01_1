@@ -347,7 +347,7 @@ router.post('/action', async (c) => {
         const conditions: any[] = [
           eq(transactions.userId, userId),
           isNull(transactions.deletedAt),
-          sql`${transactions.date} LIKE ${month}%`
+          sql`${transactions.date} LIKE ${month + '%'}`
         ];
 
         // Add category filter if provided

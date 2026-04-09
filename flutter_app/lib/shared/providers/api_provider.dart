@@ -28,6 +28,7 @@ final authenticatedDioProvider = Provider<Dio>((ref) {
     getToken: () async {
       // Get the access token from the auth provider
       final token = ref.read(accessTokenProvider);
+      print('[AUTH] Token from provider: ${token != null ? 'EXISTS (${token.length} chars)' : 'NULL'}');
       return token;
     },
     refreshToken: () async {

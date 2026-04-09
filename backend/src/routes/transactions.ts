@@ -42,16 +42,17 @@ router.post('/', async (c) => {
 
         // 클라이언트가 보낸 데이터로 거래 생성
         // userId는 서버에서 강제로 설정해서 다른 사용자 데이터를 건들 수 없게 방지 (보안)
+        const values: any = {
+            userId,  // 요청자 자신으로 고정
+            type: validated.transactionType,      // 'income' 또는 'expense'
+            amount: validated.amount,  // 금액
+            category: validated.category,
+            memo: validated.memo ?? null,  // 메모 없으면 null로 저장
+            date: validated.date,      // YYYY-MM-DD
+        };
         const result = await db
             .insert(transactions)
-            .values({
-                userId,  // 요청자 자신으로 고정
-                type: validated.transactionType,      // 'income' 또는 'expense'
-                amount: validated.amount,  // 금액
-                category: validated.category,
-                memo: validated.memo ?? null,  // 메모 없으면 null로 저장
-                date: validated.date,      // YYYY-MM-DD
-            })
+            .values(values)
             .returning({ id: transactions.id });  // 저장된 ID 반환
 
         return c.json({ id: result[0].id }, 201);  // 201 Created 상태 코드

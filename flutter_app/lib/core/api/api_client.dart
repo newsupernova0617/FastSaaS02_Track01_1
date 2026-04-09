@@ -6,7 +6,7 @@ import 'package:flutter_app/shared/models/chat_message.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'package:flutter_app/shared/models/ai_action_response.dart';
 import 'package:flutter_app/shared/models/report.dart';
-import 'api_interceptor.dart';
+import 'package:flutter_app/shared/providers/api_provider.dart';
 
 /// API Client for handling all API requests
 class ApiClient {
@@ -404,7 +404,8 @@ class ApiClient {
 
   /// Send a chat message in a session
   /// POST /api/sessions/:sessionId/messages
-  Future<ChatMessage> sendSessionMessage(
+  /// Returns void - messages are fetched via getSessionMessages
+  Future<void> sendSessionMessage(
     int sessionId,
     String message,
   ) async {
@@ -414,14 +415,12 @@ class ApiClient {
         data: {'content': message},
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final messageData = response.data as Map<String, dynamic>;
-        return ChatMessage.fromJson(messageData);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
       }
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-      );
     } on DioException {
       rethrow;
     }
@@ -433,29 +432,10 @@ class ApiClient {
   }
 }
 
-/// Provider for Dio instance
-final dioProvider = Provider<Dio>((ref) {
-  final baseUrl = AppConstants.apiBaseUrl;
-  print('[DIO] Base URL: $baseUrl');
-
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: Duration(seconds: AppConstants.connectTimeoutSeconds),
-      receiveTimeout: Duration(seconds: AppConstants.apiTimeoutSeconds),
-      contentType: Headers.jsonContentType,
-      responseType: ResponseType.json,
-    ),
-  );
-
-  // Add logging interceptor
-  dio.interceptors.add(LoggingInterceptor());
-
-  return dio;
-});
-
 /// Provider for API Client
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final dio = ref.watch(dioProvider);
+  // Use the authenticated Dio from api_provider instead of creating a new one
+  // This ensures all API requests include JWT tokens and handle 401 errors
+  final dio = ref.watch(authenticatedDioProvider);
   return ApiClient(dio: dio);
 });

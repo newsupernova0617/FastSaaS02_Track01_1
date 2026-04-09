@@ -13,12 +13,32 @@ export function generateCreateMessage(tx: Transaction): string {
   return `${formatType(tx.type)} ${formatAmount(tx.amount)} ${tx.memo || tx.category}로 ${tx.date}에 저장되었습니다`;
 }
 
+export function generateCreateMultipleMessage(transactions: Transaction[]): string {
+  const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  const summary = transactions
+    .slice(0, 2)
+    .map(tx => `${formatType(tx.type)} ${formatAmount(tx.amount)}`)
+    .join(', ');
+  const more = transactions.length > 2 ? ` 외 ${transactions.length - 2}개` : '';
+  return `${summary}${more} 등 ${transactions.length}개 거래가 생성되었습니다 (총 ${formatAmount(totalAmount)})`;
+}
+
 export function generateUpdateMessage(tx: Transaction): string {
   return `거래가 수정되었습니다. ${formatType(tx.type)} ${formatAmount(tx.amount)} ${tx.memo || tx.category} (${tx.date})`;
 }
 
+export function generateUpdateMultipleMessage(transactions: Transaction[]): string {
+  const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  return `${transactions.length}개 거래가 수정되었습니다 (총액: ${formatAmount(totalAmount)})`;
+}
+
 export function generateDeleteMessage(tx: Transaction): string {
   return `${formatType(tx.type)} ${formatAmount(tx.amount)} ${tx.memo || tx.category} (${tx.date}) 삭제되었습니다. 최근 삭제된 항목에서 되돌릴 수 있습니다`;
+}
+
+export function generateDeleteMultipleMessage(transactions: Transaction[]): string {
+  const totalAmount = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  return `${transactions.length}개 거래가 삭제되었습니다 (총액: ${formatAmount(totalAmount)}). 최근 삭제된 항목에서 되돌릴 수 있습니다`;
 }
 
 export function generateUndoMessage(tx: Transaction): string {

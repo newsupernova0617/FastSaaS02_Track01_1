@@ -1,0 +1,124 @@
+/// Structured logging utility for Flutter app
+/// Provides different log levels and automatic sensitive data masking
+
+enum LogLevel {
+  debug(0),
+  info(1),
+  warn(2),
+  error(3);
+
+  final int priority;
+  const LogLevel(this.priority);
+
+  String get label => name.toUpperCase();
+}
+
+class Logger {
+  static final Logger _instance = Logger._internal();
+  late LogLevel _minLogLevel;
+  late bool _maskSensitiveData;
+
+  Logger._internal() {
+    _minLogLevel = LogLevel.debug;
+    _maskSensitiveData = true;
+  }
+
+  factory Logger() {
+    return _instance;
+  }
+
+  /// Initialize logger with configuration
+  static void init({
+    LogLevel minLogLevel = LogLevel.debug,
+    bool maskSensitiveData = true,
+  }) {
+    _instance._minLogLevel = minLogLevel;
+    _instance._maskSensitiveData = maskSensitiveData;
+  }
+
+  /// Log debug message (lowest priority)
+  void debug(String message, {dynamic error, StackTrace? stackTrace}) {
+    _log(LogLevel.debug, message, error, stackTrace);
+  }
+
+  /// Log info message
+  void info(String message, {dynamic error, StackTrace? stackTrace}) {
+    _log(LogLevel.info, message, error, stackTrace);
+  }
+
+  /// Log warning message
+  void warn(String message, {dynamic error, StackTrace? stackTrace}) {
+    _log(LogLevel.warn, message, error, stackTrace);
+  }
+
+  /// Log error message (highest priority)
+  void error(String message, {dynamic error, StackTrace? stackTrace}) {
+    _log(LogLevel.error, message, error, stackTrace);
+  }
+
+  void _log(
+    LogLevel level,
+    String message,
+    dynamic error,
+    StackTrace? stackTrace,
+  ) {
+    if (level.priority < _minLogLevel.priority) return;
+
+    final timestamp = DateTime.now().toIso8601String();
+    final logLine = '[$timestamp] [${level.label}] $message';
+
+    print(logLine);
+
+    if (error != null) {
+      print('[ERROR] $error');
+    }
+
+    if (stackTrace != null) {
+      print('[STACKTRACE]\n$stackTrace');
+    }
+  }
+
+  /// Mask sensitive data in objects
+  static Map<String, dynamic>? maskSensitiveData(dynamic data) {
+    final logger = Logger();
+    if (!logger._maskSensitiveData || data == null) return null;
+
+    if (data is Map<String, dynamic>) {
+      return _maskMap(data);
+    }
+    return null;
+  }
+
+  static const List<String> _sensitiveKeys = [
+    'password',
+    'token',
+    'authorization',
+    'secret',
+    'apikey',
+    'accesstoken',
+    'refreshtoken',
+  ];
+
+  static Map<String, dynamic> _maskMap(Map<String, dynamic> map) {
+    final result = <String, dynamic>{};
+    for (final entry in map.entries) {
+      if (_isSensitiveKey(entry.key)) {
+        result[entry.key] = '***MASKED***';
+      } else if (entry.value is Map<String, dynamic>) {
+        result[entry.key] = _maskMap(entry.value as Map<String, dynamic>);
+      } else if (entry.value is List) {
+        result[entry.key] = (entry.value as List)
+            .map((item) => item is Map<String, dynamic> ? _maskMap(item) : item)
+            .toList();
+      } else {
+        result[entry.key] = entry.value;
+      }
+    }
+    return result;
+  }
+
+  static bool _isSensitiveKey(String key) {
+    final lowerKey = key.toLowerCase();
+    return _sensitiveKeys.any((sensitive) => lowerKey.contains(sensitive));
+  }
+}

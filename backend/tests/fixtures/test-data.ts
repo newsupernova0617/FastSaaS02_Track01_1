@@ -16,6 +16,7 @@ export function createMockChatMessage(override?: Partial<ChatMessage>): ChatMess
   return {
     id: 1,
     userId: TEST_USER_ID,
+    sessionId: null,
     role: 'user',
     content: 'Test message',
     metadata: null,
@@ -37,6 +38,7 @@ export function createAssistantMessage(
   return {
     id: 2,
     userId: TEST_USER_ID,
+    sessionId: null,
     role: 'assistant',
     content,
     metadata: metadata ? JSON.stringify(metadata) : null,
@@ -52,6 +54,7 @@ export function createAssistantMessage(
 export function createNewChatMessage(override?: Partial<NewChatMessage>): NewChatMessage {
   return {
     userId: TEST_USER_ID,
+    sessionId: null,
     role: 'user',
     content: 'Test message',
     metadata: null,
