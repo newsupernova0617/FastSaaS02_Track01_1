@@ -9,6 +9,7 @@ export default defineConfig({
           include: [
             'src/**/*.test.ts',
             'tests/unit/**/*.test.ts',
+            'tests/helpers/**/*.test.ts',
             // existing test locations (not yet migrated)
             'tests/routes/**/*.test.ts',
             'tests/services/**/*.test.ts',
