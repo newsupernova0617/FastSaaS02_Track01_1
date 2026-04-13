@@ -4,37 +4,44 @@ import { fileURLToPath } from 'url';
 import { createClient, type Client } from '@libsql/client';
 import { createDb } from '../../src/db/index';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const HELPERS_DIR = __dirname;
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../src/db/migrations');
 
-function stripLineComments(sql: string): string {
-  // Remove single-line SQL comments (-- ...) while preserving newlines
-  return sql
-    .split('\n')
-    .map((line) => {
-      const commentIdx = line.indexOf('--');
-      return commentIdx >= 0 ? line.slice(0, commentIdx) : line;
-    })
-    .join('\n');
-}
-
 function loadMigrationStatements(): string[] {
-  const files = fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((f) => f.endsWith('.sql'))
-    .sort();
-
   const statements: string[] = [];
-  for (const file of files) {
-    const raw = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf-8');
-    const stripped = stripLineComments(raw);
-    for (const chunk of stripped.split(';')) {
-      const trimmed = chunk.trim();
+
+  // Helper function to process a SQL file into statements
+  function processFile(filePath: string) {
+    const sql = fs.readFileSync(filePath, 'utf-8');
+    for (const raw of sql.split(';')) {
+      // Strip line comments and check if anything remains
+      const lines = raw.split('\n').filter(line => !line.trim().startsWith('--'));
+      const trimmed = lines.join('\n').trim();
       if (trimmed) {
         statements.push(trimmed);
       }
     }
   }
+
+  // 1. Load the test-only base schema first (creates tables that migrations expect)
+  const initFile = path.join(HELPERS_DIR, 'init.sql');
+  if (fs.existsSync(initFile)) {
+    processFile(initFile);
+  }
+
+  // 2. Load production migrations in order (001_, 002_, ...)
+  const migrationFiles = fs
+    .readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+
+  for (const file of migrationFiles) {
+    processFile(path.join(MIGRATIONS_DIR, file));
+  }
+
   return statements;
 }
 

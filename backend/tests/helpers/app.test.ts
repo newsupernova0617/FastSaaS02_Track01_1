@@ -1,30 +1,33 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestDb, type TestDbHandle } from './db';
-import { createTestApp } from './app';
+import { createTestApp, type TestAppHandle } from './app';
 import { authHeaders } from './auth';
 import { seedUser } from './fixtures';
 
 describe('createTestApp', () => {
   let handle: TestDbHandle;
+  let appHandle: TestAppHandle;
 
   beforeEach(async () => {
     handle = await createTestDb();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    appHandle?.cleanup();
     handle.client.close();
   });
 
   it('rejects requests with no Authorization header → 401', async () => {
-    const { app, env } = createTestApp(handle);
+    appHandle = createTestApp(handle);
+    const { app, env } = appHandle;
     const res = await app.fetch(new Request('http://test/api/sessions'), env as any, {} as any);
     expect(res.status).toBe(401);
   });
 
   it('accepts requests with valid HS256 JWT', async () => {
     await seedUser(handle.db, { id: 'alice' });
-    const { app, env } = createTestApp(handle);
+    appHandle = createTestApp(handle);
+    const { app, env } = appHandle;
     const headers = await authHeaders('alice');
     const res = await app.fetch(
       new Request('http://test/api/sessions', {

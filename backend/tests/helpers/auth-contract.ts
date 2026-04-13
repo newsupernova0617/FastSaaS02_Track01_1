@@ -2,6 +2,19 @@ import { expect } from 'vitest';
 import { signTestJwt } from './auth';
 import type { TestAppHandle } from './app';
 
+/**
+ * Runs three universal negative auth scenarios against any route.
+ * Every authenticated route test file must call this.
+ *
+ * Covers:
+ * 1. Missing Authorization header → 401
+ * 2. Malformed JWT → 401
+ * 3. Expired JWT → 401
+ *
+ * NOT covered here (must be written per route):
+ * 4. Valid JWT, request to another user's resource → 403
+ *    This requires a real seeded resource owned by another user.
+ */
 export async function expectAuthContract(
   handle: TestAppHandle,
   method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',

@@ -6,13 +6,15 @@ import type { TestDbHandle } from './db';
 export interface TestAppHandle {
   app: typeof appDefault;
   env: Record<string, unknown>;
+  /** Call in afterEach to restore all spies and prevent leaks between tests */
+  cleanup: () => void;
 }
 
 export function createTestApp(handle: TestDbHandle): TestAppHandle {
   // Spy on getDb so every call inside route handlers returns our in-memory DB.
   // Route handlers call getDb(c.env) per request, so installing the spy before
   // the first app.fetch() call is sufficient.
-  vi.spyOn(dbModule, 'getDb').mockReturnValue(handle.db as any);
+  const spy = vi.spyOn(dbModule, 'getDb').mockReturnValue(handle.db as any);
 
   const env = {
     SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET!,
@@ -25,5 +27,9 @@ export function createTestApp(handle: TestDbHandle): TestAppHandle {
     AI: undefined,
   };
 
-  return { app: appDefault, env };
+  return {
+    app: appDefault,
+    env,
+    cleanup: () => spy.mockRestore(),
+  };
 }
