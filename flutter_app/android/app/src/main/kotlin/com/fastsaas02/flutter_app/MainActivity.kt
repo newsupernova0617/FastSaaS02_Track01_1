@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
@@ -12,6 +13,13 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Cache the main engine so QuickEntryReceiver can reuse it instead of
+        // spawning a headless engine when the app is alive.
+        FlutterEngineCache.getInstance().put(
+            QuickEntryReceiver.MAIN_ENGINE_KEY,
+            flutterEngine
+        )
 
         // Setup overlay channel
         MethodChannel(
@@ -208,5 +216,10 @@ class MainActivity : FlutterActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        FlutterEngineCache.getInstance().remove(QuickEntryReceiver.MAIN_ENGINE_KEY)
+        super.onDestroy()
     }
 }

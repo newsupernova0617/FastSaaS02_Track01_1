@@ -45,9 +45,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         redirectTo: redirectUrl,
       );
 
-      if (mounted) {
-        context.go('/record');
-      }
+      // Do NOT navigate here: signInWithOAuth only launches the external
+      // browser/Custom Tab. The actual session arrives asynchronously when
+      // the deep-link callback fires (com.fastsaas02.app://auth/callback),
+      // and the GoRouter `redirect` hook watching authStateProvider will
+      // then push /record automatically. Jumping to /record now produces a
+      // white screen because the session is still null.
     } catch (e) {
       _showErrorSnackBar('Google 로그인 실패: ${e.toString()}');
       if (mounted) {

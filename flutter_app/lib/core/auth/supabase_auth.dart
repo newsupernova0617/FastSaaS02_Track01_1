@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
+import 'package:flutter_app/core/storage/native_shared_prefs.dart';
 
 /// Supabase authentication service
 /// Initializes Supabase and provides methods for auth operations
@@ -35,9 +36,26 @@ class SupabaseAuthService {
         url: AppConstants.supabaseUrl,
         anonKey: AppConstants.supabaseAnonKey,
       );
+      await NativeSharedPrefs.setApiBaseUrl(AppConstants.apiBaseUrl);
+      _instance._syncToNativePrefs(_instance.currentSession);
+      _instance.client.auth.onAuthStateChange.listen((data) {
+        _instance._syncToNativePrefs(data.session);
+      });
     } catch (e) {
       print('Error initializing Supabase: $e');
       rethrow;
+    }
+  }
+
+  /// Mirror auth state to SharedPreferences so native Android code
+  /// (QuickEntryReceiver / headless FlutterEngine) can read JWT and user id
+  /// when the main app process is not alive.
+  void _syncToNativePrefs(Session? session) {
+    if (session == null) {
+      NativeSharedPrefs.clearAuth();
+    } else {
+      NativeSharedPrefs.setJwt(session.accessToken);
+      NativeSharedPrefs.setUserId(session.user.id);
     }
   }
 

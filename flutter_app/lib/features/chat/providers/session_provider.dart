@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/api/api_client.dart';
+import 'package:flutter_app/core/storage/native_shared_prefs.dart';
 
 /// Session data model
 class SessionItem {
@@ -55,9 +56,15 @@ final sessionProvider = FutureProvider.autoDispose<List<SessionItem>>((ref) asyn
 });
 
 /// Currently active session ID - persists across navigation
-/// Does NOT reset when widget rebuilds
+/// Does NOT reset when widget rebuilds.
+///
+/// Any change is also mirrored to SharedPreferences (`fastsaas.session_id`)
+/// so Android native code can read it from a BroadcastReceiver or headless
+/// FlutterEngine when the main app process is dead. See NativeSharedPrefs.
 final activeSessionIdProvider = StateProvider<int?>((ref) {
-  // This value is preserved and not reset during rebuilds
+  ref.listenSelf((previous, next) {
+    NativeSharedPrefs.setSessionId(next);
+  });
   return null;
 });
 
