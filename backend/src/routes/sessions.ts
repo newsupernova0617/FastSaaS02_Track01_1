@@ -1,3 +1,26 @@
+// ============================================================
+// [DB 조작 + 인증 + 보안] 세션 API 라우트 (핵심 엔드포인트)
+//
+// 이 파일은 프로젝트에서 가장 복잡하고 보안이 중요한 라우트입니다.
+// 채팅 세션 CRUD + AI 메시지 처리를 모두 담당합니다.
+//
+// 보안 핵심 규칙:
+//   1. 모든 핸들러에서 userId = c.get('userId') (JWT에서 추출)
+//   2. 세션 접근 전 반드시 getSession(db, sessionId, userId)로 소유권 검증
+//      → null 반환 시 404 (세션 없음 또는 권한 없음)
+//   3. DB에 데이터 저장 시 userId를 서버에서 강제 설정
+//   4. AI 요청은 1분에 20번까지 제한 (sessionMessageRateLimit)
+//
+// 엔드포인트 목록:
+//   POST   /api/sessions              — 새 세션 생성
+//   GET    /api/sessions              — 세션 목록 조회
+//   GET    /api/sessions/:id          — 세션 상세 조회
+//   PATCH  /api/sessions/:id          — 세션 이름 변경
+//   DELETE /api/sessions/:id          — 세션 삭제 (메시지 포함)
+//   GET    /api/sessions/:id/messages — 세션 메시지 조회
+//   POST   /api/sessions/:id/messages — 메시지 전송 + AI 처리 (핵심)
+// ============================================================
+
 import { Hono } from 'hono';
 import { getDb, Env } from '../db/index';
 import type { Variables } from '../middleware/auth';
@@ -33,7 +56,8 @@ import {
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// 20 AI requests per minute per user
+// [보안] AI 메시지 전송 속도 제한: 사용자당 1분에 최대 20번
+// AI 호출은 비용이 높으므로 남용 방지
 const sessionMessageRateLimit = createRateLimiter(20, 60_000);
 
 function buildMetadata(
@@ -64,11 +88,12 @@ function generateClarificationQuestion(
   return `다음 정보를 알려주세요: ${missingFields.map(f => questions[f] || f).join(', ')}`;
 }
 
-// POST /api/sessions - Create new session
+// POST /api/sessions - 새 채팅 세션 생성
+// userId는 JWT에서 추출되어 서버에서 강제 설정됨
 router.post('/', async (c) => {
   try {
     const db = getDb(c.env);
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출
     const { title } = await c.req.json();
 
     // Title is required
@@ -261,11 +286,15 @@ router.delete('/:id', async (c) => {
   }
 });
 
-// GET /api/sessions/:sessionId/messages - Get messages for a session
+// GET /api/sessions/:sessionId/messages - 세션의 메시지 조회
+// [보안 흐름]
+//   1단계: getSession()으로 세션 소유권 검증 (userId + sessionId 이중 체크)
+//   2단계: 소유권 확인 후 sessionId로 메시지 조회
+//   ⚠️ 2단계에서 userId 조건이 없지만, 1단계에서 이미 검증되었으므로 안전
 router.get('/:sessionId/messages', async (c) => {
   try {
     const db = getDb(c.env);
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출
     const sessionId = parseInt(c.req.param('sessionId'), 10);
 
     if (isNaN(sessionId)) {
@@ -275,7 +304,8 @@ router.get('/:sessionId/messages', async (c) => {
       );
     }
 
-    // Verify session ownership
+    // [보안] 세션 소유권 검증 — userId와 sessionId가 모두 일치하는지 확인
+    // 이 검증이 없으면 다른 사용자의 대화 내용을 볼 수 있는 보안 취약점 발생
     const session = await getSession(db, sessionId, userId);
     if (!session) {
       return c.json(
@@ -284,7 +314,8 @@ router.get('/:sessionId/messages', async (c) => {
       );
     }
 
-    // Get messages for this session from chatMessages table
+    // 소유권이 확인된 세션의 메시지만 조회
+    // (위에서 세션 소유권을 검증했으므로 sessionId만으로 안전하게 조회 가능)
     const messages = await db
       .select()
       .from(chatMessages)
@@ -316,11 +347,26 @@ router.get('/:sessionId/messages', async (c) => {
   }
 });
 
-// POST /api/sessions/:sessionId/messages - Send message in session with full AI processing
+// POST /api/sessions/:sessionId/messages — 메시지 전송 + AI 처리 (이 파일의 핵심)
+//
+// [전체 흐름]
+//   1. 속도 제한 확인 (sessionMessageRateLimit)
+//   2. 세션 소유권 검증 (getSession)
+//   3. 사용자 메시지 DB 저장
+//   4. AI가 사용자 입력을 분석 → 액션 타입 결정 (create/read/update/delete/report/clarify/undo)
+//   5. 액션 실행 (거래 생성, 조회, 삭제, 리포트 생성 등)
+//   6. AI 응답 메시지 DB 저장
+//   7. 사용자 메시지 + AI 메시지 함께 반환
+//
+// [보안 체크포인트]
+//   - userId: JWT에서 추출 (L323)
+//   - 세션 소유권: getSession()으로 검증 (L342)
+//   - 거래 조작: 모든 DB 쿼리에 eq(transactions.userId, userId) 포함
+//   - 속도 제한: sessionMessageRateLimit 미들웨어
 router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
   try {
     const db = getDb(c.env);
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출 — 절대 body에서 읽지 않음
     const sessionId = parseInt(c.req.param('sessionId'), 10);
     const { content } = await c.req.json();
 
@@ -338,7 +384,8 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
       );
     }
 
-    // Verify session ownership
+    // [보안] 세션 소유권 검증 — 이 세션이 현재 사용자의 것인지 확인
+    // 실패 시 404 반환 (403 대신 404를 반환해서 세션 존재 여부를 노출하지 않음)
     const session = await getSession(db, sessionId, userId);
     if (!session) {
       return c.json(
@@ -347,11 +394,12 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
       );
     }
 
-    // Save user message to session
+    // 사용자 메시지를 DB에 저장
+    // userId는 서버에서 강제 설정 → 다른 사용자로 위장 불가
     const userMessage = await db
       .insert(chatMessages)
       .values({
-        userId,
+        userId,   // [보안] 서버에서 설정된 userId
         sessionId,
         role: 'user',
         content,

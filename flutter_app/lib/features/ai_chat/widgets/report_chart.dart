@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+// ============================================================
+// [리포트 위젯] report_chart.dart
+// AI 응답 또는 리포트 상세에서 차트 섹션을 렌더링합니다.
+// fl_chart 패키지를 사용합니다.
+//
+// 차트 타입별 표시:
+//   'pie'  → 파이 차트 (비율 표시 + 범례)
+//   'bar'  → 막대 차트 (카테고리별 금액 비교)
+//   'line' → 라인 차트 (시계열 추이)
+//
+// 데이터 형식: { labels: ['식비', '교통'], values: [50000, 20000] }
+// ============================================================
 class ReportChart extends StatelessWidget {
   final Map<String, dynamic> section;
 

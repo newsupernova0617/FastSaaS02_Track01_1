@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/widgets/user_profile_sheet.dart';
 
-/// Button widget displaying user avatar in AppBar
-/// Tapping opens the user profile bottom sheet
+// ============================================================
+// [공유 위젯] user_profile_button.dart
+// AppBar 우측에 표시되는 프로필 아바타 버튼입니다.
+// 구글 로그인 시 프로필 사진이 표시되고, 없으면 이름 첫 글자가 표시됩니다.
+// 탭하면 UserProfileSheet(프로필 시트)가 하단에서 올라옵니다.
+// ============================================================
 class UserProfileButton extends ConsumerWidget {
   const UserProfileButton({super.key});
 

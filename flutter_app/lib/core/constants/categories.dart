@@ -1,5 +1,10 @@
+// ============================================================
+// [카테고리 정의] categories.dart
+// 지출/수입 거래에 사용되는 카테고리 목록을 정의합니다.
+// RecordPage의 카테고리 선택 그리드에서 사용됩니다.
+// ============================================================
 class Categories {
-  // Expense Categories
+  // 지출 카테고리 목록
   static const List<String> expenseCategories = [
     '식비',      // Food/Dining
     '교통',      // Transportation

@@ -7,31 +7,39 @@ import 'package:flutter_app/core/logger/logger.dart';
 import 'package:flutter_app/native/foreground_service/foreground_service_manager.dart';
 import 'package:flutter_app/native/foreground_service/quick_entry_handler.dart';
 
+// ============================================================
+// [앱 시작점] main.dart
+// 앱이 실행되면 가장 먼저 이 함수가 호출됩니다.
+// 순서: 로거 초기화 → .env 로드 → Supabase 인증 초기화
+//       → 빠른입력 핸들러 설치 → (Android) 포그라운드 서비스 시작
+//       → App 위젯 실행
+// ============================================================
 void main() async {
+  // Flutter 엔진 초기화 (비동기 작업 전에 반드시 호출해야 함)
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Logger
+  // 로거 초기화 — debug 이상 레벨 로그 출력, 민감정보(토큰 등) 마스킹
   Logger.init(
     minLogLevel: LogLevel.debug,
     maskSensitiveData: true,
   );
 
-  // Load environment variables from .env file
+  // .env 파일에서 API URL, Supabase 키 등 환경변수 로드
   await dotenv.load(fileName: '.env');
 
-  // Initialize Supabase before running the app
+  // Supabase 인증 서비스 초기화 (로그인/회원가입 기능에 필요)
   try {
     await SupabaseAuthService.initialize();
   } catch (e) {
     Logger().error('Failed to initialize Supabase: $e', error: e);
   }
 
-  // Install the quick-entry MethodChannel handler so the alive-app path
-  // (QuickEntryReceiver -> cached FlutterEngine) can dispatch into Dart.
+  // 빠른 입력 핸들러 설치
+  // → Android 알림에서 텍스트를 입력하면 이 핸들러가 받아서 서버로 전송
   installQuickEntryHandler();
 
-  // Start the persistent quick-input notification on Android. The service
-  // only makes sense on Android; other platforms ignore the call.
+  // Android 전용: 상단바에 상주하는 알림(포그라운드 서비스) 시작
+  // → 이 알림을 통해 앱을 열지 않고도 거래를 빠르게 입력할 수 있음
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
     try {
       await ForegroundServiceManager.startForegroundService(
@@ -43,5 +51,6 @@ void main() async {
     }
   }
 
+  // 모든 초기화 완료 후 App 위젯을 화면에 띄움
   runApp(const App());
 }

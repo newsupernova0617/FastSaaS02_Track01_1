@@ -1,5 +1,13 @@
-/// Network request/response logging utility
-/// Handles API logging with timing, masking, and structured formatting
+// ============================================================
+// [네트워크 로거] network_logger.dart
+// HTTP 요청/응답을 구조화된 형식으로 로그에 기록합니다.
+// LoggingInterceptor에서 호출되어 모든 API 통신을 추적합니다.
+//
+// 기록 내용:
+//   요청: HTTP 메서드, URL, 헤더(마스킹), 요청 데이터(마스킹)
+//   응답: 상태코드, 소요시간(ms), 응답크기, 응답 데이터(마스킹)
+//   에러: 상태코드, 에러 유형, 에러 메시지
+// ============================================================
 
 import 'package:dio/dio.dart';
 import 'logger.dart';

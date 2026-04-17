@@ -3,6 +3,16 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'summary_row.freezed.dart';
 part 'summary_row.g.dart';
 
+// ============================================================
+// [모델] summary_row.dart
+// 월별 카테고리별 거래 합계 데이터 모델입니다.
+// StatsPage의 파이차트와 카테고리 상세 표시에 사용됩니다.
+//
+// 필드:
+//   type     — 'income'(수입) 또는 'expense'(지출)
+//   category — 카테고리명 (식비, 교통 등)
+//   total    — 해당 카테고리의 총 금액
+// ============================================================
 @freezed
 class SummaryRow with _$SummaryRow {
   const factory SummaryRow({

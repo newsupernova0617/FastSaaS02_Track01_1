@@ -1,3 +1,15 @@
+// ============================================================
+// [DB 조작 + 인증] 사용자 노트 API 라우트
+//
+// 사용자별 개인 메모를 CRUD하는 엔드포인트입니다.
+// AI가 사용자의 재무 패턴을 이해하는 데 활용됩니다.
+//
+// 보안 핵심 규칙:
+//   - 모든 핸들러에서 userId = c.get('userId') (JWT에서 추출)
+//   - userNotesService의 모든 메서드에 userId 전달 → 본인 노트만 접근
+//   - 서비스 내부에서도 userId로 필터링되는지 별도 확인 필요
+// ============================================================
+
 import { Hono } from 'hono';
 import { getDb, Env } from '../db/index';
 import type { Context as HonoContext } from 'hono';
@@ -8,11 +20,12 @@ export const createUserNotesRoutes = (userNotesService: any) => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
   /**
-   * POST /api/notes - Create a new note
+   * POST /api/notes - 새 노트 생성
+   * userId는 JWT에서 추출 → 다른 사용자의 노트를 생성할 수 없음
    */
   router.post('/', async (c: HonoContext) => {
     try {
-      const userId = c.get('userId');
+      const userId = c.get('userId');  // [보안] JWT에서 추출
       const db = getDb(c.env);
       const { content } = await c.req.json();
 

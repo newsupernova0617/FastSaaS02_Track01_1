@@ -1,10 +1,32 @@
+// ============================================================
+// [보안] 입력값 검증 서비스 (Validation)
+//
+// 사용자와 AI 모델의 입력값을 Zod 스키마로 검증합니다.
+// 검증을 통과하지 못하면 ZodError가 throw되고,
+// 전역 에러 핸들러(index.ts)가 400 Bad Request로 변환합니다.
+//
+// 왜 중요한가?
+//   - SQL 인젝션 방지: Drizzle ORM이 파라미터화 쿼리를 사용하지만,
+//     비정상적인 데이터가 DB에 들어가는 것 자체를 막아야 합니다.
+//   - 비즈니스 로직 보호: 음수 금액, 미래 100년 뒤 날짜 등 비정상 입력 차단
+//   - AI 응답 검증: LLM이 예상치 못한 형태의 JSON을 반환할 수 있으므로 검증 필수
+//
+// 주요 제한값:
+//   - 금액: 양수, 최대 ₩10억 (1,000,000,000)
+//   - 카테고리: 1~50자
+//   - 메모: 최대 500자, 공백만으로 구성 불가
+//   - 날짜: YYYY-MM-DD 형식, 미래 30일 이내
+// ============================================================
+
 import { z } from 'zod';
 import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload, ReportPayload, UndoPayload } from '../types/ai';
 
 /**
- * Schema for AI model response validation
- * Validates the structure of responses from AI models to ensure they contain
- * required action type, payload, and confidence score
+ * AI 모델 응답 구조 검증 스키마
+ * AI가 반환한 JSON이 올바른 형태인지 확인합니다.
+ * type: 어떤 액션을 수행할지 (create, read, update, delete, report 등)
+ * payload: 액션에 필요한 데이터
+ * confidence: AI의 확신도 (0~1, 0.7 미만이면 clarify 액션으로 추가 질문)
  */
 export const AIResponseSchema = z.object({
   type: z.enum(['create', 'update', 'read', 'delete', 'report', 'plain_text', 'undo', 'clarify']),

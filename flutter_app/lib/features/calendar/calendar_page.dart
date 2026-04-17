@@ -7,9 +7,22 @@ import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 
-/// Calendar page with transaction listing
-/// Displays a monthly calendar with income/expense indicators
-/// Shows filtered transactions for selected date
+// ============================================================
+// [달력 화면] calendar_page.dart
+// 월별 달력과 날짜별 거래 내역을 보여주는 화면입니다. (하단탭 2번)
+//
+// 구성:
+//   1) 월간 달력 (TableCalendar 패키지)
+//      - 날짜별로 지출(빨간점)/수입(파란점) 인디케이터 표시
+//      - 날짜 탭 → 해당 날짜의 거래 목록 필터링
+//   2) 일간 요약 카드: 선택된 날짜의 총 지출/총 수입
+//   3) 거래 목록: 카테고리 이모지, 금액, 메모 표시 + 삭제 버튼
+//
+// 데이터 흐름:
+//   transactionsProvider(null) → 전체 거래 로드
+//   → 현재 월 거래 필터링 (달력 인디케이터용)
+//   → 선택 날짜 거래 필터링 (목록 표시용)
+// ============================================================
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
 

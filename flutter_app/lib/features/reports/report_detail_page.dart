@@ -7,6 +7,21 @@ import '../ai_chat/widgets/report_card.dart';
 import '../ai_chat/widgets/report_chart.dart';
 import 'widgets/report_name_dialog.dart';
 
+// ============================================================
+// [리포트 상세 화면] report_detail_page.dart
+// AI가 생성한 리포트의 전체 내용을 보여주는 화면입니다.
+// /report/:id 경로로 접근합니다.
+//
+// 두 가지 진입 경로에 따라 하단 버튼이 다름:
+//   1) 채팅에서 생성 직후 → "저장하기" 버튼 (saveReportProvider)
+//   2) 통계 탭에서 저장된 리포트 클릭 → "삭제하기" + "닫기" 버튼
+//
+// 리포트 내용은 reportData 배열의 각 섹션을 순서대로 렌더링:
+//   섹션 type이 pie/bar/line → ReportChart (차트)
+//   그 외 → ReportCard (카드, 알림, 제안)
+//
+// 리포트 제목 클릭 시 이름 변경 가능 (통계 탭에서 진입한 경우만)
+// ============================================================
 class ReportDetailPage extends ConsumerStatefulWidget {
   final int reportId;
   final bool isFromStats;

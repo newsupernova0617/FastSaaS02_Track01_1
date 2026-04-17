@@ -3,7 +3,22 @@ import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'api_provider.dart';
 
-/// Family provider for fetching transactions by date
+// ============================================================
+// [거래 Provider] transaction_provider.dart
+// 거래(수입/지출) 데이터의 CRUD와 월별 요약을 담당합니다.
+// CalendarPage, RecordPage, StatsPage 등에서 사용됩니다.
+//
+// transactionsProvider(date)     — 특정 날짜(또는 전체) 거래 목록
+// allTransactionsProvider        — 전체 거래 목록
+// summaryProvider(month)         — 월별 카테고리별 합계
+// addTransactionProvider(data)   — 새 거래 추가
+// deleteTransactionProvider(id)  — 거래 삭제
+//
+// 중요: 거래 추가/삭제 후에는 관련 provider들을 invalidate하여
+//       화면이 자동으로 최신 데이터로 갱신되도록 합니다.
+// ============================================================
+
+// 날짜별 거래 목록을 서버에서 가져오는 provider
 /// Parameters:
 ///   - date: DateTime for which to fetch transactions (optional, null fetches all)
 /// Returns: List<Transaction>

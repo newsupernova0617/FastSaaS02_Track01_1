@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+// ============================================================
+// [채팅 위젯] chat_input.dart
+// AI 채팅 화면 하단의 메시지 입력 영역입니다.
+// 텍스트 입력 필드 + 전송 버튼(원형)으로 구성됩니다.
+// 글자 수 제한(기본 500자)이 있고, 80% 초과 시 카운터 표시됩니다.
+// 로딩 중에는 전송 버튼이 스피너로 변경됩니다.
+// ============================================================
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
   final bool isLoading;

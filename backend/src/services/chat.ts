@@ -1,3 +1,21 @@
+// ============================================================
+// [DB 조작] 채팅 메시지 서비스
+//
+// 사용자-AI 간 대화 메시지의 저장/조회/삭제를 담당합니다.
+//
+// 보안 핵심 규칙:
+//   - getChatHistory(): userId로 필터링 → 본인 메시지만 반환
+//   - getChatHistoryBySession(): userId가 필수 파라미터(3번째 인자)
+//     → userId 없이 호출하면 컴파일 에러 (의도적 설계)
+//   - clearChatHistory(): userId로 필터링 → 본인 메시지만 삭제
+//
+// ⚠️ 주의:
+//   - deleteSessionMessages(): sessionId로만 삭제합니다.
+//     호출자(deleteSession)가 소유권을 먼저 검증해야 합니다.
+//   - saveMessage/saveMessageToSession: userId를 파라미터로 받지만,
+//     호출자가 c.get('userId')로 전달해야 합니다 (body에서 읽지 않도록).
+// ============================================================
+
 import { eq, desc, lt, and } from 'drizzle-orm';
 import { chatMessages } from '../db/schema';
 

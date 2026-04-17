@@ -4,6 +4,20 @@ import 'dart:convert';
 part 'chat_message.freezed.dart';
 part 'chat_message.g.dart';
 
+// ============================================================
+// [모델] chat_message.dart
+// 채팅 메시지 데이터 모델입니다.
+//
+// 필드:
+//   id        — 메시지 고유 ID
+//   sessionId — 소속 세션 ID (세션 기반 채팅에서 사용)
+//   userId    — 작성자 ID
+//   role      — 'user'(사용자) 또는 'assistant'(AI)
+//   content   — 메시지 본문 텍스트
+//   metadata  — 부가 정보 (actionType, report 데이터 등)
+//              → AI 응답에 포함되어 액션 버튼이나 리포트 차트 렌더링에 사용
+//   createdAt — 생성 시각 (ISO 8601 문자열)
+// ============================================================
 @freezed
 class ChatMessage with _$ChatMessage {
   const factory ChatMessage({

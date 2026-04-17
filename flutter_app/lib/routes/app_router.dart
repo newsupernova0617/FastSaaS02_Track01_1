@@ -11,11 +11,26 @@ import 'package:flutter_app/features/ai_chat/ai_chat_page.dart';
 import 'package:flutter_app/features/reports/report_detail_page.dart';
 import 'package:flutter_app/features/chat/screens/chat_screen.dart';
 
-
-/// Go Router configuration
-/// Defines all routes and navigation logic for the app
+// ============================================================
+// [라우터 설정] app_router.dart
+// 앱의 전체 화면 이동(네비게이션)을 관리합니다.
+//
+// 화면 구조:
+//   /login   → 로그인 페이지 (비인증 상태)
+//   /record  → 거래 기록 페이지 (하단 네비게이션 탭 1)
+//   /calendar→ 달력 페이지 (탭 2)
+//   /stats   → 통계 페이지 (탭 3)
+//   /chat    → AI 채팅 페이지 (탭 4) — 세션 기반
+//   /ai      → AI 채팅 (레거시, 세션 없는 버전)
+//   /report/:id → 리포트 상세 페이지
+//
+// 핵심 동작:
+//   - 로그인 안 됨 → 자동으로 /login 이동
+//   - 로그인 됨 + /login에 있음 → 자동으로 /record 이동
+//   - ShellRoute로 하단 네비게이션바를 공유
+// ============================================================
 final goRouterProvider = Provider<GoRouter>((ref) {
-  // Watch the auth state to trigger redirects
+  // 인증 상태를 구독 → 로그인/로그아웃 시 자동으로 redirect 발동
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(

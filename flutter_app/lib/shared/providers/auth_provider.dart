@@ -2,7 +2,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 import 'package:flutter_app/core/auth/supabase_auth.dart';
 
-/// Provider for the Supabase auth service singleton
+// ============================================================
+// [인증 Provider] auth_provider.dart
+// Supabase 인증 관련 상태를 Riverpod provider로 제공합니다.
+// 다른 파일에서 ref.watch(xxxProvider)로 인증 상태를 구독할 수 있습니다.
+//
+// 제공하는 provider들:
+//   supabaseAuthProvider  — SupabaseAuthService 싱글톤 인스턴스
+//   authStateProvider     — 로그인/로그아웃 이벤트 스트림 (StreamProvider)
+//   currentUserProvider   — 현재 로그인된 사용자 정보 (User?)
+//   currentSessionProvider— 현재 인증 세션 (Session?)
+//   accessTokenProvider   — JWT 토큰 문자열 (String?)
+//   isAuthenticatedProvider— 로그인 여부 (bool)
+//   signInProvider        — 이메일+비밀번호 로그인 실행
+//   signUpProvider        — 회원가입 실행
+//   signOutProvider       — 로그아웃 실행
+// ============================================================
+
+// Supabase 인증 서비스 싱글톤을 provider로 제공
 final supabaseAuthProvider = Provider<SupabaseAuthService>((ref) {
   return SupabaseAuthService();
 });

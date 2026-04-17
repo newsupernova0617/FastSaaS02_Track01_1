@@ -8,7 +8,20 @@ import 'package:flutter_app/shared/models/ai_action_response.dart';
 import 'package:flutter_app/shared/models/report.dart';
 import 'package:flutter_app/shared/providers/api_provider.dart';
 
-/// API Client for handling all API requests
+// ============================================================
+// [API 클라이언트] api_client.dart
+// 백엔드 서버(Cloudflare Workers)와의 모든 HTTP 통신을 담당합니다.
+// Dio 라이브러리를 사용하며, 인증 토큰은 AuthInterceptor가 자동 첨부합니다.
+//
+// 주요 메서드:
+//   거래: getTransactions(), addTransaction(), deleteTransaction()
+//   요약: getSummary() — 월별 카테고리별 합계
+//   AI:  sendAIMessage() — 레거시 단건 AI 요청
+//   채팅: getSessions(), createSession(), getSessionMessages(),
+//         sendSessionMessage() — 세션 기반 채팅
+//   리포트: getReports(), getReportDetail(), saveReport(),
+//           deleteReport(), updateReport()
+// ============================================================
 class ApiClient {
   late final Dio _dio;
 

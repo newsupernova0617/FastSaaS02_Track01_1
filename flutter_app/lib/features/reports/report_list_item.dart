@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/models/report.dart';
 
+// ============================================================
+// [리포트 위젯] report_list_item.dart
+// 통계 탭의 리포트 목록에서 각 리포트를 한 줄로 표시하는 위젯입니다.
+// 제목, 부제목, 리포트 유형 칩, 생성일을 표시합니다.
+// 탭하면 /report/:id 경로로 ReportDetailPage를 엽니다.
+// ============================================================
 class ReportListItem extends StatelessWidget {
   final ReportSummary report;
 

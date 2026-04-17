@@ -7,6 +7,26 @@ import 'package:flutter_app/features/chat/providers/session_provider.dart';
 import 'package:flutter_app/shared/providers/chat_provider.dart';
 import 'package:flutter_app/shared/models/chat_message.dart';
 
+// ============================================================
+// [세션 채팅 화면] chat_screen.dart
+// AI와 세션 기반으로 대화하는 메인 채팅 화면입니다. (하단탭 4번)
+//
+// 레이아웃:
+//   [데스크톱/태블릿] 왼쪽 사이드바(세션 목록) + 오른쪽 채팅 영역
+//   [모바일] 채팅 영역만 표시, 메뉴 버튼으로 세션 목록 바텀시트
+//
+// 채팅 동작:
+//   1) 메시지 입력 → 옵티미스틱 UI (서버 응답 전에 즉시 표시)
+//   2) sendChatMessageProvider로 서버에 전송
+//   3) 서버 응답 후 chatMessagesProvider 새로고침
+//   4) AI 응답에 actionType이 있으면 액션 버튼 표시
+//      (예: 'create' → "기록 보기", 'report' → "리포트 보기")
+//
+// 세션 관리:
+//   - 새 대화 생성: createSessionProvider
+//   - 세션 삭제: deleteSessionProvider
+//   - 활성 세션: activeSessionIdProvider (StateProvider)
+// ============================================================
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 

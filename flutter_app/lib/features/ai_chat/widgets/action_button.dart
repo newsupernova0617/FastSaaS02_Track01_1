@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// ============================================================
+// [채팅 위젯] action_button.dart
+// AI 응답의 metadata에 actionType이 있을 때 표시되는 액션 버튼입니다.
+//
+// actionType에 따른 버튼:
+//   'create', 'update', 'delete' → "View in Calendar" 버튼
+//     (metadata.action.date가 있으면 해당 날짜로 이동)
+//   'read', 'report' → "View Details" 버튼
+//     (metadata.report.params.month가 있으면 해당 월 통계로 이동)
+// ============================================================
 class ActionButton extends StatelessWidget {
   final Map<String, dynamic>? metadata;
 

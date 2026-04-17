@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_app/shared/widgets/user_profile_button.dart';
 
-/// Shell widget that provides bottom navigation for authenticated routes
-/// Maintains bottom nav state across navigation while using ShellRoute
+// ============================================================
+// [공유 위젯] bottom_nav_shell.dart
+// 로그인 후 모든 메인 화면의 "껍데기" 역할을 하는 위젯입니다.
+// GoRouter의 ShellRoute로 감싸져서 하단 네비게이션바를 공유합니다.
+//
+// 구조:
+//   AppBar (상단바 — 프로필 버튼)
+//   body (자식 화면 — RecordPage, CalendarPage 등이 여기에 표시)
+//   NavigationBar (하단 네비게이션 — 기록, 달력, 통계, Chat)
+//
+// URL 경로에 따라 하단 탭의 선택 상태가 자동으로 바뀝니다.
+// ============================================================
 class BottomNavShell extends StatefulWidget {
   final Widget child;
 

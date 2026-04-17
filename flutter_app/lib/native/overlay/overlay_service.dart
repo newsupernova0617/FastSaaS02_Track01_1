@@ -1,6 +1,18 @@
 import 'package:flutter/services.dart';
 
-/// Service for managing floating overlay on Android
+// ============================================================
+// [오버레이 서비스] overlay_service.dart
+// Android에서 다른 앱 위에 떠다니는 플로팅 창을 관리합니다.
+// MethodChannel('com.fastsaas02.app/overlay')로 Kotlin과 통신합니다.
+//
+// 주요 메서드:
+//   startOverlay()  — 플로팅 창 표시
+//   stopOverlay()   — 플로팅 창 닫기
+//   sendMessage()   — 플로팅 창에 메시지 전송
+//   isOverlayRunning() — 실행 상태 확인
+//   hasOverlayPermission()    — 오버레이 권한 확인
+//   requestOverlayPermission() — 오버레이 권한 요청 (Android 6.0+)
+// ============================================================
 class OverlayService {
   static const platform = MethodChannel('com.fastsaas02.app/overlay');
 

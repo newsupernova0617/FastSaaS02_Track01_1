@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+// ============================================================
+// [리포트 위젯] report_name_dialog.dart
+// 리포트 저장/이름 변경 시 표시되는 다이얼로그입니다.
+// 텍스트 입력 필드 + 유효성 검증(빈값, 100자 초과) + 저장/취소 버튼
+// ============================================================
 class ReportNameDialog extends StatefulWidget {
   final String initialName;
   final Function(String) onSave;

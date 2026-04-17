@@ -1,11 +1,25 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 
-/// MethodChannel names shared with Kotlin side (see QuickEntryReceiver.kt).
-/// Inbound: Kotlin → Dart (onQuickEntrySubmit). This is the existing
-/// foreground_service channel also used by ForegroundServiceManager.
-/// Result: Dart → Kotlin (notifyQuickEntryResult). Dedicated channel so
-/// installing a handler here does not clobber the main-app handler.
+// ============================================================
+// [빠른입력 핸들러] quick_entry_handler.dart
+// Android 알림의 RemoteInput(텍스트 입력)으로 받은 거래 텍스트를
+// 서버에 전송하고 결과를 Android에 알려주는 핸들러입니다.
+//
+// 통신 채널 (MethodChannel):
+//   수신: 'com.fastsaas02.app/foreground_service' — Kotlin → Dart
+//     메서드: 'onQuickEntrySubmit' { text, jwt, sessionId, apiBaseUrl }
+//   결과: 'com.fastsaas02.app/quick_entry_result' — Dart → Kotlin
+//     메서드: 'notifyQuickEntryResult' { success, body }
+//
+// 처리 흐름:
+//   1) Kotlin에서 사용자가 입력한 텍스트 + JWT + 세션ID 수신
+//   2) _processQuickEntry(): POST /sessions/:id/messages로 메시지 전송
+//   3) 서버 응답에서 AI 어시스턴트 메시지 추출
+//   4) _reportResult()로 결과를 Kotlin에 전달 → Android 알림으로 표시
+// ============================================================
+
+// Kotlin과 공유하는 MethodChannel 이름
 const String _kInboundChannelName = 'com.fastsaas02.app/foreground_service';
 const String _kResultChannelName = 'com.fastsaas02.app/quick_entry_result';
 

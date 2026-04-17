@@ -1,3 +1,16 @@
+// ============================================================
+// [DB 조작 + 보안] 리포트 API 라우트
+//
+// AI가 생성한 월간 분석, 카테고리 상세, 소비 패턴 등의 리포트를
+// 저장/조회/삭제하는 엔드포인트입니다.
+//
+// 보안 핵심 규칙:
+//   - 모든 핸들러에서 userId = c.get('userId') (JWT에서 추출)
+//   - ReportService의 모든 메서드에 userId를 전달 → 본인 리포트만 접근 가능
+//   - 리포트 저장은 1분에 10번까지 제한 (rate limiting)
+//   - Zod 스키마로 입력값 검증 → 잘못된 데이터가 DB에 들어가는 것을 방지
+// ============================================================
+
 import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { z } from 'zod';
@@ -8,7 +21,8 @@ import { createRateLimiter } from '../middleware/rateLimit';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// 10 report saves per minute per user
+// [보안] 리포트 저장 속도 제한: 사용자당 1분에 최대 10번
+// 악의적인 사용자가 대량의 리포트를 생성하는 것을 방지
 const reportWriteRateLimit = createRateLimiter(10, 60_000);
 
 // Validation schema for save report
@@ -22,9 +36,11 @@ const SaveReportSchema = z.object({
 
 type SaveReportPayload = z.infer<typeof SaveReportSchema>;
 
-// POST /api/reports - Save a report
+// POST /api/reports - 리포트 저장
+// reportWriteRateLimit 미들웨어가 먼저 실행 → 속도 제한 통과 후 핸들러 진입
 router.post('/', reportWriteRateLimit, async (c) => {
   try {
+    // [보안] userId는 반드시 JWT 미들웨어에서 추출 (절대 body에서 읽지 않음)
     const userId = c.get('userId');
     const body = await c.req.json();
 
@@ -57,10 +73,11 @@ router.post('/', reportWriteRateLimit, async (c) => {
   }
 });
 
-// GET /api/reports - List reports
+// GET /api/reports - 사용자의 리포트 목록 조회
+// userId로 필터링되어 본인의 리포트만 반환됨
 router.get('/', async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출
     const month = c.req.query('month');
     const limitStr = c.req.query('limit') || '50';
     const limit = Math.min(Math.max(parseInt(limitStr) || 50, 1), 100);
@@ -83,10 +100,11 @@ router.get('/', async (c) => {
   }
 });
 
-// GET /api/reports/:id - Get report detail
+// GET /api/reports/:id - 리포트 상세 조회
+// ReportService.getReportDetail(userId, reportId)로 소유권 검증
 router.get('/:id', async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출
     const reportId = parseInt(c.req.param('id'));
 
     if (isNaN(reportId)) {
@@ -129,10 +147,11 @@ router.get('/:id', async (c) => {
   }
 });
 
-// DELETE /api/reports/:id - Delete report
+// DELETE /api/reports/:id - 리포트 삭제
+// ReportService.deleteReport(userId, reportId)로 소유권 검증 → 본인 리포트만 삭제 가능
 router.delete('/:id', async (c) => {
   try {
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출
     const reportId = parseInt(c.req.param('id'));
 
     if (isNaN(reportId)) {
@@ -167,9 +186,10 @@ router.delete('/:id', async (c) => {
   }
 });
 
-// PATCH /api/reports/:id - Update report title
+// PATCH /api/reports/:id - 리포트 제목 수정
+// updateReportTitle(db, userId, reportId, title)로 소유권 검증
 router.patch('/:id', async (c) => {
-  const userId = c.get('userId');
+  const userId = c.get('userId');  // [보안] JWT에서 추출
   const reportId = parseInt(c.req.param('id'), 10);
   const body = await c.req.json();
   const { title } = body;

@@ -1,8 +1,26 @@
+// ============================================================
+// [DB 조작 + 보안] 명확화 세션 서비스 (Clarification)
+//
+// 사용자가 애매한 입력("커피 5000원")을 보냈을 때,
+// AI가 추가 정보를 묻고 → 답변을 기존 데이터에 합치는 과정을 관리합니다.
+//
+// 흐름 예시:
+//   1. 사용자: "커피 5000원" → AI: "지출인가요, 수입인가요?"
+//      → saveClarification()으로 부분 데이터 저장
+//   2. 사용자: "지출이요" → mergeClarificationResponse()로 합침
+//      → 모든 필드가 채워지면 deleteClarification() 후 거래 생성
+//
+// 보안 핵심 규칙:
+//   - 모든 조회/삭제에 userId AND chatSessionId 이중 필터
+//   - 다른 사용자의 명확화 세션에 접근 불가
+//   - 5분 후 자동 만료 (cleanupExpired) → 방치된 세션 정리
+// ============================================================
+
 import { clarificationSessions } from '../db/schema';
 import { eq, and, lt } from 'drizzle-orm';
 import crypto from 'crypto';
 
-// Valid transaction categories (must match validation.ts)
+// 허용되는 거래 카테고리 목록 (validation.ts와 동일해야 함)
 const VALID_CATEGORIES = ['food', 'transport', 'work', 'shopping', 'entertainment', 'utilities', 'medicine', 'other'] as const;
 
 export interface ClarificationState {

@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+// ============================================================
+// [테마 설정] app_theme.dart
+// 앱 전체의 시각적 스타일(색상, 폰트, 버튼, 카드 등)을 정의합니다.
+// MaterialApp의 theme 속성에 lightTheme을 전달하여 적용됩니다.
+//
+// 주요 색상:
+//   primaryColor  — 파란색 (#3B82F6) : 버튼, 선택 상태
+//   expenseColor  — 빨간색 (#EF4444) : 지출 관련
+//   incomeColor   — 파란색 (#3B82F6) : 수입 관련
+//   backgroundColor — 연한 회색 (#F8F8FC) : 화면 배경
+// ============================================================
 class AppTheme {
   // Colors
   static const Color backgroundColor = Color(0xFFF8F8FC);

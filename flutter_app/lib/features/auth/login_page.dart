@@ -6,8 +6,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 
-/// Login page with OAuth sign-in options (Google and Kakao)
-/// Displays centered layout with app title and OAuth buttons
+// ============================================================
+// [로그인 화면] login_page.dart
+// 앱 시작 시 인증되지 않은 사용자에게 보여지는 화면입니다.
+//
+// OAuth 로그인 방식:
+//   - Google 로그인: Supabase의 signInWithOAuth로 외부 브라우저 열기
+//     → 로그인 성공 시 딥링크로 앱 복귀 → authState 변경 → /record 이동
+//   - 카카오 로그인: 아직 미구현 (TODO)
+//
+// 주의: signInWithOAuth는 비동기로 세션이 도착하므로
+//       로그인 직후 바로 화면 전환하면 안 됨 → GoRouter redirect가 처리
+// ============================================================
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 

@@ -2,7 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/report.dart';
 import '../../core/api/api_client.dart';
 
-// Get list of reports with optional month filter
+// ============================================================
+// [리포트 Provider] report_provider.dart
+// AI가 생성한 리포트의 CRUD를 담당합니다.
+// StatsPage(리포트 탭)과 ReportDetailPage에서 사용됩니다.
+//
+// getReportsProvider      — 리포트 목록 조회 (월별 필터 가능)
+// getReportDetailProvider — 특정 리포트의 상세 데이터
+// saveReportProvider      — 새 리포트 저장
+// deleteReportProvider    — 리포트 삭제
+// updateReportProvider    — 리포트 제목 수정
+// ============================================================
+
+// 리포트 목록 조회 (month: 필터, limit: 최대 개수)
 final getReportsProvider = FutureProvider.family<List<ReportSummary>, ({String? month, int limit})>(
   (ref, params) async {
     final apiClient = ref.watch(apiClientProvider);

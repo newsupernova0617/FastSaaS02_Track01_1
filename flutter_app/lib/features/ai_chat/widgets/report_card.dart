@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+// ============================================================
+// [리포트 위젯] report_card.dart
+// AI 응답 또는 리포트 상세에서 카드형 섹션을 렌더링합니다.
+//
+// 섹션 타입별 표시:
+//   'card'       → 메트릭 카드 (제목, 수치, 추세 아이콘)
+//   'alert'      → 경고 카드 (주황색, 경고 아이콘)
+//   'suggestion' → 제안 카드 (파란색, 전구 아이콘)
+// ============================================================
 class ReportCard extends StatelessWidget {
   final Map<String, dynamic> section;
 

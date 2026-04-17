@@ -5,6 +5,17 @@ import 'package:flutter_app/shared/providers/ai_chat_provider.dart';
 import 'widgets/chat_bubble.dart';
 import 'widgets/chat_input.dart';
 
+// ============================================================
+// [레거시 AI 채팅 화면] ai_chat_page.dart
+// 세션 없이 AI와 대화하는 화면입니다. (/ai 경로)
+// → 현재는 세션 기반 ChatScreen(/chat)이 메인이므로 레거시입니다.
+//
+// 동작:
+//   - getChatHistoryProvider로 과거 대화 로드
+//   - 메시지 전송 시 옵티미스틱 UI (즉시 표시 후 서버 응답 대기)
+//   - 대화 기록 삭제 기능 (clearChatHistoryProvider)
+//   - ChatBubble, ChatInput 위젯으로 구성
+// ============================================================
 class AIChatPage extends ConsumerStatefulWidget {
   const AIChatPage({Key? key}) : super(key: key);
 

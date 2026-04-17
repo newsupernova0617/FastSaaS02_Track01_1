@@ -1,3 +1,17 @@
+// ============================================================
+// [DB 조작 + 인증 + 보안] 레거시 AI API 라우트
+//
+// ⚠️ 이 파일은 이전 버전의 AI 엔드포인트입니다.
+// 새로운 코드는 sessions.ts의 POST /:sessionId/messages를 사용합니다.
+// 하위 호환성을 위해 유지되고 있습니다.
+//
+// 보안 핵심 규칙:
+//   1. userId = c.get('userId') — JWT에서 추출
+//   2. 세션 소유권 검증: getSession(db, sessionId, userId) → null이면 403
+//   3. 모든 DB 쿼리에 eq(transactions.userId, userId) 포함
+//   4. AI 요청 속도 제한: 1분에 20번
+// ============================================================
+
 import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { getDb, Env } from '../db/index';
@@ -37,7 +51,8 @@ What would you like to do?`;
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// 20 AI requests per minute per user
+// [보안] AI 요청 속도 제한: 사용자당 1분에 최대 20번
+// AI 호출은 외부 LLM API를 사용하므로 비용이 높음 → 남용 방지 필수
 const aiActionRateLimit = createRateLimiter(20, 60_000);
 
 function isAIServiceError(error: unknown): boolean {
@@ -95,11 +110,16 @@ function generateClarificationQuestion(
   return `다음 정보를 알려주세요: ${missingFields.map(f => questions[f] || f).join(', ')}`;
 }
 
-// POST /api/ai/action
+// POST /api/ai/action — AI에게 텍스트를 보내고 액션을 실행
+// [보안 흐름]
+//   1. 속도 제한 (aiActionRateLimit)
+//   2. userId를 JWT에서 추출 (body에서 읽지 않음!)
+//   3. sessionId의 소유권 검증 (getSession)
+//   4. AI 분석 → 거래 CRUD 또는 리포트 생성
 router.post('/action', aiActionRateLimit, async (c) => {
   try {
     const db = getDb(c.env);
-    const userId = c.get('userId');
+    const userId = c.get('userId');  // [보안] JWT에서 추출 — 절대 body에서 읽지 않음
     const { text, sessionId } = await c.req.json();
 
     if (!text || typeof text !== 'string') {
@@ -116,12 +136,13 @@ router.post('/action', aiActionRateLimit, async (c) => {
       );
     }
 
-    // Verify the session belongs to the authenticated user before writing anything
+    // [보안] 세션 소유권 검증 — 이 세션이 현재 사용자의 것인지 확인
+    // 검증 없이 메시지를 저장하면 다른 사용자의 세션에 데이터를 쓸 수 있는 취약점 발생
     const session = await getSession(db, sessionId, userId);
     if (!session) {
       return c.json(
         { success: false, error: 'Session not found or access denied' },
-        403
+        403  // 소유권 없음 → 접근 거부
       );
     }
 

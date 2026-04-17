@@ -5,6 +5,15 @@ import 'action_button.dart';
 import 'report_card.dart';
 import 'report_chart.dart';
 
+// ============================================================
+// [채팅 위젯] chat_bubble.dart
+// 개별 채팅 메시지를 말풍선으로 표시하는 위젯입니다.
+//
+// 사용자 메시지: 오른쪽 정렬, 파란색 배경, 사람 아이콘
+// AI 메시지: 왼쪽 정렬, 회색 배경, 로봇 아이콘
+//   + metadata에 report 데이터가 있으면 ReportCard/ReportChart 렌더링
+//   + metadata에 actionType이 있으면 ActionButton 표시
+// ============================================================
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
 

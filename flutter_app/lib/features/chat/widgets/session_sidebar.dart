@@ -3,6 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/features/chat/providers/session_provider.dart';
 
+// ============================================================
+// [채팅 위젯] session_sidebar.dart
+// 채팅 화면 왼쪽의 세션(대화방) 목록 사이드바입니다.
+// 어두운 배경(grey[900])으로 디자인되어 있습니다.
+//
+// 기능:
+//   - "New Conversation" 버튼으로 새 세션 생성
+//   - 세션 목록 표시 (제목, 생성 시간)
+//   - 활성 세션 하이라이트 (배경색 변경)
+//   - 세션 삭제 (삭제 확인 다이얼로그)
+//   - 세션 이름 변경 (이름 변경 다이얼로그)
+// ============================================================
 class SessionSidebar extends ConsumerWidget {
   final int? activeSessionId;
   final Function(int) onSessionSelect;

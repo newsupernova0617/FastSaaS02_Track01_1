@@ -3,8 +3,18 @@ import 'package:flutter_app/shared/models/chat_message.dart';
 import 'api_provider.dart';
 import 'transaction_provider.dart';
 
-/// Provider for fetching chat history
-/// Returns: List<ChatMessage>
+// ============================================================
+// [AI 채팅 Provider] ai_chat_provider.dart
+// 레거시 AI 채팅 (세션 없이 단건 메시지 주고받기)용 provider입니다.
+// AIChatPage(/ai 경로)에서 사용됩니다.
+//
+// getChatHistoryProvider — 과거 대화 기록 조회
+// sendAIMessageProvider  — AI에게 메시지 전송 + 응답 받기
+//   → 응답 후 거래 관련 provider들도 갱신 (AI가 거래를 생성했을 수 있으므로)
+// clearChatHistoryProvider — 대화 기록 전체 삭제
+// ============================================================
+
+// 대화 기록을 서버에서 가져오는 provider (최근 50개)
 final getChatHistoryProvider = FutureProvider<List<ChatMessage>>((ref) async {
   try {
     // Check if API client is ready (user is authenticated)

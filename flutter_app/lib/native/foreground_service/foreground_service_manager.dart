@@ -1,6 +1,20 @@
 import 'package:flutter/services.dart';
 
-/// Manager for foreground service lifecycle on Android
+// ============================================================
+// [포그라운드 서비스] foreground_service_manager.dart
+// Android 상단 알림바에 상주하는 서비스를 관리합니다.
+//
+// MethodChannel('com.fastsaas02.app/foreground_service')을 통해
+// Dart → Kotlin 네이티브 코드와 통신합니다.
+//
+// 주요 메서드:
+//   startForegroundService()  — 알림 표시 + 서비스 시작
+//   stopForegroundService()   — 서비스 중지
+//   updateNotification()      — 알림 내용 업데이트
+//   isForegroundServiceRunning() — 실행 상태 확인
+//   hasNotificationPermission()  — 알림 권한 확인 (Android 13+)
+//   requestNotificationPermission() — 알림 권한 요청
+// ============================================================
 class ForegroundServiceManager {
   static const platform =
       MethodChannel('com.fastsaas02.app/foreground_service');

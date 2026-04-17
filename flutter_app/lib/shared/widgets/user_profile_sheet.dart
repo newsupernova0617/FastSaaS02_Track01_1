@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 
-/// Bottom sheet widget displaying user profile information
-/// Shows user avatar, name, email, and logout button
+// ============================================================
+// [공유 위젯] user_profile_sheet.dart
+// 프로필 버튼 탭 시 하단에서 올라오는 바텀시트입니다.
+// 사용자 아바타, 이름, 이메일, 로그아웃 버튼을 표시합니다.
+// 로그아웃 시 signOutProvider를 호출 → authState 변경 → /login으로 이동
+// ============================================================
 class UserProfileSheet extends ConsumerWidget {
   const UserProfileSheet({super.key});
 

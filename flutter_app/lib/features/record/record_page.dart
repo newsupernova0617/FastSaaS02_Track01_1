@@ -5,16 +5,23 @@ import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/core/constants/categories.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 
-/// Record page for adding income and expense transactions
-/// Features:
-/// - Toggle between expense and income
-/// - Date picker for transaction date
-/// - Amount input with currency formatting
-/// - Category selection grid (3 columns)
-/// - Memo/description input
-/// - Submit button with dynamic color
-/// - Loading state during submission
-/// - Success/error feedback
+// ============================================================
+// [거래 기록 화면] record_page.dart
+// 수동으로 수입/지출 거래를 입력하는 폼 화면입니다. (하단탭 1번)
+//
+// 입력 항목:
+//   1) 유형 토글: 지출 / 수입 선택 (SegmentedButton)
+//   2) 날짜 선택: DatePicker로 거래 날짜 지정
+//   3) 금액 입력: 숫자 키보드, 자동 콤마 포맷팅
+//   4) 카테고리 선택: 3열 그리드 (지출 7개, 수입 4개)
+//   5) 메모 입력: 선택사항
+//   6) 등록 버튼: 지출=빨간색, 수입=파란색
+//
+// 동작 흐름:
+//   입력 → 유효성 검증 → addTransactionProvider 호출
+//   → 성공 시 폼 초기화 + 스낵바 알림
+//   → 실패 시 에러 스낵바
+// ============================================================
 class RecordPage extends ConsumerStatefulWidget {
   const RecordPage({super.key});
 

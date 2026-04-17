@@ -4,8 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/logger/network_logger.dart';
 import 'package:flutter_app/core/logger/logger.dart';
 
-/// Logging Interceptor for Dio
-/// Logs request and response information with timing and masking
+// ============================================================
+// [HTTP 인터셉터] api_interceptor.dart
+// Dio HTTP 클라이언트에 붙는 인터셉터(미들웨어)들입니다.
+//
+// 1) LoggingInterceptor — 모든 요청/응답을 로그로 기록
+// 2) AuthInterceptor — 핵심! 두 가지 역할:
+//    a) 모든 요청에 JWT 토큰을 Authorization 헤더에 자동 첨부
+//    b) 401(인증만료) 에러 시 토큰을 자동 갱신하고 원래 요청을 재시도
+//       → 여러 요청이 동시에 401을 받아도 토큰 갱신은 1번만 수행 (Completer 사용)
+//       → 갱신 실패 시 자동 로그아웃
+// ============================================================
+
+// 요청/응답을 콘솔에 기록하는 인터셉터
 class LoggingInterceptor extends Interceptor {
   final NetworkLogger _networkLogger = NetworkLogger();
 

@@ -1,5 +1,15 @@
-/// Structured logging utility for Flutter app
-/// Provides different log levels and automatic sensitive data masking
+// ============================================================
+// [로거] logger.dart
+// 앱 전체에서 사용하는 로깅 유틸리티입니다. 싱글톤 패턴.
+//
+// 로그 레벨: debug < info < warn < error
+//   → minLogLevel 이상만 출력 (기본: debug = 전부 출력)
+//
+// 민감정보 마스킹: password, token, authorization 등
+//   포함된 키의 값을 '***MASKED***'로 대체하여 로그 유출 방지
+//
+// 사용법: Logger().info('메시지'), Logger().error('에러', error: e)
+// ============================================================
 
 enum LogLevel {
   debug(0),

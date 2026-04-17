@@ -2,8 +2,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/storage/native_shared_prefs.dart';
 
-/// Supabase authentication service
-/// Initializes Supabase and provides methods for auth operations
+// ============================================================
+// [인증 서비스] supabase_auth.dart
+// Supabase를 통한 사용자 인증(로그인/회원가입/로그아웃)을 담당합니다.
+//
+// 싱글톤 패턴: 앱 전체에서 하나의 인스턴스만 존재
+// 주요 기능:
+//   - initialize()       : 앱 시작 시 Supabase SDK 초기화
+//   - signInWithPassword(): 이메일+비밀번호 로그인
+//   - signUp()           : 회원가입
+//   - signOut()          : 로그아웃
+//   - refreshSession()   : 만료된 JWT 토큰 갱신
+//   - _syncToNativePrefs(): 인증 정보를 SharedPreferences에 저장
+//     → Android 네이티브 코드(빠른입력)가 JWT를 읽을 수 있도록
+// ============================================================
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
 

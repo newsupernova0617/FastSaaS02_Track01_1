@@ -3,7 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/storage/native_shared_prefs.dart';
 
-/// Session data model
+// ============================================================
+// [세션 Provider] session_provider.dart
+// 채팅 세션(대화방)의 CRUD를 담당합니다.
+//
+// SessionItem            — 세션 데이터 모델 (id, title, createdAt, updatedAt)
+// sessionProvider         — 전체 세션 목록 조회 (최근 수정순 정렬)
+// activeSessionIdProvider — 현재 선택된 세션 ID (StateProvider)
+//   → 변경 시 SharedPreferences에도 저장 (Android 네이티브 빠른입력에서 사용)
+// createSessionProvider   — 새 세션 생성
+// renameSessionProvider   — 세션 이름 변경
+// deleteSessionProvider   — 세션 삭제 (삭제된 세션이 활성이면 null로 초기화)
+// ============================================================
+
+// 세션 데이터 모델
 class SessionItem {
   final int id;
   final String title;

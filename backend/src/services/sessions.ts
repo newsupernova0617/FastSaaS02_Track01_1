@@ -1,10 +1,24 @@
+// ============================================================
+// [DB 조작 + 인가] 세션 관리 서비스
+//
+// 채팅 세션의 CRUD를 담당합니다.
+// 모든 함수에서 userId를 필수로 받아 "본인의 세션만" 접근 가능하도록 합니다.
+//
+// 보안 핵심 규칙:
+//   - getSession(): sessionId AND userId 둘 다 일치해야 반환
+//   - deleteSession(): 소유권 먼저 확인 → 메시지 삭제 → 세션 삭제
+//   - 다른 사용자의 세션을 조회/수정/삭제할 수 없음
+// ============================================================
+
 import { and, eq, desc } from 'drizzle-orm';
 import { sessions as sessionsTable, chatMessages } from '../db/schema';
 
 /**
- * Create a new session for a user
+ * 새 채팅 세션을 생성합니다.
+ * userId는 서버에서 설정되므로 다른 사용자의 세션을 만들 수 없습니다.
+ *
  * @param db - Database instance
- * @param userId - User ID
+ * @param userId - User ID (JWT에서 추출된 값)
  * @param title - Session title (auto-generated from first message or user-provided)
  * @returns Created session object with id, title, createdAt
  */

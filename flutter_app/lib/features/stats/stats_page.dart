@@ -8,6 +8,24 @@ import 'package:flutter_app/shared/models/summary_row.dart';
 import '../../shared/providers/report_provider.dart';
 import '../reports/report_list_item.dart';
 
+// ============================================================
+// [통계 화면] stats_page.dart
+// 월별 수입/지출 통계와 저장된 리포트를 보여주는 화면입니다. (하단탭 3번)
+//
+// 2개의 탭으로 구성:
+//   [통계 탭]
+//     - 월 네비게이션 (좌/우 화살표로 이전/다음 월 이동)
+//     - 총 지출 / 총 수입 / 순 자산 변화 요약 카드
+//     - 지출 파이차트 + 카테고리별 상세 (금액, 비율, 프로그레스바)
+//     - 수입 파이차트 + 카테고리별 상세
+//   [리포트 탭]
+//     - AI가 생성하여 저장한 리포트 목록 (SavedReportsTab)
+//     - 탭하면 ReportDetailPage로 이동
+//
+// 데이터 흐름:
+//   summaryProvider(monthString) → 월별 카테고리 합계 데이터
+//   getReportsProvider → 저장된 리포트 목록
+// ============================================================
 class StatsPage extends ConsumerStatefulWidget {
   const StatsPage({Key? key}) : super(key: key);
 
