@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/models/report.dart';
+import '../../shared/models/report_type.dart';
 
 class ReportListItem extends StatelessWidget {
   final ReportSummary report;
@@ -20,14 +21,7 @@ class ReportListItem extends StatelessWidget {
   }
 
   String _getReportTypeLabel(String reportType) {
-    final labels = {
-      'monthly_summary': '월간 요약',
-      'category_detail': '카테고리 분석',
-      'spending_pattern': '지출 패턴',
-      'anomaly': '이상 탐지',
-      'suggestion': '제안',
-    };
-    return labels[reportType] ?? reportType;
+    return ReportType.fromString(reportType)?.label ?? reportType;
   }
 
   @override

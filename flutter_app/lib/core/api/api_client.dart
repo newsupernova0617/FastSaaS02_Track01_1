@@ -6,6 +6,7 @@ import 'package:flutter_app/shared/models/chat_message.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'package:flutter_app/shared/models/ai_action_response.dart';
 import 'package:flutter_app/shared/models/report.dart';
+import 'package:flutter_app/shared/models/report_type.dart';
 import 'package:flutter_app/shared/providers/api_provider.dart';
 
 /// API Client for handling all API requests
@@ -83,7 +84,9 @@ class ApiClient {
 
       if (response.statusCode == 200) {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['success'] as bool? ?? true;
+        final success = responseData['success'];
+        if (success == null) throw Exception('응답 형식 오류: success 필드 없음');
+        return success as bool;
       }
       throw DioException(
         requestOptions: response.requestOptions,
@@ -201,7 +204,7 @@ class ApiClient {
   /// POST /api/reports
   /// Returns the ID of the created report
   Future<int> saveReport({
-    required String reportType,
+    required ReportType reportType,
     required String title,
     String? subtitle,
     required List<Map<String, dynamic>> reportData,
@@ -211,7 +214,7 @@ class ApiClient {
       final response = await _dio.post(
         '/reports',
         data: {
-          'reportType': reportType,
+          'reportType': reportType.name,
           'title': title,
           'subtitle': subtitle,
           'reportData': reportData,

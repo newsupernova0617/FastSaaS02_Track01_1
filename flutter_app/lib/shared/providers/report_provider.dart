@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/report.dart';
+import '../models/report_type.dart';
 import '../../core/api/api_client.dart';
 
 // Get list of reports with optional month filter
@@ -26,7 +27,7 @@ final saveReportProvider = FutureProvider.family<int, Report>(
   (ref, report) async {
     final apiClient = ref.watch(apiClientProvider);
     return apiClient.saveReport(
-      reportType: report.reportType,
+      reportType: ReportType.fromString(report.reportType) ?? ReportType.monthly_summary,
       title: report.title,
       subtitle: report.subtitle,
       reportData: report.reportData,
