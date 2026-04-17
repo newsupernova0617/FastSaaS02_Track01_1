@@ -80,8 +80,8 @@ rules:
   # Type safety: any type in security files
   - id: any-type-in-security-files
     patterns:
-      - pattern: ": any"
-      - pattern: "as any"
+      - pattern-regex: ':\s*any\b'
+      - pattern-regex: '\bas\s+any\b'
     message: "Usage of 'any' type in security-critical file. Use specific types or 'unknown' instead."
     languages: [typescript]
     severity: WARNING
