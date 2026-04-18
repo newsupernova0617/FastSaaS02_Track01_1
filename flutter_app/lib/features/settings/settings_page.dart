@@ -147,67 +147,84 @@ class SettingsPage extends ConsumerWidget {
       (mode: ThemeMode.dark, label: '다크', icon: Icons.dark_mode),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          children: items.map((item) {
-            final selected = current == item.mode;
-            return InkWell(
-              borderRadius: BorderRadius.circular(AppRadii.md),
-              onTap: () =>
-                  ref.read(themeModeProvider.notifier).setMode(item.mode),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      item.icon,
-                      color: selected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                          color: selected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (selected)
-                      Icon(
-                        Icons.check_circle,
-                        color: theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                  ],
-                ),
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        children: items.map((item) {
+          final selected = current == item.mode;
+          return InkWell(
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            onTap: () =>
+                ref.read(themeModeProvider.notifier).setMode(item.mode),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
               ),
-            );
-          }).toList(),
-        ),
+              decoration: BoxDecoration(
+                gradient: selected
+                    ? LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.16),
+                          AppColors.secondary.withValues(alpha: 0.10),
+                        ],
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(AppRadii.md),
+                border: selected
+                    ? Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.35),
+                        width: 0.5,
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    item.icon,
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      item.label,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                        color: selected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  if (selected)
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
   Widget _buildInfoCard(BuildContext context, ThemeData theme) {
-    return Card(
-      margin: EdgeInsets.zero,
+    return GlassCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           ListTile(
-            leading: const FaIcon(FontAwesomeIcons.circleInfo, size: 18),
+            leading: FaIcon(
+              FontAwesomeIcons.circleInfo,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
             title: const Text('앱 버전'),
             trailing: Text(
               '1.0.0',
@@ -216,13 +233,21 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          ),
           ListTile(
-            leading: const FaIcon(FontAwesomeIcons.shield, size: 18),
+            leading: FaIcon(
+              FontAwesomeIcons.shield,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
             title: const Text('개인정보 처리방침'),
             trailing: Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
             ),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(

@@ -4,16 +4,8 @@ import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/features/chat/providers/session_provider.dart';
 
 // ============================================================
-// [채팅 위젯] session_sidebar.dart
-// 채팅 화면 왼쪽의 세션(대화방) 목록 사이드바입니다.
-// 어두운 배경(grey[900])으로 디자인되어 있습니다.
-//
-// 기능:
-//   - "New Conversation" 버튼으로 새 세션 생성
-//   - 세션 목록 표시 (제목, 생성 시간)
-//   - 활성 세션 하이라이트 (배경색 변경)
-//   - 세션 삭제 (삭제 확인 다이얼로그)
-//   - 세션 이름 변경 (이름 변경 다이얼로그)
+// [Phase 3] session_sidebar.dart
+// 채팅 세션 목록 사이드바 — 다크 elevated 표면 + 활성 세션 gradient pill.
 // ============================================================
 class SessionSidebar extends ConsumerWidget {
   final int? activeSessionId;
@@ -37,14 +29,14 @@ class SessionSidebar extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Session?'),
+        title: const Text('대화 삭제'),
         content: const Text(
-          'This will permanently delete the session and all its messages. This cannot be undone.',
+          '대화와 모든 메시지가 영구 삭제됩니다. 되돌릴 수 없습니다.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('취소'),
           ),
           TextButton(
             onPressed: () {
@@ -52,9 +44,9 @@ class SessionSidebar extends ConsumerWidget {
               Navigator.pop(context);
             },
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: AppColors.expense,
             ),
-            child: const Text('Delete'),
+            child: const Text('삭제'),
           ),
         ],
       ),
@@ -63,97 +55,211 @@ class SessionSidebar extends ConsumerWidget {
 
   String _formatDate(DateTime dateTime) {
     final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${dateTime.month}/${dateTime.day}';
-    }
+    final diff = now.difference(dateTime);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
+    if (diff.inHours < 24) return '${diff.inHours}시간 전';
+    if (diff.inDays < 7) return '${diff.inDays}일 전';
+    return '${dateTime.month}/${dateTime.day}';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     return Container(
       width: 280,
-      color: Colors.grey[900],
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          right: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+            width: 0.5,
+          ),
+        ),
+      ),
       child: Column(
         children: [
-          // Header with "New Conversation" button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey[800]!),
-              ),
-            ),
-            child: ElevatedButton.icon(
-              onPressed: onNewSession,
-              icon: const Icon(Icons.add),
-              label: const Text('New Conversation'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: AppTheme.primaryColor,
+          // Header — "New Conversation" gradient button
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.brand,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  boxShadow: AppGlow.small(),
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: onNewSession,
+                  icon: const Icon(Icons.add_rounded,
+                      size: 18, color: Colors.white),
+                  label: const Text(
+                    '새 대화',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          ),
 
-          // Sessions list
+          // List
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : sessions.isEmpty
                     ? Center(
                         child: Text(
-                          'No conversations yet',
-                          style: TextStyle(color: Colors.grey[400]),
+                          '아직 대화가 없어요',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
+                          ),
                         ),
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.sm,
+                        ),
                         itemCount: sessions.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 4),
                         itemBuilder: (context, index) {
                           final session = sessions[index];
                           final isActive = activeSessionId == session.id;
-
-                          return Container(
-                            color: isActive ? Colors.grey[800] : Colors.transparent,
-                            child: ListTile(
-                              title: Text(
-                                session.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isActive
-                                      ? AppTheme.primaryColor
-                                      : Colors.grey[200],
-                                ),
-                              ),
-                              subtitle: Text(
-                                _formatDate(session.createdAt),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                              onTap: () => onSessionSelect(session.id),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                onPressed: () => _showDeleteConfirmation(context, session),
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                padding: EdgeInsets.zero,
-                              ),
-                              dense: true,
-                            ),
+                          return _SessionTile(
+                            session: session,
+                            isActive: isActive,
+                            formattedDate: _formatDate(session.createdAt),
+                            onTap: () => onSessionSelect(session.id),
+                            onDelete: onDeleteSession == null
+                                ? null
+                                : () => _showDeleteConfirmation(
+                                    context, session),
                           );
                         },
                       ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SessionTile extends StatelessWidget {
+  final SessionItem session;
+  final bool isActive;
+  final String formattedDate;
+  final VoidCallback onTap;
+  final VoidCallback? onDelete;
+
+  const _SessionTile({
+    required this.session,
+    required this.isActive,
+    required this.formattedDate,
+    required this.onTap,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: isActive
+                ? Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.35),
+                    width: 0.5,
+                  )
+                : null,
+          ),
+          child: Row(
+            children: [
+              if (isActive)
+                Container(
+                  width: 3,
+                  height: 24,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.brand,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: AppGlow.small(),
+                  ),
+                ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      session.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: isActive
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurface
+                                .withValues(alpha: 0.85),
+                        fontWeight:
+                            isActive ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formattedDate,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onDelete != null)
+                IconButton(
+                  onPressed: onDelete,
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  tooltip: '대화 삭제',
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

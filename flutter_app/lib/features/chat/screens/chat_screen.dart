@@ -4,6 +4,7 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
+import 'package:flutter_app/features/ai_chat/widgets/chat_input.dart';
 import 'package:flutter_app/features/chat/adapters/chat_ui_adapter.dart';
 import 'package:flutter_app/features/chat/widgets/session_sidebar.dart';
 import 'package:flutter_app/features/chat/providers/session_provider.dart';
@@ -257,6 +258,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     customMessageBuilder:
                         (message, {required int messageWidth}) =>
                             _buildCustomMessage(message, messageWidth),
+                    // Phase 3 ChatInput 재사용 — glass pill + violet focus glow
+                    // + gradient 전송 버튼 + haptic. flutter_chat_ui 기본 입력창 대체.
+                    customBottomWidget: ChatInput(
+                      isLoading: _isSending,
+                      onSend: (text) => _handleSend(
+                        types.PartialText(text: text),
+                        activeSessionId,
+                      ),
+                    ),
                   );
                 },
               );
@@ -275,8 +285,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -285,25 +295,70 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.25)),
         ),
       ),
-      child: Row(
-        children: [
-          if (isMobile)
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
             IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => _showSessionsSheet(activeSessionId, sessionsAsync),
+              icon: const Icon(Icons.arrow_back_rounded),
+              tooltip: '돌아가기',
+              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
             ),
-          const Icon(Icons.smart_toy_outlined, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              _currentSessionTitle(activeSessionId, sessionsAsync),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+            if (isMobile)
+              IconButton(
+                icon: const Icon(Icons.menu_rounded),
+                tooltip: '대화 목록',
+                onPressed: () => _showSessionsSheet(activeSessionId, sessionsAsync),
               ),
-              overflow: TextOverflow.ellipsis,
+            Container(
+              width: 28,
+              height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              decoration: BoxDecoration(
+                gradient: AppGradients.brand,
+                shape: BoxShape.circle,
+                boxShadow: AppGlow.small(),
+              ),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _currentSessionTitle(activeSessionId, sessionsAsync),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isSending ? 'AI 응답 중…' : 'AI 준비 완료',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -470,18 +525,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       Radius.circular(AppRadii.md),
     );
 
+    // 입력창은 customBottomWidget (ChatInput) 이 실제로 렌더하므로
+    // 아래 inputBackgroundColor / inputTextColor 는 fallback 값일 뿐이다.
+    final inputBg = isDark
+        ? theme.colorScheme.surfaceContainerHighest
+        : Colors.white;
+    final inputFg = isDark ? theme.colorScheme.onSurface : Colors.black;
+    final inputStyle = TextStyle(
+      fontSize: 14,
+      height: 1.4,
+      color: inputFg,
+    );
+
     if (isDark) {
       return DarkChatTheme(
         backgroundColor: theme.scaffoldBackgroundColor,
         primaryColor: theme.colorScheme.primary,
         secondaryColor: theme.colorScheme.surfaceContainerHighest,
-        inputBackgroundColor: theme.colorScheme.surfaceContainerHighest,
-        inputTextColor: theme.colorScheme.onSurface,
+        inputBackgroundColor: inputBg,
+        inputTextColor: inputFg,
         inputBorderRadius: inputBorderRadius,
         messageBorderRadius: AppRadii.md,
         sentMessageBodyTextStyle: sentTextStyle,
         receivedMessageBodyTextStyle: receivedTextStyle,
-        inputTextStyle: const TextStyle(fontSize: 14, height: 1.4),
+        inputTextStyle: inputStyle,
       );
     }
 
@@ -489,13 +556,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       primaryColor: theme.colorScheme.primary,
       secondaryColor: theme.colorScheme.surfaceContainerHighest,
-      inputBackgroundColor: theme.colorScheme.primary,
-      inputTextColor: Colors.white,
+      inputBackgroundColor: inputBg,
+      inputTextColor: inputFg,
       inputBorderRadius: inputBorderRadius,
       messageBorderRadius: AppRadii.md,
       sentMessageBodyTextStyle: sentTextStyle,
       receivedMessageBodyTextStyle: receivedTextStyle,
-      inputTextStyle: const TextStyle(fontSize: 14, height: 1.4),
+      inputTextStyle: inputStyle,
     );
   }
 }

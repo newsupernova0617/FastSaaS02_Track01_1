@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/core/constants/categories.dart';
 import 'package:flutter_app/core/constants/category_icons.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
-import 'package:flutter_app/shared/widgets/animated_fade_slide.dart';
-import 'package:flutter_app/shared/widgets/glass_card.dart';
+import 'package:flutter_app/shared/widgets/glowing_number.dart';
 
 // ============================================================
-// [거래 기록 화면] record_page.dart
-// 수동으로 수입/지출 거래를 입력하는 폼.
+// [Phase 3] record_page.dart
+// Full-screen modal for recording a transaction.
+//
+// Layout:
+//   ┌───── drag handle ──────┐
+//   [close]         [date]
+//   ┌──── HERO AMOUNT ────┐   <- giant gradient number
+//   [ 지출  |  수입 ]          <- segmented
+//   [ category grid 3-col ]
+//   [ memo ]
+//   [ submit CTA (gradient) ]
 // ============================================================
+
 class RecordPage extends ConsumerStatefulWidget {
   const RecordPage({super.key});
 
@@ -46,57 +57,46 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     super.dispose();
   }
 
-  List<String> _getCategories() =>
-      _transactionType == 'expense'
-          ? Categories.getAllExpenseCategories()
-          : Categories.getAllIncomeCategories();
-
-  Color get _accentColor =>
-      _transactionType == 'expense' ? AppColors.expense : AppColors.income;
+  List<String> _getCategories() => _transactionType == 'expense'
+      ? Categories.getAllExpenseCategories()
+      : Categories.getAllIncomeCategories();
 
   void _formatAmountInput(String value) {
-    final numeric = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    final numeric = value.replaceAll(RegExp(r'[^0-9]'), '');
     if (numeric.isEmpty) {
-      _amountText = '';
+      setState(() => _amountText = '');
       _amountController.clear();
       return;
     }
-
     try {
       final parsed = double.parse(numeric);
       if (parsed > 999999999) return;
     } catch (_) {
       return;
     }
-
-    _amountText = numeric;
-    final formatted = _formatWithCommas(numeric);
+    setState(() => _amountText = numeric);
+    final formatted = NumberFormat('#,##0').format(int.parse(numeric));
     _amountController.value = TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 
-  String _formatWithCommas(String value) {
-    try {
-      if (value.isEmpty) return '';
-      if (value.contains('.')) {
-        final parts = value.split('.');
-        final intPart = int.parse(parts[0]);
-        return '${NumberFormat('#,##0').format(intPart)}.${parts[1]}';
-      }
-      return NumberFormat('#,##0').format(int.parse(value));
-    } catch (_) {
-      return value;
-    }
-  }
-
   Future<void> _pickDate() async {
+    HapticFeedback.selectionClick();
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder: (c, child) => Theme(
+        data: Theme.of(c).copyWith(
+          colorScheme: Theme.of(c).colorScheme.copyWith(
+                primary: AppColors.primary,
+              ),
+        ),
+        child: child!,
+      ),
     );
     if (picked != null && mounted) {
       setState(() => _selectedDate = picked);
@@ -123,7 +123,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       _toast(error, isError: true);
       return;
     }
-
     setState(() => _isLoading = true);
     HapticFeedback.lightImpact();
 
@@ -141,24 +140,14 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       }).future);
 
       if (!mounted) return;
-
-      setState(() {
-        _transactionType = 'expense';
-        _selectedDate = DateTime.now();
-        _amountText = '';
-        _selectedCategory = null;
-        _memo = '';
-        _amountController.clear();
-        _memoController.clear();
-        _isLoading = false;
-      });
-
       HapticFeedback.mediumImpact();
-      _toast('거래가 저장되었습니다');
+      _toast('저장되었어요');
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (mounted) context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _toast('거래 저장 실패: $e', isError: true);
+      _toast('저장 실패: $e', isError: true);
     }
   }
 
@@ -179,144 +168,141 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final categories = _getCategories();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('거래 기록'),
-        elevation: 0,
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            _transactionType = 'expense';
-            _selectedDate = DateTime.now();
-            _amountText = '';
-            _selectedCategory = null;
-            _memo = '';
-            _amountController.clear();
-            _memoController.clear();
-          });
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AnimatedFadeSlide(
-                child: _buildTypeToggle(theme),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              AnimatedFadeSlide(
-                delay: const Duration(milliseconds: 80),
-                child: _buildDatePicker(theme),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              AnimatedFadeSlide(
-                delay: const Duration(milliseconds: 160),
-                child: _buildAmountInput(theme),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              AnimatedFadeSlide(
-                delay: const Duration(milliseconds: 240),
-                child: _buildCategoryGrid(categories, theme),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              AnimatedFadeSlide(
-                delay: const Duration(milliseconds: 320),
-                child: _buildMemoInput(),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              AnimatedFadeSlide(
-                delay: const Duration(milliseconds: 400),
-                child: _buildSubmitButton(theme),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─── Type toggle ─────────────────────────────────────────────
-  Widget _buildTypeToggle(ThemeData theme) {
-    return GlassCard(
-      accentColor: _accentColor,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          Expanded(
-            child: _toggleChip(
-              label: '지출',
-              active: _transactionType == 'expense',
-              color: AppColors.expense,
-              icon: FontAwesomeIcons.arrowTrendDown,
-              onTap: () => setState(() {
-                _transactionType = 'expense';
-                _selectedCategory = null;
-              }),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _toggleChip(
-              label: '수입',
-              active: _transactionType == 'income',
-              color: AppColors.income,
-              icon: FontAwesomeIcons.arrowTrendUp,
-              onTap: () => setState(() {
-                _transactionType = 'income';
-                _selectedCategory = null;
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _toggleChip({
-    required String label,
-    required bool active,
-    required Color color,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadii.md),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: active ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(
-            color: active ? color : theme.colorScheme.outline.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Column(
           children: [
-            FaIcon(
-              icon,
-              size: 14,
-              color: active ? Colors.white : color,
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+              ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              label,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: active ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+
+            // Top bar
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: '닫기',
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _pickDate,
+                    icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                    label: Text(
+                      DateFormat('yyyy.MM.dd (E)', 'ko').format(_selectedDate),
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Hero amount
+                    _HeroAmount(
+                      amountText: _amountText,
+                      displayText: _amountController.text,
+                      onChanged: _formatAmountInput,
+                      controller: _amountController,
+                    ),
+
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Type segmented
+                    _TypeSegmented(
+                      value: _transactionType,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _transactionType = v;
+                          _selectedCategory = null;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Categories
+                    Text('카테고리',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                          letterSpacing: 0.5,
+                        )),
+                    const SizedBox(height: AppSpacing.md),
+                    _CategoryGrid(
+                      categories: categories,
+                      selected: _selectedCategory,
+                      onSelect: (c) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _selectedCategory = c);
+                      },
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Memo
+                    Text('메모 (선택)',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                          letterSpacing: 0.5,
+                        )),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextField(
+                      controller: _memoController,
+                      maxLines: 2,
+                      maxLength: 200,
+                      onChanged: (v) => _memo = v,
+                      decoration: const InputDecoration(
+                        hintText: '무엇에 대한 거래인가요?',
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
+                ),
+              ),
+            ),
+
+            // Submit CTA
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.xl,
+              ),
+              child: _SubmitCta(
+                isLoading: _isLoading,
+                enabled: !_isLoading && _amountText.isNotEmpty,
+                onTap: _submit,
+                label: _transactionType == 'expense' ? '지출 저장' : '수입 저장',
               ),
             ),
           ],
@@ -324,233 +310,309 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       ),
     );
   }
+}
 
-  // ─── Date picker ─────────────────────────────────────────────
-  Widget _buildDatePicker(ThemeData theme) {
+// ────────────────────────────────────────────────────────────
+// Hero amount — big gradient number that taps to invoke keyboard
+// ────────────────────────────────────────────────────────────
+class _HeroAmount extends StatelessWidget {
+  final String amountText;
+  final String displayText;
+  final ValueChanged<String> onChanged;
+  final TextEditingController controller;
+
+  const _HeroAmount({
+    required this.amountText,
+    required this.displayText,
+    required this.onChanged,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final showPlaceholder = amountText.isEmpty;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('날짜'),
-        const SizedBox(height: AppSpacing.sm),
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(AppRadii.md),
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: theme.inputDecorationTheme.fillColor,
-                border: Border.all(color: theme.colorScheme.outline),
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    DateFormat('yyyy-MM-dd (E)', 'ko').format(_selectedDate),
-                    style: theme.textTheme.bodyLarge,
+        Text('₩',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            )),
+        const SizedBox(height: 4),
+
+        // Invisible text field captures input; the displayed value is the
+        // gradient GlowingNumber below.
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              height: 72,
+              child: showPlaceholder
+                  ? GlowingNumber('0', fontSize: 56, glow: false)
+                  : GlowingNumber(displayText, fontSize: 56),
+            ),
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.0,
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
+                  onChanged: onChanged,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 56),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                    filled: false,
                   ),
-                  Icon(
-                    Icons.calendar_today,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
-  }
 
-  // ─── Amount input ────────────────────────────────────────────
-  Widget _buildAmountInput(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel('금액'),
         const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: _amountController,
-          keyboardType:
-              const TextInputType.numberWithOptions(decimal: true),
-          onChanged: _formatAmountInput,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: _accentColor,
-            fontWeight: FontWeight.w700,
-          ),
-          decoration: InputDecoration(
-            hintText: '0',
-            suffixText: '원',
-            suffixStyle: theme.textTheme.titleMedium,
+        Text(
+          '금액을 입력하세요',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
           ),
         ),
       ],
-    );
+    ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.96, end: 1);
   }
+}
 
-  // ─── Category grid ───────────────────────────────────────────
-  Widget _buildCategoryGrid(List<String> categories, ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel('카테고리'),
-        const SizedBox(height: AppSpacing.sm),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            childAspectRatio: 1.05,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-          ),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            final isSelected = _selectedCategory == category;
-            final icon = CategoryIcons.of(category);
+// ────────────────────────────────────────────────────────────
+// Type segmented — expense / income
+// ────────────────────────────────────────────────────────────
+class _TypeSegmented extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
 
-            return Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadii.md),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadii.md),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedCategory = category);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? _accentColor.withValues(alpha: 0.12)
-                        : theme.colorScheme.surface,
-                    border: Border.all(
-                      color: isSelected
-                          ? _accentColor
-                          : theme.colorScheme.outline.withValues(alpha: 0.3),
-                      width: isSelected ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadii.md),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FaIcon(
-                        icon,
-                        size: 22,
-                        color: isSelected
-                            ? _accentColor
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        category,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? _accentColor
-                              : theme.colorScheme.onSurface,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
+  const _TypeSegmented({required this.value, required this.onChanged});
 
-  // ─── Memo input ──────────────────────────────────────────────
-  Widget _buildMemoInput() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel('메모'),
-        const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: _memoController,
-          onChanged: (value) => setState(() => _memo = value),
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: '거래에 대한 설명을 입력하세요 (선택사항)',
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─── Submit button ───────────────────────────────────────────
-  Widget _buildSubmitButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _submit,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _accentColor,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor:
-              theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
-          ),
-          elevation: 2,
-          shadowColor: _accentColor.withValues(alpha: 0.4),
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FaIcon(
-                    _transactionType == 'expense'
-                        ? FontAwesomeIcons.circleMinus
-                        : FontAwesomeIcons.circlePlus,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    _transactionType == 'expense' ? '지출 등록' : '수입 등록',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: theme.colorScheme.outline, width: 0.5),
+      ),
+      child: Row(
+        children: [
+          _segBtn(context, '지출', 'expense', AppColors.expense),
+          _segBtn(context, '수입', 'income', AppColors.income),
+        ],
       ),
     );
   }
 
-  Widget _fieldLabel(String label) {
+  Widget _segBtn(BuildContext context, String label, String key, Color color) {
+    final selected = value == key;
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: Text(
-        label,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w600,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(key),
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
+          decoration: BoxDecoration(
+            gradient: selected
+                ? LinearGradient(
+                    colors: [color.withValues(alpha: 0.9), color],
+                  )
+                : null,
+            borderRadius: BorderRadius.circular(AppRadii.pill),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected
+                    ? Colors.white
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Category grid
+// ────────────────────────────────────────────────────────────
+class _CategoryGrid extends StatelessWidget {
+  final List<String> categories;
+  final String? selected;
+  final ValueChanged<String> onSelect;
+
+  const _CategoryGrid({
+    required this.categories,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (final c in categories)
+          _CatChip(
+            label: c,
+            icon: CategoryIcons.of(c),
+            selected: selected == c,
+            onTap: () => onSelect(c),
+            theme: theme,
+          ),
+      ],
+    );
+  }
+}
+
+class _CatChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final ThemeData theme;
+
+  const _CatChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.pill),
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md + 2,
+          vertical: AppSpacing.sm + 2,
+        ),
+        decoration: BoxDecoration(
+          gradient: selected ? AppGradients.brand : null,
+          color: selected ? null : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(
+            color: selected
+                ? Colors.transparent
+                : theme.colorScheme.outline.withValues(alpha: 0.4),
+            width: 0.5,
+          ),
+          boxShadow: selected ? AppGlow.small() : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 16,
+                color: selected
+                    ? Colors.white
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.75)),
+            const SizedBox(width: 6),
+            Text(label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Submit CTA
+// ────────────────────────────────────────────────────────────
+class _SubmitCta extends StatelessWidget {
+  final bool isLoading;
+  final bool enabled;
+  final VoidCallback onTap;
+  final String label;
+
+  const _SubmitCta({
+    required this.isLoading,
+    required this.enabled,
+    required this.onTap,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
+      child: SizedBox(
+        width: double.infinity,
+        height: 58,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: AppGradients.brand,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            boxShadow: enabled ? AppGlow.medium() : null,
+          ),
+          child: ElevatedButton(
+            onPressed: enabled ? onTap : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              disabledBackgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+              ),
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
         ),
       ),
     );

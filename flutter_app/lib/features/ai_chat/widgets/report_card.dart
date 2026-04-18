@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/core/theme/app_theme.dart';
 
 // ============================================================
-// [리포트 위젯] report_card.dart
-// AI 응답 또는 리포트 상세에서 카드형 섹션을 렌더링합니다.
+// [Phase 3] report_card.dart
+// AI 응답·리포트 상세에서 카드형 섹션 렌더.
+// Dark-first 테마 + 타입별 액센트 색상(gradient/warning/primary)으로
+// glass 스타일 카드를 출력한다.
 //
-// 섹션 타입별 표시:
-//   'card'       → 메트릭 카드 (제목, 수치, 추세 아이콘)
-//   'alert'      → 경고 카드 (주황색, 경고 아이콘)
-//   'suggestion' → 제안 카드 (파란색, 전구 아이콘)
+// 섹션 타입:
+//   'card'       → 메트릭 카드 (제목, 수치, 추세)
+//   'alert'      → 경고 카드 (amber warning accent)
+//   'suggestion' → 제안 카드 (violet brand accent)
 // ============================================================
 class ReportCard extends StatelessWidget {
   final Map<String, dynamic> section;
 
-  const ReportCard({
-    Key? key,
-    required this.section,
-  }) : super(key: key);
+  const ReportCard({super.key, required this.section});
 
   @override
   Widget build(BuildContext context) {
@@ -31,131 +31,118 @@ class ReportCard extends StatelessWidget {
       case 'card':
         return _buildCardSection(context, title, subtitle, metric, trend);
       case 'alert':
-        return _buildAlertSection(context, title, message);
+        return _buildAccentSection(
+          context,
+          icon: Icons.warning_rounded,
+          title: title,
+          message: message,
+          accent: AppColors.warning,
+        );
       case 'suggestion':
-        return _buildSuggestionSection(context, title, message);
+        return _buildAccentSection(
+          context,
+          icon: Icons.lightbulb_rounded,
+          title: title,
+          message: message,
+          accent: AppColors.primary,
+        );
       default:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _buildCardSection(BuildContext context, String? title, String? subtitle, String? metric, String? trend) {
-    // Determine trend icon and color
+  // ── Metric card with trend ─────────────────────────────────
+  Widget _buildCardSection(
+    BuildContext context,
+    String? title,
+    String? subtitle,
+    String? metric,
+    String? trend,
+  ) {
+    final theme = Theme.of(context);
+
     IconData? trendIcon;
-    Color trendColor = Colors.grey;
+    Color trendColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
     if (trend != null) {
       switch (trend.toLowerCase()) {
         case 'up':
-          trendIcon = Icons.trending_up;
-          trendColor = Colors.green;
+          trendIcon = Icons.trending_up_rounded;
+          trendColor = AppColors.expense;
           break;
         case 'down':
-          trendIcon = Icons.trending_down;
-          trendColor = Colors.red;
+          trendIcon = Icons.trending_down_rounded;
+          trendColor = AppColors.income;
           break;
         case 'stable':
-          trendIcon = Icons.trending_flat;
-          trendColor = Colors.orange;
+          trendIcon = Icons.trending_flat_rounded;
+          trendColor = AppColors.warning;
           break;
       }
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(
-          left: BorderSide(color: Colors.grey[300]!, width: 4),
-        ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(8),
-          bottomRight: Radius.circular(8),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          width: 0.5,
         ),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title row with trend icon
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title ?? 'Metric',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
-                      ),
-                ),
-              ),
-              if (trendIcon != null) ...[
-                const SizedBox(width: 8),
-                Icon(trendIcon, size: 20, color: trendColor),
-              ],
-            ],
-          ),
-          // Subtitle if present
-          if (subtitle != null && subtitle.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-          // Large metric value
-          const SizedBox(height: 12),
-          Text(
-            metric ?? '—',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlertSection(BuildContext context, String? title, String? message) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.orange[50],
-        border: Border(
-          left: BorderSide(color: Colors.orange[300]!, width: 4),
-        ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
-      ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.warning_rounded, size: 20, color: Colors.orange[700]),
-          const SizedBox(width: 12),
+          // Gradient accent bar
+          Container(
+            width: 4,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: AppGradients.brand,
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              boxShadow: AppGlow.small(),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (title != null)
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title ?? 'Metric',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.65),
                           fontWeight: FontWeight.w600,
-                          color: Colors.orange[900],
                         ),
-                  ),
-                if (message != null) ...[
-                  if (title != null) const SizedBox(height: 4),
+                      ),
+                    ),
+                    if (trendIcon != null) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(trendIcon, size: 18, color: trendColor),
+                    ],
+                  ],
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    message,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.orange[800],
-                        ),
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.55),
+                    ),
                   ),
                 ],
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  metric ?? '—',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
           ),
@@ -164,24 +151,35 @@ class ReportCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSuggestionSection(BuildContext context, String? title, String? message) {
+  // ── Alert / Suggestion ─────────────────────────────────────
+  Widget _buildAccentSection(
+    BuildContext context, {
+    required IconData icon,
+    required Color accent,
+    String? title,
+    String? message,
+  }) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue[50],
-        border: Border(
-          left: BorderSide(color: Colors.blue[300]!, width: 4),
-        ),
-        borderRadius: const BorderRadius.only(
-          topRight: Radius.circular(8),
-          bottomRight: Radius.circular(8),
-        ),
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: accent.withValues(alpha: 0.35), width: 0.8),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lightbulb_rounded, size: 20, color: Colors.blue[700]),
-          const SizedBox(width: 12),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: accent),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,18 +187,20 @@ class ReportCard extends StatelessWidget {
                 if (title != null)
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[900],
-                        ),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 if (message != null) ...[
                   if (title != null) const SizedBox(height: 4),
                   Text(
                     message,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.blue[800],
-                        ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.85),
+                      height: 1.45,
+                    ),
                   ),
                 ],
               ],

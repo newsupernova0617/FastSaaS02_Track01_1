@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_app/core/ads/ad_ids.dart';
@@ -18,6 +19,7 @@ class AdInterstitialTrigger {
   /// — if a load is already in progress or an ad is already cached, does
   /// nothing.
   static void preload() {
+    if (kIsWeb) return;
     if (_cached != null || _loading) return;
     _loading = true;
     InterstitialAd.load(
@@ -40,6 +42,7 @@ class AdInterstitialTrigger {
   /// and an ad is ready. Silently skips otherwise. After the ad closes
   /// (success or failure), preloads the next one.
   static Future<void> showIfFree(WidgetRef ref) async {
+    if (kIsWeb) return;
     final plan = ref.read(planProvider);
     if (plan != PlanStatus.free) return;
 

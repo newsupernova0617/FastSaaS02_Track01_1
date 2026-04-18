@@ -1,91 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_app/core/theme/app_theme.dart';
 
 // ============================================================
-// [리포트 위젯] report_chart.dart
-// AI 응답 또는 리포트 상세에서 차트 섹션을 렌더링합니다.
-// fl_chart 패키지를 사용합니다.
+// [Phase 3] report_chart.dart
+// AI 리포트/채팅에서 차트 섹션 렌더. Violet/Cyan 브랜드 팔레트 + 다크
+// 최적화된 fl_chart 스타일링.
 //
-// 차트 타입별 표시:
-//   'pie'  → 파이 차트 (비율 표시 + 범례)
-//   'bar'  → 막대 차트 (카테고리별 금액 비교)
-//   'line' → 라인 차트 (시계열 추이)
-//
-// 데이터 형식: { labels: ['식비', '교통'], values: [50000, 20000] }
+// 지원 타입: 'pie' | 'bar' | 'line'
+// 데이터: { labels: [...], values: [...] }
 // ============================================================
+
+// 다회 카테고리 컬러 — 브랜드 계열 + 보완색. 다크 배경에서 가독 우선.
+const List<Color> _chartPalette = [
+  AppColors.primary,       // violet
+  AppColors.secondary,     // cyan
+  AppColors.income,        // emerald
+  AppColors.warning,       // amber
+  AppColors.expense,       // red
+  AppColors.primarySoft,   // violet-soft
+  AppColors.secondarySoft, // cyan-soft
+  Color(0xFFA855F7),       // violet-500 alt
+];
+
 class ReportChart extends StatelessWidget {
   final Map<String, dynamic> section;
 
-  const ReportChart({
-    Key? key,
-    required this.section,
-  }) : super(key: key);
+  const ReportChart({super.key, required this.section});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final chartType = section['type'] as String? ?? 'bar';
     final title = section['title'] as String?;
     final subtitle = section['subtitle'] as String?;
     final rawData = section['data'] as Map<String, dynamic>?;
 
-    if (rawData == null) {
-      return const SizedBox.shrink();
-    }
+    if (rawData == null) return const SizedBox.shrink();
 
-    // Parse labels and values from the API response format
     final labels = (rawData['labels'] as List<dynamic>?)?.cast<String>() ?? [];
     final values = (rawData['values'] as List<dynamic>?)
-        ?.map((v) => (v as num).toDouble())
-        .toList() ?? [];
+            ?.map((v) => (v as num).toDouble())
+            .toList() ??
+        [];
 
-    if (values.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (values.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (title != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 2),
             child: Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         if (subtitle != null && subtitle.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: Text(
               subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
             ),
           ),
         Container(
-          height: 250,
+          height: 260,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.4),
+              width: 0.5,
+            ),
           ),
-          padding: const EdgeInsets.all(16),
-          child: _buildChart(chartType, labels, values),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: _buildChart(context, chartType, labels, values),
         ),
       ],
     );
   }
 
-  Widget _buildChart(String chartType, List<String> labels, List<double> values) {
+  Widget _buildChart(
+    BuildContext context,
+    String chartType,
+    List<String> labels,
+    List<double> values,
+  ) {
     switch (chartType) {
       case 'pie':
-        return _buildPieChart(labels, values);
+        return _buildPieChart(context, labels, values);
       case 'bar':
-        return _buildBarChart(labels, values);
+        return _buildBarChart(context, labels, values);
       case 'line':
-        return _buildLineChart(labels, values);
+        return _buildLineChart(context, labels, values);
       default:
         return Center(
           child: Text('Unknown chart type: $chartType'),
@@ -93,34 +106,28 @@ class ReportChart extends StatelessWidget {
     }
   }
 
-  Widget _buildPieChart(List<String> labels, List<double> values) {
+  Widget _buildPieChart(
+    BuildContext context,
+    List<String> labels,
+    List<double> values,
+  ) {
+    final theme = Theme.of(context);
+    final total = values.fold<double>(0, (sum, v) => sum + v);
     final sections = <PieChartSectionData>[];
-    final colors = [
-      Colors.blue,
-      Colors.red,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
-      Colors.pink,
-      Colors.amber,
-    ];
-
-    double total = values.fold(0, (sum, val) => sum + val);
 
     for (var i = 0; i < values.length; i++) {
       final value = values[i];
-      final percentage = total > 0 ? (value / total) * 100 : 0;
-
+      final pct = total > 0 ? (value / total) * 100 : 0;
+      final color = _chartPalette[i % _chartPalette.length];
       sections.add(
         PieChartSectionData(
           value: value,
-          color: colors[i % colors.length],
-          title: '${percentage.toStringAsFixed(0)}%',
+          color: color,
+          title: pct > 5 ? '${pct.toStringAsFixed(0)}%' : '',
           titleStyle: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
           ),
           radius: 50,
         ),
@@ -131,34 +138,46 @@ class ReportChart extends StatelessWidget {
       children: [
         Expanded(
           child: PieChart(
-            PieChartData(sections: sections),
+            PieChartData(
+              sections: sections,
+              sectionsSpace: 2,
+              centerSpaceRadius: 28,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
-        // Legend
+        const SizedBox(height: AppSpacing.sm),
         Wrap(
-          spacing: 12,
-          runSpacing: 8,
+          spacing: AppSpacing.md,
+          runSpacing: 6,
           children: List.generate(values.length, (i) {
             final label = i < labels.length ? labels[i] : 'Item $i';
-            final value = values[i];
-            final color = colors[i % colors.length];
-            final percentage = total > 0 ? (value / total) * 100 : 0;
+            final pct = total > 0 ? (values[i] / total) * 100 : 0;
+            final color = _chartPalette[i % _chartPalette.length];
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 12,
-                  height: 12,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$label ${percentage.toStringAsFixed(0)}%',
-                  style: const TextStyle(fontSize: 12),
+                  '$label ${pct.toStringAsFixed(0)}%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0,
+                  ),
                 ),
               ],
             );
@@ -168,47 +187,71 @@ class ReportChart extends StatelessWidget {
     );
   }
 
-  Widget _buildBarChart(List<String> labels, List<double> values) {
-    final barGroups = <BarChartGroupData>[];
+  Widget _buildBarChart(
+    BuildContext context,
+    List<String> labels,
+    List<double> values,
+  ) {
+    final theme = Theme.of(context);
     final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final barGroups = <BarChartGroupData>[];
 
     for (var i = 0; i < values.length && i < 12; i++) {
-      final value = values[i];
       barGroups.add(
         BarChartGroupData(
           x: i,
           barRods: [
             BarChartRodData(
-              toY: value,
-              color: Colors.blue,
+              toY: values[i],
+              width: 16,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(4),
               ),
+              // Gradient fill matches brand
+              gradient: AppGradients.brand,
             ),
           ],
         ),
       );
     }
 
+    final tickStyle = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+      fontSize: 10,
+    );
+
     return BarChart(
       BarChartData(
         barGroups: barGroups,
         maxY: maxValue > 0 ? maxValue * 1.1 : 100,
         borderData: FlBorderData(show: false),
-        gridData: const FlGridData(show: true, drawHorizontalLine: true),
+        gridData: FlGridData(
+          show: true,
+          drawHorizontalLine: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+            strokeWidth: 0.5,
+          ),
+        ),
         titlesData: FlTitlesData(
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: labels.isNotEmpty,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                int index = value.toInt();
-                if (index < labels.length) {
-                  return Text(
-                    labels[index],
-                    style: const TextStyle(fontSize: 10),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              getTitlesWidget: (value, meta) {
+                final i = value.toInt();
+                if (i >= 0 && i < labels.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      labels[i],
+                      style: tickStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 }
                 return const Text('');
@@ -218,12 +261,11 @@ class ReportChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                return Text(
-                  _formatNumber(value.toInt()),
-                  style: const TextStyle(fontSize: 10),
-                );
-              },
+              reservedSize: 36,
+              getTitlesWidget: (value, meta) => Text(
+                _formatNumber(value.toInt()),
+                style: tickStyle,
+              ),
             ),
           ),
         ),
@@ -231,31 +273,52 @@ class ReportChart extends StatelessWidget {
     );
   }
 
-  Widget _buildLineChart(List<String> labels, List<double> values) {
-    final spots = <FlSpot>[];
+  Widget _buildLineChart(
+    BuildContext context,
+    List<String> labels,
+    List<double> values,
+  ) {
+    final theme = Theme.of(context);
     final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final spots = [
+      for (var i = 0; i < values.length; i++) FlSpot(i.toDouble(), values[i]),
+    ];
 
-    for (var i = 0; i < values.length; i++) {
-      spots.add(FlSpot(i.toDouble(), values[i]));
-    }
+    final tickStyle = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+      fontSize: 10,
+    );
 
     return LineChart(
       LineChartData(
         maxY: maxValue > 0 ? maxValue * 1.1 : 100,
         borderData: FlBorderData(show: false),
-        gridData: const FlGridData(show: true, drawHorizontalLine: true),
+        gridData: FlGridData(
+          show: true,
+          drawHorizontalLine: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+            strokeWidth: 0.5,
+          ),
+        ),
         titlesData: FlTitlesData(
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: labels.isNotEmpty,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                int index = value.toInt();
-                if (index < labels.length) {
-                  return Text(
-                    labels[index],
-                    style: const TextStyle(fontSize: 10),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              getTitlesWidget: (value, meta) {
+                final i = value.toInt();
+                if (i >= 0 && i < labels.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      labels[i],
+                      style: tickStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 }
                 return const Text('');
@@ -265,12 +328,9 @@ class ReportChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                return Text(
-                  _formatNumber(value.toInt()),
-                  style: const TextStyle(fontSize: 10),
-                );
-              },
+              reservedSize: 36,
+              getTitlesWidget: (value, meta) =>
+                  Text(_formatNumber(value.toInt()), style: tickStyle),
             ),
           ),
         ),
@@ -278,12 +338,27 @@ class ReportChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: Colors.blue,
-            barWidth: 2,
+            gradient: AppGradients.brand,
+            barWidth: 2.5,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) =>
-                  FlDotCirclePainter(radius: 3, color: Colors.blue),
+              getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+                radius: 3.5,
+                color: AppColors.primary,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.25),
+                  AppColors.secondary.withValues(alpha: 0.02),
+                ],
+              ),
             ),
           ),
         ],
@@ -292,11 +367,8 @@ class ReportChart extends StatelessWidget {
   }
 
   String _formatNumber(int num) {
-    if (num >= 1000000) {
-      return '${(num / 1000000).toStringAsFixed(0)}M';
-    } else if (num >= 1000) {
-      return '${(num / 1000).toStringAsFixed(0)}K';
-    }
+    if (num >= 1000000) return '${(num / 1000000).toStringAsFixed(0)}M';
+    if (num >= 1000) return '${(num / 1000).toStringAsFixed(0)}K';
     return num.toString();
   }
 }

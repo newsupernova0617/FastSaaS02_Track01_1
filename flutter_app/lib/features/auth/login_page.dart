@@ -1,17 +1,20 @@
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
-import 'package:flutter_app/shared/widgets/animated_fade_slide.dart';
 
 // ============================================================
-// [로그인 화면] login_page.dart
-// OAuth 로그인 (Google via Supabase).
-// 재설계: 브랜드 히어로 + 그라데이션 + 다크 모드 대응.
+// [Phase 3] login_page.dart
+// Animated gradient mesh background (two drifting radial blobs)
+// + glowing AI mark + glass OAuth buttons.
 // ============================================================
+
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -31,7 +34,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       final authService = ref.read(supabaseAuthProvider);
-
       final redirectUrl = kIsWeb
           ? 'http://localhost:5173/auth/callback'
           : 'com.fastsaas02.app://auth/callback';
@@ -40,8 +42,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         OAuthProvider.google,
         redirectTo: redirectUrl,
       );
-      // signInWithOAuth는 외부 브라우저를 띄우기만 함.
-      // 세션은 딥링크 콜백 후 authStateProvider → GoRouter redirect가 처리.
     } catch (e) {
       _showError('Google 로그인 실패: $e');
       if (mounted) setState(() => _isLoading = false);
@@ -53,7 +53,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _isLoading = true;
       _errorMessage = null;
     });
-    // TODO: kakao_flutter_sdk 연동 예정
     _showError('카카오 로그인은 준비 중입니다.');
     if (mounted) setState(() => _isLoading = false);
   }
@@ -73,74 +72,78 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isMobile = size.width < 600;
     final horizontalPadding = isMobile ? 24.0 : 48.0;
-    final contentWidth = isMobile ? double.infinity : 360.0;
+    final contentWidth = isMobile ? double.infinity : 380.0;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    AppColors.darkBackground,
-                    Color.alphaBlend(
-                      theme.colorScheme.primary.withValues(alpha: 0.18),
-                      AppColors.darkBackground,
-                    ),
-                  ]
-                : [
-                    const Color(0xFFF3F6FF),
-                    Color.alphaBlend(
-                      theme.colorScheme.primary.withValues(alpha: 0.10),
-                      Colors.white,
-                    ),
-                  ],
+      backgroundColor: AppColors.darkBackground,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Static deep background
+          Container(color: AppColors.darkBackground),
+
+          // Drifting violet blob
+          _MovingBlob(
+            gradient: AppGradients.violetBlob,
+            size: 540,
+            startAlign: const Alignment(-1.1, -1.2),
+            endAlign: const Alignment(-0.2, -0.4),
+            duration: const Duration(seconds: 7),
           ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: AppSpacing.xl,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: contentWidth),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedFadeSlide(
-                      child: _buildHero(theme),
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
+          // Drifting cyan blob
+          _MovingBlob(
+            gradient: AppGradients.cyanBlob,
+            size: 460,
+            startAlign: const Alignment(1.2, 1.1),
+            endAlign: const Alignment(0.4, 0.3),
+            duration: const Duration(seconds: 9),
+          ),
 
-                    AnimatedFadeSlide(
-                      delay: const Duration(milliseconds: 160),
-                      child: _buildGoogleButton(theme),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+          // Blur veil so blobs look soft
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(color: Colors.black.withValues(alpha: 0.25)),
+          ),
 
-                    AnimatedFadeSlide(
-                      delay: const Duration(milliseconds: 240),
-                      child: _buildKakaoButton(),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    if (_errorMessage != null)
-                      AnimatedFadeSlide(
-                        child: _buildErrorBanner(theme),
-                      ),
-                  ],
+          // Content
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: AppSpacing.xl,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentWidth),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHero(theme),
+                      const SizedBox(height: AppSpacing.xxl),
+                      _buildGoogleButton(theme)
+                          .animate(delay: 200.ms)
+                          .fadeIn(duration: 450.ms)
+                          .slideY(begin: 0.12, end: 0),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildKakaoButton(theme)
+                          .animate(delay: 300.ms)
+                          .fadeIn(duration: 450.ms)
+                          .slideY(begin: 0.12, end: 0),
+                      const SizedBox(height: AppSpacing.xl),
+                      if (_errorMessage != null)
+                        _buildErrorBanner(theme)
+                            .animate()
+                            .fadeIn(duration: 300.ms),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -148,135 +151,133 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget _buildHero(ThemeData theme) {
     return Column(
       children: [
+        // Glowing AI mark
         Container(
-          width: 96,
-          height: 96,
+          width: 104,
+          height: 104,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                theme.colorScheme.primary,
-                Color.alphaBlend(
-                  Colors.white.withValues(alpha: 0.25),
-                  theme.colorScheme.primary,
-                ),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.35),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-            ],
+            gradient: AppGradients.brand,
+            borderRadius: BorderRadius.circular(AppRadii.xl),
+            boxShadow: AppGlow.hero(),
           ),
           child: const Icon(
-            Icons.account_balance_wallet_rounded,
-            size: 44,
+            Icons.auto_awesome,
+            size: 48,
             color: Colors.white,
           ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          '민근 가계부',
-          style: theme.textTheme.headlineLarge?.copyWith(
-            fontSize: 36,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
+        )
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .scaleXY(
+              begin: 1.0,
+              end: 1.04,
+              duration: 2400.ms,
+              curve: Curves.easeInOut,
+            ),
+        const SizedBox(height: AppSpacing.xl),
+        ShaderMask(
+          shaderCallback: (bounds) => AppGradients.brand.createShader(
+              Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+          blendMode: BlendMode.srcIn,
+          child: Text(
+            'Money AI',
+            style: theme.textTheme.headlineLarge?.copyWith(
+              fontSize: 40,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.2,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'AI와 대화하며 관리하는 개인 가계부',
+          '대화로 기록하고, AI가 읽어주는 내 소비',
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
           textAlign: TextAlign.center,
         ),
       ],
-    );
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .slideY(begin: 0.08, end: 0, curve: AppMotion.emphasizedDecel);
   }
 
   Widget _buildGoogleButton(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleGoogleSignIn,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDark
-              ? theme.colorScheme.surface
-              : Colors.white,
-          foregroundColor: theme.colorScheme.onSurface,
-          elevation: 2,
-          shadowColor: Colors.black.withValues(alpha: 0.08),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
-            side: BorderSide(
-              color: theme.colorScheme.outline.withValues(alpha: 0.3),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: SizedBox(
+          width: double.infinity,
+          height: 58,
+          child: OutlinedButton(
+            onPressed: _isLoading ? null : _handleGoogleSignIn,
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              foregroundColor: Colors.white,
+              side: BorderSide(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+              ),
             ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const FaIcon(
+                        FontAwesomeIcons.google,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text(
+                        'Google로 계속하기',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
-        child: _isLoading
-            ? SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const FaIcon(
-                    FontAwesomeIcons.google,
-                    size: 20,
-                    color: Color(0xFFEA4335),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    'Google로 계속하기',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
       ),
     );
   }
 
-  Widget _buildKakaoButton() {
+  Widget _buildKakaoButton(ThemeData theme) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 58,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _handleKakaoSignIn,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFEE500),
           foregroundColor: const Color(0xFF3C1E1E),
-          elevation: 2,
-          shadowColor: const Color(0xFFFEE500).withValues(alpha: 0.4),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const FaIcon(
-              FontAwesomeIcons.comment,
-              size: 20,
-              color: Color(0xFF3C1E1E),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            const Text(
+          children: const [
+            FaIcon(FontAwesomeIcons.comment, size: 18, color: Color(0xFF3C1E1E)),
+            SizedBox(width: AppSpacing.md),
+            Text(
               '카카오로 계속하기',
               style: TextStyle(
                 color: Color(0xFF3C1E1E),
@@ -294,19 +295,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.expense.withValues(alpha: 0.1),
+        color: AppColors.expense.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(
-          color: AppColors.expense.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.expense.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: AppColors.expense,
-            size: 20,
-          ),
+          const Icon(Icons.error_outline, color: AppColors.expense, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -317,6 +312,69 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Moving blob — gradient that drifts between two aligns, repeating.
+// ────────────────────────────────────────────────────────────
+class _MovingBlob extends StatefulWidget {
+  final RadialGradient gradient;
+  final double size;
+  final Alignment startAlign;
+  final Alignment endAlign;
+  final Duration duration;
+
+  const _MovingBlob({
+    required this.gradient,
+    required this.size,
+    required this.startAlign,
+    required this.endAlign,
+    required this.duration,
+  });
+
+  @override
+  State<_MovingBlob> createState() => _MovingBlobState();
+}
+
+class _MovingBlobState extends State<_MovingBlob>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  late final Animation<Alignment> _align;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat(reverse: true);
+    _align = AlignmentTween(begin: widget.startAlign, end: widget.endAlign)
+        .animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) => Align(
+        alignment: _align.value,
+        child: IgnorePointer(
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: widget.gradient,
+            ),
+          ),
+        ),
       ),
     );
   }

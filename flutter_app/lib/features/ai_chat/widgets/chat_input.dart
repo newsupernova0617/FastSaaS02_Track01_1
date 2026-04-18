@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 
 // ============================================================
-// [채팅 위젯] chat_input.dart
-// AI 채팅 화면 하단의 메시지 입력 영역입니다.
-// 텍스트 입력 필드 + 전송 버튼(원형)으로 구성됩니다.
-// 글자 수 제한(기본 500자)이 있고, 80% 초과 시 카운터 표시됩니다.
-// 로딩 중에는 전송 버튼이 스피너로 변경됩니다.
+// [Phase 3] chat_input.dart
+// Glass pill 통합 입력 — 테마 연동 (Option A).
+//   라이트: 흰 pill + 검정 텍스트
+//   다크:   surfaceContainerHighest (#1A1A24) pill + 흰 텍스트
+// Focus 시 violet 보더 + glow.
 // ============================================================
+
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
   final bool isLoading;
@@ -25,125 +27,163 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
-  late TextEditingController _controller;
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   int _charCount = 0;
+  bool _focused = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
     _controller.addListener(() {
-      setState(() {
-        _charCount = _controller.text.length;
-      });
+      if (!mounted) return;
+      setState(() => _charCount = _controller.text.length);
     });
+    _focusNode = FocusNode()
+      ..addListener(() {
+        if (!mounted) return;
+        setState(() => _focused = _focusNode.hasFocus);
+      });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isNotEmpty && !widget.isLoading) {
-      widget.onSend(text);
-      _controller.clear();
-      _charCount = 0;
-    }
+    if (text.isEmpty || widget.isLoading) return;
+    HapticFeedback.lightImpact();
+    widget.onSend(text);
+    _controller.clear();
+    _charCount = 0;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Option A: 테마 따름
+    final pillBg = isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white;
+    final pillFg = isDark ? theme.colorScheme.onSurface : Colors.black;
+    final hintColor = isDark
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+        : const Color(0xFF6B7280);
+    final idleBorderColor = isDark
+        ? theme.colorScheme.outline.withValues(alpha: 0.5)
+        : const Color(0xFFE5E7EB);
+
     final isEmpty = _controller.text.trim().isEmpty;
     final overLimit = _charCount > widget.maxLength;
-    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.55);
-    final outline = theme.colorScheme.outline.withValues(alpha: 0.25);
+    final canSend = !isEmpty && !widget.isLoading;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: outline, width: 1),
-        ),
-      ),
+    return SafeArea(
+      top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.sm,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Character counter (80% 이상일 때만)
+            // 글자 수 카운터 (80% 이상)
             if (_charCount > widget.maxLength * 0.8)
               Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$_charCount/${widget.maxLength}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: overLimit ? theme.colorScheme.error : muted,
-                        fontWeight:
-                            overLimit ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                  ],
+                padding: const EdgeInsets.only(
+                  right: AppSpacing.md,
+                  bottom: 6,
                 ),
-              ),
-            // Input + send button
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    enabled: !widget.isLoading,
-                    maxLines: null,
-                    maxLength: widget.maxLength,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _handleSend(),
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    cursorColor: theme.colorScheme.primary,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceContainerHighest,
-                      hintText: 'AI에게 메시지 입력...',
-                      hintStyle: TextStyle(color: muted),
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.lg),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.lg),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.lg),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: 0.45),
-                          width: 1.2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
-                      ),
-                      counterText: '',
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '$_charCount/${widget.maxLength}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: overLimit ? theme.colorScheme.error : hintColor,
+                      fontWeight:
+                          overLimit ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                _buildSendButton(theme, isEmpty),
-              ],
+              ),
+
+            // Pill composer — 테마 연동 (Option A)
+            AnimatedContainer(
+              duration: AppMotion.fast,
+              curve: AppMotion.emphasized,
+              decoration: BoxDecoration(
+                color: pillBg,
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                border: Border.all(
+                  color: _focused
+                      ? AppColors.primary.withValues(alpha: 0.55)
+                      : idleBorderColor,
+                  width: _focused ? 1.4 : 0.8,
+                ),
+                boxShadow: _focused
+                    ? AppGlow.small()
+                    : [
+                        BoxShadow(
+                          color: Colors.black
+                              .withValues(alpha: isDark ? 0.30 : 0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+              ),
+              padding: const EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: 6,
+                top: 6,
+                bottom: 6,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      enabled: !widget.isLoading,
+                      maxLines: 4,
+                      minLines: 1,
+                      maxLength: widget.maxLength,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _handleSend(),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: pillFg,
+                        height: 1.35,
+                      ),
+                      cursorColor: AppColors.primary,
+                      cursorWidth: 1.6,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md + 2,
+                        ),
+                        hintText: 'AI에게 메시지 입력…',
+                        hintStyle: TextStyle(color: hintColor),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        filled: false,
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildSendButton(canSend: canSend),
+                ],
+              ),
             ),
           ],
         ),
@@ -151,56 +191,55 @@ class _ChatInputState extends State<ChatInput> {
     );
   }
 
-  Widget _buildSendButton(ThemeData theme, bool isEmpty) {
+  Widget _buildSendButton({required bool canSend}) {
     if (widget.isLoading) {
-      return SizedBox(
-        width: 44,
-        height: 44,
+      return const SizedBox(
+        width: 40,
+        height: 40,
         child: Center(
           child: SizedBox(
-            width: 22,
-            height: 22,
+            width: 20,
+            height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
         ),
       );
     }
 
-    final disabled = isEmpty;
-    final bg = disabled
-        ? theme.colorScheme.surfaceContainerHighest
-        : theme.colorScheme.primary;
-    final fg = disabled
-        ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
-        : Colors.white;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: disabled ? null : _handleSend,
-        borderRadius: BorderRadius.circular(AppRadii.pill),
+    return Semantics(
+      button: true,
+      label: 'Send message',
+      child: GestureDetector(
+        onTap: canSend ? _handleSend : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: 44,
-          height: 44,
+          duration: AppMotion.fast,
+          curve: AppMotion.emphasized,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: bg,
             shape: BoxShape.circle,
-            boxShadow: disabled
+            gradient: canSend ? AppGradients.brand : null,
+            color: canSend
                 ? null
-                : [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.08),
+            boxShadow: canSend ? AppGlow.small() : null,
           ),
-          child: Icon(Icons.arrow_upward_rounded, color: fg, size: 20),
+          child: Icon(
+            Icons.arrow_upward_rounded,
+            size: 20,
+            color: canSend
+                ? Colors.white
+                : Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.35),
+          ),
         ),
       ),
     );

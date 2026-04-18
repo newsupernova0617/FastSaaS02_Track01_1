@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/widgets/user_profile_sheet.dart';
 
@@ -48,41 +49,47 @@ class UserProfileButton extends ConsumerWidget {
         child: Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.all(2),
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.grey[300] ?? Colors.grey,
-              width: 2,
-            ),
+            gradient: AppGradients.brand,
           ),
-          child: ClipOval(
-            child: avatarUrl != null && avatarUrl.isNotEmpty
-                ? Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildAvatarFallback(name);
-                    },
-                  )
-                : _buildAvatarFallback(name),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).colorScheme.surface,
+            ),
+            padding: const EdgeInsets.all(1),
+            child: ClipOval(
+              child: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? Image.network(
+                      avatarUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildAvatarFallback(name, context);
+                      },
+                    )
+                  : _buildAvatarFallback(name, context),
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// Build avatar fallback with initials
-  Widget _buildAvatarFallback(String name) {
+  /// Build avatar fallback with initials (Phase 3: violet tint + theme-aware)
+  Widget _buildAvatarFallback(String name, BuildContext context) {
+    final theme = Theme.of(context);
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
     return Container(
-      color: Colors.grey[200],
+      color: theme.colorScheme.primary.withValues(alpha: 0.12),
       child: Center(
         child: Text(
           initial,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            color: theme.colorScheme.primary,
           ),
         ),
       ),

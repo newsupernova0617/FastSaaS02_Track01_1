@@ -1,63 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/onboarding_provider.dart';
-import 'package:flutter_app/shared/widgets/bottom_nav_shell.dart';
+import 'package:flutter_app/shared/widgets/app_shell.dart';
 import 'package:flutter_app/features/auth/login_page.dart';
 import 'package:flutter_app/features/onboarding/onboarding_page.dart';
+import 'package:flutter_app/features/home/home_page.dart';
 import 'package:flutter_app/features/record/record_page.dart';
 import 'package:flutter_app/features/calendar/calendar_page.dart';
 import 'package:flutter_app/features/stats/stats_page.dart';
-import 'package:flutter_app/features/ai_chat/ai_chat_page.dart';
 import 'package:flutter_app/features/reports/report_detail_page.dart';
 import 'package:flutter_app/features/chat/screens/chat_screen.dart';
 import 'package:flutter_app/features/settings/settings_page.dart';
 
 // ============================================================
-// [라우터 설정] app_router.dart
-// 앱의 전체 화면 이동(네비게이션)을 관리합니다.
-//
-// 화면 구조:
-//   /login   → 로그인 페이지 (비인증 상태)
-//   /record  → 거래 기록 페이지 (하단 네비게이션 탭 1)
-//   /calendar→ 달력 페이지 (탭 2)
-//   /stats   → 통계 페이지 (탭 3)
-//   /chat    → AI 채팅 페이지 (탭 4) — 세션 기반
-//   /ai      → AI 채팅 (레거시, 세션 없는 버전)
-//   /report/:id → 리포트 상세 페이지
-//
-// 핵심 동작:
-//   - 로그인 안 됨 → 자동으로 /login 이동
-//   - 로그인 됨 + /login에 있음 → 자동으로 /record 이동
-//   - ShellRoute로 하단 네비게이션바를 공유
+// [Phase 3] app_router.dart
+// 5-slot shell: Home / Calendar / <AI FAB> / Stats / Settings.
+// /record is pushed as a full-screen modal (from Home FAB), not a tab.
+// /chat is pushed as a full-screen from the central AI FAB.
+// Custom fade-scale page transition throughout.
 // ============================================================
+
+CustomTransitionPage<T> _fadeScale<T>({
+  required LocalKey? key,
+  required Widget child,
+  Duration duration = AppMotion.medium,
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    transitionsBuilder: (context, animation, secondary, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: AppMotion.emphasizedDecel,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: Transform.scale(
+          scale: 0.98 + curved.value * 0.02,
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
+CustomTransitionPage<T> _modalSlide<T>({
+  required LocalKey? key,
+  required Widget child,
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    opaque: false,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    transitionDuration: AppMotion.medium,
+    reverseTransitionDuration: AppMotion.medium,
+    transitionsBuilder: (context, animation, secondary, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: AppMotion.emphasizedDecel,
+      );
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      );
+    },
+  );
+}
+
+// Root navigator — used to push /chat, /record, /report/:id, /onboarding,
+// /login full-screen (above AppShell). Without this key, pushes from a
+// ShellRoute child nest inside the shell's inner navigator and leave the
+// GlowNavBar visible on top.
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final goRouterProvider = Provider<GoRouter>((ref) {
-  // 인증 상태 + 온보딩 완료 여부를 구독
   final authState = ref.watch(authStateProvider);
   final onboardingState = ref.watch(onboardingCompletedProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/login',
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      // 온보딩 상태 로딩 중 → 대기
       if (onboardingState.isLoading) return null;
       final onboardingDone = onboardingState.value ?? false;
 
-      // 온보딩 미완료면 /onboarding으로 (단 이미 있으면 그대로)
       if (!onboardingDone) {
         return state.matchedLocation == '/onboarding' ? null : '/onboarding';
       }
 
-      // 인증 상태 로딩 중 → 대기
       if (authState.isLoading) return null;
       final isAuthenticated =
           authState.whenData((s) => s.session != null).value ?? false;
 
-      // 온보딩은 완료됐는데 아직 /onboarding에 있으면 /login으로
       if (state.matchedLocation == '/onboarding') {
-        return isAuthenticated ? '/record' : '/login';
+        return isAuthenticated ? '/home' : '/login';
       }
 
       if (!isAuthenticated && state.matchedLocation != '/login') {
@@ -65,95 +111,97 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (isAuthenticated && state.matchedLocation == '/login') {
-        return '/record';
+        return '/home';
+      }
+
+      // Legacy redirects — old entry points now funnel to home.
+      if (state.matchedLocation == '/') {
+        return isAuthenticated ? '/home' : '/login';
       }
 
       return null;
     },
     routes: [
-      // Onboarding route (no shell)
+      // No-shell routes ──────────────────────────────────────
       GoRoute(
         path: '/onboarding',
         name: 'onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const OnboardingPage()),
       ),
-      // Login route (no shell)
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const LoginPage()),
       ),
-      // Placeholder root route
+      GoRoute(path: '/', redirect: (context, state) => '/home'),
+
+      // Modal: record (slide-up, covers shell)
       GoRoute(
-        path: '/',
-        redirect: (context, state) => '/login',
+        path: '/record',
+        name: 'record',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _modalSlide(key: state.pageKey, child: const RecordPage()),
       ),
 
-      // Report detail route
+      // Full-screen chat — 반드시 root navigator로 push 되어야 nav bar가
+      // 사라지고 ChatInput이 nav bar 그림자에 가리지 않는다.
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const ChatScreen()),
+      ),
+
+      // Report detail
       GoRoute(
         path: '/report/:id',
-        builder: (context, state) {
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
           final id = int.parse(state.pathParameters['id'] ?? '0');
           final extras = state.extra as Map<String, dynamic>?;
           final isFromStats = extras?['isFromStats'] as bool? ?? false;
-          return ReportDetailPage(
-            reportId: id,
-            isFromStats: isFromStats,
+          return _fadeScale(
+            key: state.pageKey,
+            child: ReportDetailPage(reportId: id, isFromStats: isFromStats),
           );
         },
       ),
 
-      // Shell route for authenticated pages with bottom navigation
+      // Shell routes ─────────────────────────────────────────
       ShellRoute(
-        builder: (context, state, child) {
-          return BottomNavShell(child: child);
-        },
+        builder: (context, state, child) => AppShell(child: child),
         routes: [
-          // Record route
           GoRoute(
-            path: '/record',
-            name: 'record',
-            builder: (context, state) => const RecordPage(),
+            path: '/home',
+            name: 'home',
+            pageBuilder: (context, state) =>
+                _fadeScale(key: state.pageKey, child: const HomePage()),
           ),
-
-          // Calendar route
           GoRoute(
             path: '/calendar',
             name: 'calendar',
-            builder: (context, state) => const CalendarPage(),
+            pageBuilder: (context, state) =>
+                _fadeScale(key: state.pageKey, child: const CalendarPage()),
           ),
-
-          // Stats route
           GoRoute(
             path: '/stats',
             name: 'stats',
-            builder: (context, state) => const StatsPage(),
+            pageBuilder: (context, state) =>
+                _fadeScale(key: state.pageKey, child: const StatsPage()),
           ),
-
-          // AI Chat route (legacy)
-          GoRoute(
-            path: '/ai',
-            name: 'ai',
-            builder: (context, state) => const AIChatPage(),
-          ),
-
-          // Session-based Chat route
-          GoRoute(
-            path: '/chat',
-            name: 'chat',
-            builder: (context, state) => const ChatScreen(),
-          ),
-
-          // Settings route
           GoRoute(
             path: '/settings',
             name: 'settings',
-            builder: (context, state) => const SettingsPage(),
+            pageBuilder: (context, state) =>
+                _fadeScale(key: state.pageKey, child: const SettingsPage()),
           ),
         ],
       ),
     ],
-    // Error handling for unknown routes
     errorBuilder: (context, state) {
       return Scaffold(
         appBar: AppBar(title: const Text('오류')),
@@ -164,7 +212,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               const Text('페이지를 찾을 수 없습니다.'),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => context.go('/record'),
+                onPressed: () => context.go('/home'),
                 child: const Text('홈으로 돌아가기'),
               ),
             ],

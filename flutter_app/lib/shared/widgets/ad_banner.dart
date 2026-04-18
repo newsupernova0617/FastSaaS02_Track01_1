@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -24,6 +25,7 @@ class _AdBannerState extends ConsumerState<AdBanner> {
   @override
   void initState() {
     super.initState();
+    if (kIsWeb) return; // google_mobile_ads has no web implementation
     final plan = ref.read(planProvider);
     if (plan == PlanStatus.free) {
       _loadAd();
@@ -52,7 +54,7 @@ class _AdBannerState extends ConsumerState<AdBanner> {
 
   @override
   void dispose() {
-    _ad?.dispose();
+    if (!kIsWeb) _ad?.dispose();
     super.dispose();
   }
 

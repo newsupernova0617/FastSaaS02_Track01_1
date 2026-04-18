@@ -306,47 +306,173 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
   }
 
   Widget _buildBottomBar(ReportDetail report) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: widget.isFromStats
-            ? Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _isDeleting ? null : _handleDeleteReport,
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(_isDeleting ? '삭제 중...' : '삭제하기'),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => context.go('/stats'),
-                      child: const Text('닫기'),
-                    ),
-                  ),
-                ],
-              )
-            : SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isSaving ? null : () => _showSaveDialog(report),
-                  icon: _isSaving
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+            width: 0.5,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: widget.isFromStats
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: _isDeleting ? null : _handleDeleteReport,
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 18, color: AppColors.expense),
+                          label: Text(
+                            _isDeleting ? '삭제 중…' : '삭제',
+                            style: const TextStyle(
+                              color: AppColors.expense,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : const Icon(Icons.bookmark_add_outlined),
-                  label: Text(_isSaving ? '저장 중...' : '리포트 저장하기'),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: AppColors.expense.withValues(alpha: 0.5),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadii.lg),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: SizedBox(
+                        height: 52,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.brand,
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
+                            boxShadow: AppGlow.small(),
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () => context.go('/stats'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.lg),
+                              ),
+                            ),
+                            child: const Text(
+                              '닫기',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    // 저장 없이 바로 나가기
+                    SizedBox(
+                      height: 56,
+                      child: OutlinedButton.icon(
+                        onPressed: _isSaving
+                            ? null
+                            : () =>
+                                context.canPop() ? context.pop() : context.go('/chat'),
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        label: const Text(
+                          '닫기',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor:
+                              theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                          backgroundColor: theme.colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.4),
+                          side: BorderSide(
+                            color: theme.colorScheme.outline,
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    // 주 CTA: 저장
+                    Expanded(
+                      child: SizedBox(
+                        height: 56,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.brand,
+                            borderRadius: BorderRadius.circular(AppRadii.lg),
+                            boxShadow: AppGlow.medium(),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _isSaving
+                                ? null
+                                : () => _showSaveDialog(report),
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : const Icon(Icons.bookmark_add_rounded,
+                                    color: Colors.white),
+                            label: Text(
+                              _isSaving ? '저장 중…' : '리포트 저장하기',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadii.lg),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+        ),
       ),
     );
   }

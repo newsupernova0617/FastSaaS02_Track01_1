@@ -4,7 +4,6 @@ import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/chat_message.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
-import 'package:flutter_app/shared/models/ai_action_response.dart';
 import 'package:flutter_app/shared/models/report.dart';
 import 'package:flutter_app/shared/models/report_type.dart';
 import 'package:flutter_app/shared/providers/api_provider.dart';
@@ -17,7 +16,6 @@ import 'package:flutter_app/shared/providers/api_provider.dart';
 // 주요 메서드:
 //   거래: getTransactions(), addTransaction(), deleteTransaction()
 //   요약: getSummary() — 월별 카테고리별 합계
-//   AI:  sendAIMessage() — 레거시 단건 AI 요청
 //   채팅: getSessions(), createSession(), getSessionMessages(),
 //         sendSessionMessage() — 세션 기반 채팅
 //   리포트: getReports(), getReportDetail(), saveReport(),
@@ -124,85 +122,6 @@ class ApiClient {
         return data
             .map((e) => SummaryRow.fromJson(e as Map<String, dynamic>))
             .toList();
-      }
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-      );
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  /// Send a message to AI and get response
-  /// POST /api/ai/action
-  Future<AIActionResponse> sendAIMessage(String text) async {
-    try {
-      final response = await _dio.post('/ai/action', data: {'text': text});
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        return AIActionResponse.fromJson(responseData);
-      }
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-      );
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  /// Retrieve chat history with optional pagination
-  /// GET /api/ai/chat/history?limit=50&before=id
-  Future<List<ChatMessage>> getChatHistory({
-    int? limit,
-    DateTime? before,
-  }) async {
-    try {
-      final params = <String, dynamic>{};
-      if (limit != null) {
-        params['limit'] = limit;
-      }
-      if (before != null) {
-        // If 'before' is a timestamp, format as ISO string
-        params['before'] = before.toIso8601String();
-      }
-
-      final response = await _dio.get(
-        '${AppConstants.aiChatEndpoint}/history',
-        queryParameters: params.isNotEmpty ? params : null,
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        final messages =
-            (responseData['messages'] as List<dynamic>?)
-                ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [];
-        return messages;
-      }
-      throw DioException(
-        requestOptions: response.requestOptions,
-        response: response,
-      );
-    } on DioException {
-      rethrow;
-    }
-  }
-
-  /// Clear all chat history for the current user
-  /// DELETE /api/ai/chat/history
-  Future<int> clearChatHistory() async {
-    try {
-      final response = await _dio.delete(
-        '${AppConstants.aiChatEndpoint}/history',
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        return responseData['deletedCount'] as int? ?? 0;
       }
       throw DioException(
         requestOptions: response.requestOptions,

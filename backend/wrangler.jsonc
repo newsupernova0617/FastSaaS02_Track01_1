@@ -6,7 +6,7 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"vars": {
 		"AI_PROVIDER": "workers-ai",
-		"SUPABASE_URL": "your-supabase-url",
+		"SUPABASE_URL": "https://uqvnepemplsdkkawbmdc.supabase.co",
 		"ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173"
 	},
 	"observability": {

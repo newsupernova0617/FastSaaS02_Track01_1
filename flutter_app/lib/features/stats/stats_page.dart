@@ -308,16 +308,25 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              AppColors.primary.withValues(alpha: 0.10),
+              AppColors.secondary.withValues(alpha: 0.06),
+            ],
+          ),
           borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.25),
+            width: 0.6,
           ),
         ),
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.chevron_left),
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: theme.colorScheme.primary,
               onPressed: () => setState(
                 () => _selectedDate =
                     DateTime(_selectedDate.year, _selectedDate.month - 1),
@@ -328,13 +337,15 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                 child: Text(
                   '${_selectedDate.year}년 ${_selectedDate.month}월',
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.chevron_right),
+              icon: const Icon(Icons.chevron_right_rounded),
+              color: theme.colorScheme.primary,
               onPressed: () => setState(
                 () => _selectedDate =
                     DateTime(_selectedDate.year, _selectedDate.month + 1),
@@ -658,9 +669,15 @@ class SavedReportsTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.xxl,
+          ),
           itemCount: reports.length,
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) => AnimatedFadeSlide(
             delay: Duration(milliseconds: 40 * index),
             child: ReportListItem(report: reports[index]),
