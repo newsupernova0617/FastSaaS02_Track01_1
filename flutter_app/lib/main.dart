@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_app/app.dart';
 import 'package:flutter_app/core/auth/supabase_auth.dart';
 import 'package:flutter_app/core/ads/ad_service.dart';
+import 'package:flutter_app/shared/widgets/ad_interstitial_trigger.dart';
 import 'package:flutter_app/core/logger/logger.dart';
 import 'package:flutter_app/native/foreground_service/foreground_service_manager.dart';
 import 'package:flutter_app/native/foreground_service/quick_entry_handler.dart';
@@ -30,6 +31,10 @@ void main() async {
 
   // Initialize AdMob SDK. Failure is logged and swallowed — app continues.
   await AdService.initialize();
+
+  // Preload the first interstitial so it's ready by the time the user
+  // generates their first report. Failure is silently swallowed.
+  AdInterstitialTrigger.preload();
 
   // Supabase 인증 서비스 초기화 (로그인/회원가입 기능에 필요)
   try {
