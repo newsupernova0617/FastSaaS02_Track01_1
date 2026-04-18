@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
+import 'package:flutter_app/shared/widgets/ad_banner.dart';
 import 'package:flutter_app/shared/widgets/animated_fade_slide.dart';
 import 'package:flutter_app/shared/widgets/empty_state.dart';
 import 'package:flutter_app/shared/widgets/glass_card.dart';
@@ -86,31 +87,38 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             ],
           ),
         ),
-        body: TabBarView(
+        body: Column(
           children: [
-            summaryAsync.when(
-              data: (summary) =>
-                  _buildContent(context, summary, ref, monthString),
-              loading: () => Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xl,
-                ),
-                child: Column(
-                  children: const [
-                    SkeletonCard(),
-                    SizedBox(height: AppSpacing.md),
-                    SkeletonCard(),
-                    SizedBox(height: AppSpacing.md),
-                    SkeletonCard(),
-                    SizedBox(height: AppSpacing.xl),
-                    SkeletonCard(height: 220),
-                  ],
-                ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  summaryAsync.when(
+                    data: (summary) =>
+                        _buildContent(context, summary, ref, monthString),
+                    loading: () => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.xl,
+                      ),
+                      child: Column(
+                        children: const [
+                          SkeletonCard(),
+                          SizedBox(height: AppSpacing.md),
+                          SkeletonCard(),
+                          SizedBox(height: AppSpacing.md),
+                          SkeletonCard(),
+                          SizedBox(height: AppSpacing.xl),
+                          SkeletonCard(height: 220),
+                        ],
+                      ),
+                    ),
+                    error: (error, _) => _buildError(context, error),
+                  ),
+                  const SavedReportsTab(),
+                ],
               ),
-              error: (error, _) => _buildError(context, error),
             ),
-            const SavedReportsTab(),
+            const AdBanner(),
           ],
         ),
       ),
