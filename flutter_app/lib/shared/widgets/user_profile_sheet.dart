@@ -44,11 +44,33 @@ class UserProfileSheet extends ConsumerWidget {
           topRight: Radius.circular(AppRadii.lg),
         ),
       ),
+      // 화면 상단 SafeArea + isScrollControlled=true 조합에서 시트가 스크린을
+      // 꽉 채워버리지 않도록 상한을 85%로 지정. 내용이 짧으면 Column.min이
+      // 알아서 줄어든다.
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Drag handle
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -71,105 +93,117 @@ class UserProfileSheet extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.xl,
-              horizontal: AppSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (avatarUrl != null && avatarUrl.isNotEmpty)
-                  ClipOval(
-                    child: Image.network(
-                      avatarUrl,
-                      width: 64,
-                      height: 64,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildAvatarFallback(name, theme),
-                    ),
-                  )
-                else
-                  _buildAvatarFallback(name, theme),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  name,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
+          // Scrollable content area
+          Flexible(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.xl,
+                  horizontal: AppSpacing.lg,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                if (email.isNotEmpty)
-                  Text(
-                    email,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                const SizedBox(height: AppSpacing.xl),
-
-                // Dark mode toggle
-                _buildDarkModeToggle(
-                  context: context,
-                  ref: ref,
-                  isDark: isDark,
-                  themeMode: themeMode,
-                  theme: theme,
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Settings link
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/settings');
-                    },
-                    icon: const Icon(Icons.settings_outlined),
-                    label: const Text('설정'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: theme.colorScheme.onSurface,
-                      side: BorderSide(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.md),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () => _handleLogout(context, ref),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.expense,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.md),
-                      ),
-                    ),
-                    child: const Text(
-                      '로그아웃',
-                      style: TextStyle(
-                        fontSize: 16,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (avatarUrl != null && avatarUrl.isNotEmpty)
+                      ClipOval(
+                        child: Image.network(
+                          avatarUrl,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildAvatarFallback(name, theme),
+                        ),
+                      )
+                    else
+                      _buildAvatarFallback(name, theme),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      name,
+                      style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (email.isNotEmpty)
+                      Text(
+                        email,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Dark mode toggle
+                    _buildDarkModeToggle(
+                      context: context,
+                      ref: ref,
+                      isDark: isDark,
+                      themeMode: themeMode,
+                      theme: theme,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Settings link
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.go('/settings');
+                        },
+                        icon: const Icon(Icons.settings_outlined),
+                        label: const Text('설정'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurface,
+                          side: BorderSide(
+                            color: theme.colorScheme.outline
+                                .withValues(alpha: 0.4),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadii.md),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () => _handleLogout(context, ref),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.expense,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadii.md),
+                          ),
+                        ),
+                        child: const Text(
+                          '로그아웃',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          // Respect bottom safe-area (home indicator etc.)
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
+          ),
         ],
       ),
     );

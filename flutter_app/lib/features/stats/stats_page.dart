@@ -95,7 +95,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                   summaryAsync.when(
                     data: (summary) =>
                         _buildContent(context, summary, ref, monthString),
-                    loading: () => Padding(
+                    loading: () => SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
                         vertical: AppSpacing.xl,
@@ -407,14 +408,18 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       child: GlassCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: SizedBox(
-          height: 260,
+          height: 240,
           child: Row(
             children: [
-              Expanded(
+              // 파이차트는 정사각형 영역에서 가장 잘 렌더. AspectRatio 1로
+              // 강제하여 Row의 비어있는 수직 공간을 활용하고, radius도 좁은
+              // 너비에서 잘리지 않도록 줄였음.
+              AspectRatio(
+                aspectRatio: 1,
                 child: PieChart(
                   PieChartData(
                     sections: _buildPieChartData(data, colors, touched, total),
-                    centerSpaceRadius: 56,
+                    centerSpaceRadius: 38,
                     sectionsSpace: 3,
                     startDegreeOffset: -90,
                     pieTouchData: PieTouchData(
@@ -497,7 +502,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       return PieChartSectionData(
         value: item.total.toDouble(),
         title: '$percentage%',
-        radius: isTouched ? 92 : 78,
+        radius: isTouched ? 68 : 56,
         titleStyle: TextStyle(
           fontSize: isTouched ? 14 : 12,
           fontWeight: FontWeight.bold,

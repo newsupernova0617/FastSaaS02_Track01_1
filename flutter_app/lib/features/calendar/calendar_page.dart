@@ -137,7 +137,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         children: [
           Expanded(
             child: txsAsync.when(
-              loading: () => Padding(
+              loading: () => SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   children: [
@@ -313,47 +314,61 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       textColor = theme.colorScheme.onSurface;
     }
 
-    return Container(
-      decoration: selected
-          ? BoxDecoration(
-              color: theme.colorScheme.primary,
-              shape: BoxShape.circle,
-            )
-          : null,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${day.day}',
-            style: TextStyle(
-              fontSize: 14,
-              color: textColor,
-              fontWeight: (today || selected) ? FontWeight.bold : FontWeight.w400,
-            ),
+    // 날짜 셀은 TableCalendar가 부여하는 사각형 영역. 그 안쪽에 정사각형
+    // AspectRatio 박스를 Center로 배치해 그 안에서만 circle decoration을 적용 →
+    // 셀 전체가 파란 사각형으로 채워지는 문제를 해결.
+    return Center(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: selected
+                ? theme.colorScheme.primary
+                : (today
+                    ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                    : Colors.transparent),
+            shape: BoxShape.circle,
           ),
-          if (indicators.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: indicators
-                    .map(
-                      (c) => Container(
-                        width: 4,
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        decoration: BoxDecoration(
-                          color: selected ? Colors.white.withValues(alpha: 0.9) : c,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    )
-                    .toList(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${day.day}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textColor,
+                  fontWeight:
+                      (today || selected) ? FontWeight.bold : FontWeight.w400,
+                ),
               ),
-            ),
-        ],
+              if (indicators.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: indicators
+                        .map(
+                          (c) => Container(
+                            width: 4,
+                            height: 4,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? Colors.white.withValues(alpha: 0.9)
+                                  : c,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

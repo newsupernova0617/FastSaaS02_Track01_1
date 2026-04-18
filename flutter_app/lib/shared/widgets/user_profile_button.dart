@@ -34,11 +34,15 @@ class UserProfileButton extends ConsumerWidget {
             builder: (context) => const UserProfileSheet(),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
             ),
-            isScrollControlled: false,
+            // 다크 모드 토글 + 설정 + 로그아웃 버튼이 있어 콘텐츠가 기본
+            // 바텀시트 최대 높이(screen × 9/16)를 초과하면 잘린다. true로
+            // 풀어 콘텐츠 크기만큼 늘릴 수 있게 하고, 시트 내부에서는
+            // SingleChildScrollView로 과도한 길이에 대비.
+            isScrollControlled: true,
           );
         },
         child: Container(
