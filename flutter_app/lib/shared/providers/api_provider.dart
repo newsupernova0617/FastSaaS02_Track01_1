@@ -35,21 +35,17 @@ final authenticatedDioProvider = Provider<Dio>((ref) {
 
   // Add auth interceptor that injects JWT token and handles 401 refresh
   final authInterceptor = AuthInterceptor(
-    ref: ref,
+    getDio: () => dio,
     getToken: () async {
-      // Get the access token from the auth provider
       final token = ref.read(accessTokenProvider);
       print('[AUTH] Token from provider: ${token != null ? 'EXISTS (${token.length} chars)' : 'NULL'}');
       return token;
     },
     refreshToken: () async {
-      // Refresh the session when access token expires
       final authService = ref.read(supabaseAuthProvider);
       await authService.refreshSession();
     },
     onRefreshFailed: () async {
-      // If token refresh fails, sign out the user
-      // This will trigger authStateProvider to update and GoRouter will redirect to /login
       final authService = ref.read(supabaseAuthProvider);
       await authService.signOut();
     },
@@ -74,8 +70,3 @@ final isApiClientReadyProvider = Provider<bool>((ref) {
   return isAuthenticated;
 });
 
-/// Override dioProvider from api_interceptor.dart to provide the authenticated Dio instance
-/// This allows AuthInterceptor to use the same Dio instance for retry requests
-final dioProvider = Provider<Dio>((ref) {
-  return ref.watch(authenticatedDioProvider);
-});

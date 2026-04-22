@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/logger/network_logger.dart';
 import 'package:flutter_app/core/logger/logger.dart';
 
@@ -46,18 +45,18 @@ class LoggingInterceptor extends Interceptor {
 /// Attaches JWT token from Supabase session to all requests
 /// Handles 401 errors with automatic token refresh and request retry
 class AuthInterceptor extends Interceptor {
-  final Ref ref;
   final Future<String?> Function() getToken;
   final Future<void> Function() refreshToken;
   final Future<void> Function()? onRefreshFailed;
+  final Dio Function() getDio;
 
   // Completer to prevent race conditions when multiple requests fail with 401 simultaneously
   Completer<String?>? _refreshCompleter;
 
   AuthInterceptor({
-    required this.ref,
     required this.getToken,
     required this.refreshToken,
+    required this.getDio,
     this.onRefreshFailed,
   });
 
@@ -104,7 +103,7 @@ class AuthInterceptor extends Interceptor {
           final opts = err.requestOptions;
           opts.headers['Authorization'] = 'Bearer $newToken';
           try {
-            final response = await ref.read(dioProvider).fetch(opts);
+            final response = await getDio().fetch(opts);
             handler.resolve(response);
             return;
           } catch (e) {
@@ -137,7 +136,7 @@ class AuthInterceptor extends Interceptor {
         final opts = err.requestOptions;
         opts.headers['Authorization'] = 'Bearer $newToken';
         try {
-          final response = await ref.read(dioProvider).fetch(opts);
+          final response = await getDio().fetch(opts);
           handler.resolve(response);
           return;
         } catch (e) {
@@ -168,8 +167,3 @@ class AuthInterceptor extends Interceptor {
   Logger _getLogger() => Logger();
 }
 
-// Placeholder for dioProvider (will be injected from api_provider.dart)
-// This is used for retrying requests after token refresh
-final dioProvider = Provider<Dio>((ref) {
-  throw UnimplementedError('dioProvider must be overridden in api_provider.dart');
-});

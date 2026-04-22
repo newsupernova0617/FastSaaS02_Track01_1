@@ -50,7 +50,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final location = GoRouterState.of(context).uri.path;
+    final location = GoRouter.of(context).routerDelegate.currentConfiguration.uri.path;
     final index = _indexFor(location);
 
     return Scaffold(
