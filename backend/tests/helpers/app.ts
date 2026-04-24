@@ -4,7 +4,7 @@ import appDefault from '../../src/index';
 import type { TestDbHandle } from './db';
 
 export interface TestAppHandle {
-  app: typeof appDefault;
+  app: any;
   env: Record<string, unknown>;
   /** Call in afterEach to restore all spies and prevent leaks between tests */
   cleanup: () => void;

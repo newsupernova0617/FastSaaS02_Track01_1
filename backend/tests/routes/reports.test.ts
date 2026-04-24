@@ -86,7 +86,7 @@ describe('PATCH /api/reports/:id', () => {
     });
 
     it('should reject missing title in request', () => {
-      const body = {};
+      const body: Record<string, unknown> = {};
       const isValid = body.hasOwnProperty('title') && typeof body.title === 'string';
       expect(isValid).toBe(false);
     });

@@ -195,12 +195,18 @@ const DeletePayloadSchema = z.object({
  * Schema for report payload validation
  */
 const ReportPayloadSchema = z.object({
-  reportType: z.enum(['monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion'], {
+  reportType: z.enum(['weekly_summary', 'monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion'], {
     message: 'Invalid report type',
   }),
   params: z.object({
     month: z.string()
       .regex(/^\d{4}-\d{2}$/, { message: 'Expected YYYY-MM format for month' })
+      .optional(),
+    weekStart: z.string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Expected YYYY-MM-DD format for weekStart' })
+      .optional(),
+    weekEnd: z.string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Expected YYYY-MM-DD format for weekEnd' })
       .optional(),
     category: z.string().optional(),
   }).optional().default({}),

@@ -75,7 +75,7 @@ export const reports = sqliteTable('reports', {
     id: integer('id').primaryKey({ autoIncrement: true }),
     userId: text('user_id').notNull().references(() => users.id),
     reportType: text('report_type', {
-        enum: ['monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']
+        enum: ['weekly_summary', 'monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']
     }).notNull(),
     title: text('title').notNull(),
     subtitle: text('subtitle'),
@@ -119,12 +119,23 @@ export interface TransactionSnapshot {
   date: string;
 }
 
-export type Transaction = typeof transactions.$inferSelect;
+export type Transaction = Omit<
+  typeof transactions.$inferSelect,
+  'previousState'
+> & {
+  previousState?: string | null;
+};
 export type NewTransaction = typeof transactions.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type NewChatMessage = typeof chatMessages.$inferInsert;
-export type Report = typeof reports.$inferSelect;
+export type Report = Omit<
+  typeof reports.$inferSelect,
+  'createdAt' | 'updatedAt'
+> & {
+  createdAt: string | Date | null;
+  updatedAt: string | Date | null;
+};
 export type NewReport = typeof reports.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;

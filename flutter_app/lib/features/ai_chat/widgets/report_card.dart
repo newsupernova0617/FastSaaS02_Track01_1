@@ -93,14 +93,21 @@ class ReportCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Gradient accent bar
           Container(
-            width: 4,
-            height: 48,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              gradient: AppGradients.brand,
-              borderRadius: BorderRadius.circular(AppRadii.pill),
-              boxShadow: AppGlow.small(),
+              color: AppColors.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadii.md),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.18),
+                width: 0.8,
+              ),
+            ),
+            child: const Icon(
+              Icons.auto_graph_rounded,
+              color: AppColors.primary,
+              size: 20,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -114,8 +121,9 @@ class ReportCard extends StatelessWidget {
                       child: Text(
                         title ?? 'Metric',
                         style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.65),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.65,
+                          ),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -131,8 +139,9 @@ class ReportCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.55),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.55,
+                      ),
                     ),
                   ),
                 ],
@@ -197,8 +206,9 @@ class ReportCard extends StatelessWidget {
                   Text(
                     message,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface
-                          .withValues(alpha: 0.85),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.85,
+                      ),
                       height: 1.45,
                     ),
                   ),

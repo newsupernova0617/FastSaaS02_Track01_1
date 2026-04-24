@@ -41,7 +41,9 @@ class SessionItem {
 }
 
 /// Fetch all sessions for current user
-final sessionProvider = FutureProvider.autoDispose<List<SessionItem>>((ref) async {
+final sessionProvider = FutureProvider.autoDispose<List<SessionItem>>((
+  ref,
+) async {
   final apiClient = ref.watch(apiClientProvider);
 
   try {
@@ -75,6 +77,9 @@ final sessionProvider = FutureProvider.autoDispose<List<SessionItem>>((ref) asyn
 /// so Android native code can read it from a BroadcastReceiver or headless
 /// FlutterEngine when the main app process is dead. See NativeSharedPrefs.
 final activeSessionIdProvider = StateProvider<int?>((ref) {
+  // Riverpod keeps this API for StateProvider; migrate when this provider is
+  // converted to a Notifier.
+  // ignore: deprecated_member_use
   ref.listenSelf((previous, next) {
     NativeSharedPrefs.setSessionId(next);
   });
@@ -82,7 +87,10 @@ final activeSessionIdProvider = StateProvider<int?>((ref) {
 });
 
 /// Create a new session with given title
-final createSessionProvider = FutureProvider.family<int, String>((ref, title) async {
+final createSessionProvider = FutureProvider.family<int, String>((
+  ref,
+  title,
+) async {
   final apiClient = ref.watch(apiClientProvider);
 
   try {
@@ -98,8 +106,10 @@ final createSessionProvider = FutureProvider.family<int, String>((ref, title) as
 });
 
 /// Rename an existing session
-final renameSessionProvider =
-    FutureProvider.family<void, (int, String)>((ref, args) async {
+final renameSessionProvider = FutureProvider.family<void, (int, String)>((
+  ref,
+  args,
+) async {
   final apiClient = ref.watch(apiClientProvider);
   final (sessionId, newTitle) = args;
 
@@ -114,8 +124,10 @@ final renameSessionProvider =
 });
 
 /// Delete a session (hard delete, permanent)
-final deleteSessionProvider =
-    FutureProvider.family<void, int>((ref, sessionId) async {
+final deleteSessionProvider = FutureProvider.family<void, int>((
+  ref,
+  sessionId,
+) async {
   final apiClient = ref.watch(apiClientProvider);
 
   try {

@@ -100,9 +100,11 @@ export interface DeletePayload {
 
 /** Payload for generating a financial report */
 export interface ReportPayload {
-  reportType: 'monthly_summary' | 'category_detail' | 'spending_pattern' | 'anomaly' | 'suggestion';
+  reportType: 'weekly_summary' | 'monthly_summary' | 'category_detail' | 'spending_pattern' | 'anomaly' | 'suggestion';
   params?: {
     month?: string;  // YYYY-MM
+    weekStart?: string; // YYYY-MM-DD
+    weekEnd?: string;   // YYYY-MM-DD
     category?: string;
   };
 }

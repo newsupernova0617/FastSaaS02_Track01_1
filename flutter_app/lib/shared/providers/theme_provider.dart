@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _prefsKey = 'app.themeMode';
 
 class ThemeModeController extends StateNotifier<ThemeMode> {
-  ThemeModeController() : super(ThemeMode.dark) {
+  ThemeModeController() : super(ThemeMode.light) {
     _load();
   }
 
@@ -37,8 +37,9 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
       case 'system':
         return ThemeMode.system;
       case 'dark':
-      default:
         return ThemeMode.dark;
+      default:
+        return ThemeMode.light;
     }
   }
 
@@ -54,7 +55,8 @@ class ThemeModeController extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeController, ThemeMode>((ref) {
-  return ThemeModeController();
-});
+final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
+  (ref) {
+    return ThemeModeController();
+  },
+);

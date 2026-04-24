@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
+import 'package:flutter_app/shared/providers/ai_feature_provider.dart';
 import 'package:flutter_app/shared/providers/theme_provider.dart';
 import 'package:flutter_app/shared/widgets/glass_card.dart';
 
@@ -18,12 +19,11 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
+    final aiFeatureEnabled = ref.watch(aiFeatureUiProvider);
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('설정'),
-      ),
+      appBar: AppBar(title: const Text('설정')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
@@ -33,6 +33,16 @@ class SettingsPage extends ConsumerWidget {
           _sectionTitle(theme, '디스플레이'),
           const SizedBox(height: AppSpacing.sm),
           _buildThemeCard(context, ref, themeMode, theme),
+          const SizedBox(height: AppSpacing.lg),
+
+          _sectionTitle(theme, 'AI 기능'),
+          const SizedBox(height: AppSpacing.sm),
+          _buildAiFeatureCard(ref, aiFeatureEnabled, theme),
+          const SizedBox(height: AppSpacing.lg),
+
+          _sectionTitle(theme, 'UI 복구'),
+          const SizedBox(height: AppSpacing.sm),
+          _buildRollbackInfoCard(theme),
           const SizedBox(height: AppSpacing.lg),
 
           _sectionTitle(theme, '정보'),
@@ -62,8 +72,7 @@ class SettingsPage extends ConsumerWidget {
 
   Widget _buildAccountCard(ThemeData theme, dynamic user) {
     final email = user.email as String? ?? '';
-    final name =
-        (user.userMetadata?['name'] as String?) ?? email;
+    final name = (user.userMetadata?['name'] as String?) ?? email;
     final avatarUrl = user.userMetadata?['avatar_url'] as String?;
 
     return GlassCard(
@@ -135,6 +144,49 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildAiFeatureCard(WidgetRef ref, bool enabled, ThemeData theme) {
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: SwitchListTile(
+        value: enabled,
+        onChanged: (value) =>
+            ref.read(aiFeatureUiProvider.notifier).setEnabled(value),
+        secondary: Icon(
+          Icons.auto_awesome_rounded,
+          color: enabled ? AppColors.primary : theme.iconTheme.color,
+        ),
+        title: const Text('새 AI 기능 UI 사용'),
+        subtitle: const Text('끄면 중앙 AI 버튼이 기존 채팅 화면으로 돌아갑니다.'),
+      ),
+    );
+  }
+
+  Widget _buildRollbackInfoCard(ThemeData theme) {
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.restore_rounded, color: theme.colorScheme.primary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('랜딩 이전 UI 복원', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  r'개발 환경에서 flutter_app\tool\restore_legacy_ui.ps1을 실행하면 보관된 legacy_ui 파일로 복원합니다.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildThemeCard(
     BuildContext context,
     WidgetRef ref,
@@ -162,19 +214,14 @@ class SettingsPage extends ConsumerWidget {
                 vertical: AppSpacing.md,
               ),
               decoration: BoxDecoration(
-                gradient: selected
-                    ? LinearGradient(
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.16),
-                          AppColors.secondary.withValues(alpha: 0.10),
-                        ],
-                      )
-                    : null,
+                color: selected
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppRadii.md),
                 border: selected
                     ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.35),
-                        width: 0.5,
+                        color: AppColors.primary.withValues(alpha: 0.18),
+                        width: 0.8,
                       )
                     : null,
               ),
@@ -191,8 +238,9 @@ class SettingsPage extends ConsumerWidget {
                     child: Text(
                       item.label,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: selected
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurface,
@@ -250,9 +298,9 @@ class SettingsPage extends ConsumerWidget {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
             ),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('준비 중입니다')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('준비 중입니다')));
             },
           ),
         ],
@@ -271,9 +319,9 @@ class SettingsPage extends ConsumerWidget {
             if (context.mounted) context.go('/login');
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('로그아웃 실패: $e')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
             }
           }
         },

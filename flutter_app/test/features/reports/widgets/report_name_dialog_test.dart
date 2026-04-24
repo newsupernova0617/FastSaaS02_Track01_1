@@ -5,15 +5,13 @@ import 'package:flutter_app/features/reports/widgets/report_name_dialog.dart';
 void main() {
   group('ReportNameDialog', () {
     testWidgets('renders with initial name', (WidgetTester tester) async {
-      String? savedName;
-
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
               child: ReportNameDialog(
                 initialName: 'Initial Title',
-                onSave: (name) => savedName = name,
+                onSave: (_) {},
               ),
             ),
           ),
@@ -56,10 +54,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: ReportNameDialog(
-                initialName: 'Title',
-                onSave: (_) {},
-              ),
+              child: ReportNameDialog(initialName: 'Title', onSave: (_) {}),
             ),
           ),
         ),
@@ -74,15 +69,14 @@ void main() {
       expect(find.text('이름을 입력해주세요'), findsOneWidget);
     });
 
-    testWidgets('shows error for title > 100 chars', (WidgetTester tester) async {
+    testWidgets('shows error for title > 100 chars', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: ReportNameDialog(
-                initialName: 'Title',
-                onSave: (_) {},
-              ),
+              child: ReportNameDialog(initialName: 'Title', onSave: (_) {}),
             ),
           ),
         ),
@@ -103,10 +97,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: ReportNameDialog(
-                initialName: 'Title',
-                onSave: (_) {},
-              ),
+              child: ReportNameDialog(initialName: 'Title', onSave: (_) {}),
             ),
           ),
         ),
@@ -120,15 +111,14 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('clears error message on input change', (WidgetTester tester) async {
+    testWidgets('clears error message on input change', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: ReportNameDialog(
-                initialName: 'Title',
-                onSave: (_) {},
-              ),
+              child: ReportNameDialog(initialName: 'Title', onSave: (_) {}),
             ),
           ),
         ),

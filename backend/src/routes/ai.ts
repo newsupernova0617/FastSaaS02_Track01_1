@@ -410,6 +410,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
             type: payload.type || null,
             count: results.length,
           },
+          transactions: results,
         });
         await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);
 

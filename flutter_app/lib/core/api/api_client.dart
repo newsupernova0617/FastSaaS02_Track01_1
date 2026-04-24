@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/chat_message.dart';
+import 'package:flutter_app/shared/models/ai_action.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'package:flutter_app/shared/models/report.dart';
 import 'package:flutter_app/shared/models/report_type.dart';
@@ -166,6 +167,37 @@ class ApiClient {
     }
   }
 
+  /// Generate and save a scheduled weekly/monthly AI report.
+  /// POST /api/reports/generate
+  Future<int> generateScheduledReport({
+    required String period,
+    String? month,
+    String? weekStart,
+    String? weekEnd,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/reports/generate',
+        data: {
+          'period': period,
+          if (month != null) 'month': month,
+          if (weekStart != null) 'weekStart': weekStart,
+          if (weekEnd != null) 'weekEnd': weekEnd,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data['id'] as int;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Get list of saved reports with optional month filter
   /// GET /api/reports?limit=50&month=YYYY-MM (optional)
   Future<List<ReportSummary>> getReports({
@@ -173,17 +205,12 @@ class ApiClient {
     int limit = 50,
   }) async {
     try {
-      final params = <String, dynamic>{
-        'limit': limit,
-      };
+      final params = <String, dynamic>{'limit': limit};
       if (month != null) {
         params['month'] = month;
       }
 
-      final response = await _dio.get(
-        '/reports',
-        queryParameters: params,
-      );
+      final response = await _dio.get('/reports', queryParameters: params);
 
       if (response.statusCode == 200) {
         final reports = (response.data['reports'] as List)
@@ -260,8 +287,10 @@ class ApiClient {
   /// GET /api/sessions?limit=50
   Future<Map<String, dynamic>> getSessions({int limit = 50}) async {
     try {
-      final response = await _dio.get('/sessions',
-          queryParameters: {'limit': limit});
+      final response = await _dio.get(
+        '/sessions',
+        queryParameters: {'limit': limit},
+      );
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -280,10 +309,7 @@ class ApiClient {
   /// Returns the ID of the created session
   Future<int> createSession(String title) async {
     try {
-      final response = await _dio.post(
-        '/sessions',
-        data: {'title': title},
-      );
+      final response = await _dio.post('/sessions', data: {'title': title});
 
       if (response.statusCode == 201) {
         final responseData = response.data as Map<String, dynamic>;
@@ -361,10 +387,7 @@ class ApiClient {
   /// Send a chat message in a session
   /// POST /api/sessions/:sessionId/messages
   /// Returns void - messages are fetched via getSessionMessages
-  Future<void> sendSessionMessage(
-    int sessionId,
-    String message,
-  ) async {
+  Future<void> sendSessionMessage(int sessionId, String message) async {
     try {
       final response = await _dio.post(
         '/sessions/$sessionId/messages',
@@ -377,6 +400,30 @@ class ApiClient {
           response: response,
         );
       }
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  /// Run an AI action directly while still storing the exchange in a session.
+  /// POST /api/ai/action
+  Future<AiActionResponse> runAiAction({
+    required String text,
+    required int sessionId,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/ai/action',
+        data: {'text': text, 'sessionId': sessionId},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return AiActionResponse.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
     } on DioException {
       rethrow;
     }

@@ -4,13 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/widgets/ai_fab.dart';
 
-// ============================================================
-// [Phase 3] glow_nav_bar.dart
-// Floating pill-shaped navigation with a center AI FAB.
-// 5 slots: [home, calendar, <FAB>, stats, settings].
-// Active tab shows a pulsing violet dot indicator under the icon.
-// ============================================================
-
 class GlowNavItem {
   final IconData icon;
   final IconData selectedIcon;
@@ -27,7 +20,7 @@ class GlowNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final VoidCallback onAiTap;
-  final List<GlowNavItem> items; // must be length 4 (two each side of FAB)
+  final List<GlowNavItem> items;
 
   const GlowNavBar({
     super.key,
@@ -53,20 +46,20 @@ class GlowNavBar extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadii.pill),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.85),
+                color: theme.colorScheme.surface.withValues(alpha: 0.94),
                 borderRadius: BorderRadius.circular(AppRadii.pill),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                  width: 0.5,
+                  color: theme.colorScheme.outline,
+                  width: 0.8,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 24,
-                    offset: const Offset(0, 8),
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
@@ -129,31 +122,40 @@ class _NavSlot extends StatelessWidget {
     final theme = Theme.of(context);
     final color = selected
         ? AppColors.primary
-        : theme.colorScheme.onSurface.withValues(alpha: 0.55);
+        : theme.colorScheme.onSurface.withValues(alpha: 0.48);
 
     return Expanded(
-      child: InkResponse(
-        onTap: onTap,
-        radius: 32,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(selected ? item.selectedIcon : item.icon, size: 22, color: color),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: AppMotion.fast,
-                curve: AppMotion.emphasized,
-                width: selected ? 16 : 0,
-                height: 3,
-                decoration: BoxDecoration(
-                  gradient: selected ? AppGradients.brand : null,
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow: selected ? AppGlow.small() : null,
+      child: SizedBox(
+        height: 52,
+        child: InkResponse(
+          containedInkWell: true,
+          highlightShape: BoxShape.rectangle,
+          onTap: onTap,
+          radius: 32,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  selected ? item.selectedIcon : item.icon,
+                  size: 22,
+                  color: color,
                 ),
-              ),
-            ],
+                const SizedBox(height: 5),
+                AnimatedContainer(
+                  duration: AppMotion.fast,
+                  curve: AppMotion.emphasized,
+                  width: selected ? 16 : 4,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primary
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

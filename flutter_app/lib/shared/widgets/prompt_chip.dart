@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 
-// ============================================================
-// [Phase 3] prompt_chip.dart
-// Pill-shaped chip used for quick actions & suggested prompts.
-// Haptic feedback on tap. Variant: "brand" (gradient fill) or "ghost" (outline).
-// ============================================================
-
 enum PromptChipVariant { brand, ghost }
 
 class PromptChip extends StatelessWidget {
@@ -42,12 +36,12 @@ class PromptChip extends StatelessWidget {
               },
         child: Ink(
           decoration: BoxDecoration(
-            gradient: isBrand ? AppGradients.brand : null,
-            color: isBrand ? null : theme.colorScheme.surfaceContainerHighest,
+            color: isBrand ? AppColors.primary : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            border: isBrand
-                ? null
-                : Border.all(color: theme.colorScheme.outline, width: 0.5),
+            border: Border.all(
+              color: isBrand ? AppColors.primary : theme.colorScheme.outline,
+              width: 0.8,
+            ),
             boxShadow: isBrand ? AppGlow.small() : null,
           ),
           child: Padding(
@@ -62,7 +56,9 @@ class PromptChip extends StatelessWidget {
                   Icon(
                     icon,
                     size: 16,
-                    color: isBrand ? Colors.white : theme.colorScheme.onSurface,
+                    color: isBrand
+                        ? Colors.white
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.72),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                 ],
@@ -70,7 +66,7 @@ class PromptChip extends StatelessWidget {
                   label,
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: isBrand ? Colors.white : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],

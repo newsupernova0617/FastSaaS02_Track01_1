@@ -14,9 +14,13 @@
 import { Hono } from 'hono';
 import { ZodError } from 'zod';
 import { z } from 'zod';
+import { and, eq } from 'drizzle-orm';
 import { getDb, Env } from '../db/index';
+import { reports } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { ReportService, updateReportTitle } from '../services/reports';
+import { AIReportService } from '../services/ai-report';
+import { getLLMConfig } from '../services/llm';
 import { createRateLimiter } from '../middleware/rateLimit';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -27,7 +31,7 @@ const reportWriteRateLimit = createRateLimiter(10, 60_000);
 
 // Validation schema for save report
 const SaveReportSchema = z.object({
-  reportType: z.enum(['monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']),
+  reportType: z.enum(['weekly_summary', 'monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']),
   title: z.string().min(1).max(200),
   subtitle: z.string().max(100).optional(),
   reportData: z.array(z.record(z.string(), z.unknown())),
@@ -35,6 +39,18 @@ const SaveReportSchema = z.object({
 });
 
 type SaveReportPayload = z.infer<typeof SaveReportSchema>;
+
+const GenerateReportSchema = z.object({
+  period: z.enum(['weekly', 'monthly']),
+  month: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+  weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  weekEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+}).refine((data) => {
+  if (data.period === 'monthly') return Boolean(data.month);
+  return Boolean(data.weekStart && data.weekEnd);
+}, {
+  message: 'monthly requires month; weekly requires weekStart and weekEnd',
+});
 
 // POST /api/reports - 리포트 저장
 // reportWriteRateLimit 미들웨어가 먼저 실행 → 속도 제한 통과 후 핸들러 진입
@@ -70,6 +86,79 @@ router.post('/', reportWriteRateLimit, async (c) => {
       { success: false, error: 'Failed to save report' },
       500
     );
+  }
+});
+
+// POST /api/reports/generate - 주간/월간 정기 리포트 생성
+router.post('/generate', reportWriteRateLimit, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const payload = GenerateReportSchema.parse(await c.req.json());
+    const reportPayload = payload.period === 'weekly'
+      ? {
+          reportType: 'weekly_summary' as const,
+          params: {
+            weekStart: payload.weekStart,
+            weekEnd: payload.weekEnd,
+          },
+        }
+      : {
+          reportType: 'monthly_summary' as const,
+          params: {
+            month: payload.month,
+          },
+        };
+
+    const db = getDb(c.env);
+    const paramsKey = JSON.stringify(reportPayload.params || {});
+    const existingReports = await db
+      .select({
+        id: reports.id,
+        reportType: reports.reportType,
+        createdAt: reports.createdAt,
+      })
+      .from(reports)
+      .where(and(
+        eq(reports.userId, userId),
+        eq(reports.reportType, reportPayload.reportType),
+        eq(reports.params, paramsKey),
+      ))
+      .limit(1);
+
+    const existingReport = existingReports[0];
+    if (existingReport) {
+      return c.json({
+        success: true,
+        id: existingReport.id,
+        reportType: existingReport.reportType,
+        createdAt: existingReport.createdAt,
+        existing: true,
+      }, 200);
+    }
+
+    const reportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+    const report = await reportService.generateReport(db, userId, reportPayload);
+    const savedReport = await db.insert(reports).values({
+      userId,
+      reportType: report.reportType,
+      title: report.title,
+      subtitle: report.subtitle,
+      reportData: JSON.stringify(report.sections),
+      params: paramsKey,
+    }).returning().get();
+
+    return c.json({
+      success: true,
+      id: savedReport.id,
+      reportType: savedReport.reportType,
+      createdAt: savedReport.createdAt,
+    }, 201);
+  } catch (error) {
+    console.error('[Reports API] Generate error:', error);
+    if (error instanceof ZodError) {
+      return c.json({ success: false, error: 'Invalid report generation data', details: error.flatten() }, 400);
+    }
+    return c.json({ success: false, error: 'Failed to generate report' }, 500);
   }
 });
 

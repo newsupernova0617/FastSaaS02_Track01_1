@@ -97,7 +97,7 @@ describe('loggingMiddleware', () => {
       });
 
       // At least one call should contain the body field
-      const allOutput = logSpy.mock.calls.map((args) => JSON.stringify(args)).join('\n');
+      const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).toMatch(/amount|Request Body/i);
     });
 
@@ -126,7 +126,7 @@ describe('loggingMiddleware', () => {
       });
 
       // The raw token must not appear anywhere in the log output
-      const allOutput = logSpy.mock.calls.map((args) => JSON.stringify(args)).join('\n');
+      const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(secretToken);
     });
 
@@ -143,7 +143,7 @@ describe('loggingMiddleware', () => {
         }),
       });
 
-      const allOutput = logSpy.mock.calls.map((args) => JSON.stringify(args)).join('\n');
+      const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(sensitiveValue);
     });
 
@@ -157,7 +157,7 @@ describe('loggingMiddleware', () => {
         body: JSON.stringify({ token: secretToken, name: 'Alice' }),
       });
 
-      const allOutput = logSpy.mock.calls.map((args) => JSON.stringify(args)).join('\n');
+      const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(secretToken);
       // The mask indicator should appear
       expect(allOutput).toContain('MASKED');
@@ -173,7 +173,7 @@ describe('loggingMiddleware', () => {
         body: JSON.stringify({ password, username: 'alice' }),
       });
 
-      const allOutput = logSpy.mock.calls.map((args) => JSON.stringify(args)).join('\n');
+      const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(password);
       expect(allOutput).toContain('MASKED');
     });
@@ -200,7 +200,7 @@ describe('loggingMiddleware', () => {
       app.use('*', async (c, next) => {
         // Swallow logging errors like a robust middleware would
         try {
-          await loggingMiddleware(c, next);
+          await loggingMiddleware(c as any, next);
         } catch {
           // If the middleware itself throws (from log failure), we still respond
           if (!c.res) {

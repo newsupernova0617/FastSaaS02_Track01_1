@@ -25,12 +25,13 @@ class ReportListItem extends StatelessWidget {
     }
   }
 
-  String _typeLabel(String raw) =>
-      ReportType.fromString(raw)?.label ?? raw;
+  String _typeLabel(String raw) => ReportType.fromString(raw)?.label ?? raw;
 
   IconData _typeIcon(String raw) {
     final type = ReportType.fromString(raw);
     switch (type) {
+      case ReportType.weekly_summary:
+        return Icons.calendar_view_week_rounded;
       case ReportType.monthly_summary:
         return Icons.calendar_view_month_rounded;
       case ReportType.category_detail:
@@ -76,16 +77,18 @@ class ReportListItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Gradient icon badge
               Container(
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.brand,
+                  color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadii.md),
-                  boxShadow: AppGlow.small(),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                    width: 0.8,
+                  ),
                 ),
-                child: Icon(icon, size: 20, color: Colors.white),
+                child: Icon(icon, size: 20, color: AppColors.primary),
               ),
               const SizedBox(width: AppSpacing.md),
 
@@ -108,8 +111,9 @@ class ReportListItem extends StatelessWidget {
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -123,15 +127,17 @@ class ReportListItem extends StatelessWidget {
                         Icon(
                           Icons.schedule_rounded,
                           size: 12,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.45),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.45,
+                          ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(report.createdAt),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.55),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.55,
+                            ),
                           ),
                         ),
                       ],

@@ -1,98 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ============================================================
-// [Phase 3] Futuristic AI Theme
-// Electric Violet (#8B5CF6) → Cyan (#06B6D4) brand gradient.
-// Dark-first (default ThemeMode.dark). Inter typography.
+// Landing-style product UI theme.
 //
-// Structure:
-//   AppColors     — semantic color tokens (dark & light)
-//   AppGradients  — brand gradients
-//   AppGlow       — neon shadow presets (glow effects)
-//   AppMotion     — motion curves/durations
-//   AppSpacing    — 4dp grid (retained from Phase 2)
-//   AppRadii      — corner radii (retained from Phase 2)
-//   AppTheme      — ThemeData (lightTheme, darkTheme) + legacy constants
-// ============================================================
+// The previous dark neon theme is preserved under lib/legacy_ui for rollback.
+// Keep these token names stable; existing screens depend on them.
 
 class AppColors {
   AppColors._();
 
-  // ── Brand ──────────────────────────────────────────────
-  static const Color primary = Color(0xFF8B5CF6); // Electric Violet
-  static const Color secondary = Color(0xFF06B6D4); // Cyan
-  static const Color primarySoft = Color(0xFFA78BFA); // Violet-400
-  static const Color secondarySoft = Color(0xFF22D3EE); // Cyan-400
+  static const Color primary = Color(0xFF2563EB);
+  static const Color secondary = Color(0xFFFF5A4D);
+  static const Color primarySoft = Color(0xFF60A5FA);
+  static const Color secondarySoft = Color(0xFFFF8A80);
 
-  // ── Legacy brand aliases (Phase 2 compat) ──────────────
   static const Color brand = primary;
-  static const Color brandDark = primarySoft;
+  static const Color brandDark = Color(0xFF1D4ED8);
 
-  // ── Semantic ───────────────────────────────────────────
-  static const Color income = Color(0xFF34D399); // Emerald-400
-  static const Color expense = Color(0xFFF87171); // Red-400
-  static const Color warning = Color(0xFFFBBF24); // Amber-400
-  static const Color success = Color(0xFF34D399);
+  static const Color income = Color(0xFF10B981);
+  static const Color expense = Color(0xFFEF4444);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color success = Color(0xFF10B981);
 
-  // ── Dark palette (default) ─────────────────────────────
-  static const Color darkBackground = Color(0xFF0A0A0F);
-  static const Color darkSurface = Color(0xFF12121A);
-  static const Color darkSurfaceElevated = Color(0xFF1A1A24);
-  static const Color darkSurfaceVariant = Color(0xFF1A1A24);
-  static const Color darkBorder = Color(0xFF26262E);
-  static const Color darkOnSurface = Color(0xFFEDEDF2);
-  static const Color darkOnSurfaceMuted = Color(0xFF9A9AA8);
-
-  // ── Light palette ──────────────────────────────────────
-  static const Color lightBackground = Color(0xFFFAFAFB);
-  static const Color lightSurface = Colors.white;
-  static const Color lightSurfaceElevated = Color(0xFFF5F5F7);
+  static const Color lightBackground = Color(0xFFFFFFFF);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceElevated = Color(0xFFF7F7F8);
   static const Color lightSurfaceVariant = Color(0xFFF1F3F9);
-  static const Color lightBorder = Color(0xFFE5E7EB);
-  static const Color lightOnSurface = Color(0xFF1A1A24);
-  static const Color lightOnSurfaceMuted = Color(0xFF6B7280);
+  static const Color lightBorder = Color(0xFFECECF0);
+  static const Color lightOnSurface = Color(0xFF111318);
+  static const Color lightOnSurfaceMuted = Color(0xFF69707D);
+
+  // Dark remains as a safe fallback, not the primary visual direction.
+  static const Color darkBackground = Color(0xFF111318);
+  static const Color darkSurface = Color(0xFF181B22);
+  static const Color darkSurfaceElevated = Color(0xFF20242D);
+  static const Color darkSurfaceVariant = Color(0xFF252A34);
+  static const Color darkBorder = Color(0xFF343A46);
+  static const Color darkOnSurface = Color(0xFFF7F7F8);
+  static const Color darkOnSurfaceMuted = Color(0xFFB6BDC8);
 }
 
 class AppGradients {
   AppGradients._();
 
-  /// Primary brand gradient — violet → cyan. Use for CTA, hero numbers, glow.
   static const LinearGradient brand = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.primary, AppColors.secondary],
+    colors: [AppColors.primary, AppColors.brandDark],
   );
 
-  /// Softer version for subtle backgrounds.
   static const LinearGradient brandSoft = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.primarySoft, AppColors.secondarySoft],
+    colors: [Color(0xFFEFF6FF), Color(0xFFFFF1F0)],
   );
 
-  /// Hero card background (very subtle, violet-to-cyan at low opacity).
-  static LinearGradient heroCard({bool dark = true}) => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: dark
-            ? [
-                AppColors.primary.withValues(alpha: 0.28),
-                AppColors.secondary.withValues(alpha: 0.20),
-              ]
-            : [
-                AppColors.primary.withValues(alpha: 0.10),
-                AppColors.secondary.withValues(alpha: 0.08),
-              ],
-      );
+  static LinearGradient heroCard({bool dark = false}) => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: dark
+        ? const [AppColors.primary, AppColors.brandDark]
+        : const [AppColors.primary, AppColors.brandDark],
+  );
 
-  /// Animated login background blobs.
   static const RadialGradient violetBlob = RadialGradient(
-    colors: [Color(0xFF8B5CF6), Color(0x008B5CF6)],
+    colors: [Color(0x332563EB), Color(0x002563EB)],
     radius: 0.8,
   );
+
   static const RadialGradient cyanBlob = RadialGradient(
-    colors: [Color(0xFF06B6D4), Color(0x0006B6D4)],
+    colors: [Color(0x22FF5A4D), Color(0x00FF5A4D)],
     radius: 0.8,
   );
 }
@@ -100,41 +77,34 @@ class AppGradients {
 class AppGlow {
   AppGlow._();
 
-  /// Subtle button / chip glow.
   static List<BoxShadow> small({Color? color}) => [
-        BoxShadow(
-          color: (color ?? AppColors.primary).withValues(alpha: 0.35),
-          blurRadius: 12,
-          spreadRadius: 0,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: (color ?? AppColors.primary).withValues(alpha: 0.16),
+      blurRadius: 14,
+      offset: const Offset(0, 6),
+    ),
+  ];
 
-  /// Card / FAB glow.
   static List<BoxShadow> medium({Color? color}) => [
-        BoxShadow(
-          color: (color ?? AppColors.primary).withValues(alpha: 0.30),
-          blurRadius: 24,
-          spreadRadius: 2,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: (color ?? AppColors.secondary).withValues(alpha: 0.18),
-          blurRadius: 16,
-          spreadRadius: 0,
-          offset: const Offset(0, 0),
-        ),
-      ];
+    BoxShadow(
+      color: (color ?? AppColors.primary).withValues(alpha: 0.14),
+      blurRadius: 24,
+      offset: const Offset(0, 12),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
-  /// Hero number glow.
   static List<BoxShadow> hero({Color? color}) => [
-        BoxShadow(
-          color: (color ?? AppColors.primary).withValues(alpha: 0.45),
-          blurRadius: 40,
-          spreadRadius: 4,
-          offset: const Offset(0, 12),
-        ),
-      ];
+    BoxShadow(
+      color: (color ?? AppColors.primary).withValues(alpha: 0.18),
+      blurRadius: 32,
+      offset: const Offset(0, 16),
+    ),
+  ];
 }
 
 class AppMotion {
@@ -164,17 +134,16 @@ class AppRadii {
   AppRadii._();
   static const double sm = 8;
   static const double md = 12;
-  static const double card = 16;
-  static const double lg = 20;
-  static const double xl = 28;
+  static const double card = 20;
+  static const double lg = 24;
+  static const double xl = 32;
   static const double pill = 999;
 }
 
 class AppTheme {
   AppTheme._();
 
-  // ── Legacy constants (Phase 2 compat) ────────────────────
-  static const Color backgroundColor = AppColors.darkBackground;
+  static const Color backgroundColor = AppColors.lightBackground;
   static const Color expenseColor = AppColors.expense;
   static const Color incomeColor = AppColors.income;
   static const Color primaryColor = AppColors.primary;
@@ -184,87 +153,61 @@ class AppTheme {
   static const double borderRadiusCards = AppRadii.card;
   static const double borderRadiusLarge = AppRadii.lg;
 
-  // ── TextTheme (Inter via GoogleFonts, Noto Sans KR 한글 폴백) ────
-  // Inter는 한글 글리프가 없으므로 각 TextStyle에 Noto Sans KR 폴백을
-  // 지정한다. 그렇지 않으면 Flutter Web이 "Could not find a set of Noto
-  // fonts" 경고를 출력하며, OS 기본 한글 폰트가 없는 장치에서는 한글이
-  // tofu(☐)로 렌더링된다.
   static TextTheme _textTheme(Color onSurface, Color onSurfaceMuted) {
-    final base = GoogleFonts.interTextTheme();
-    final krFallback = <String>[GoogleFonts.notoSansKr().fontFamily!];
+    final base = GoogleFonts.notoSansKrTextTheme();
     return base.copyWith(
       headlineLarge: base.headlineLarge?.copyWith(
         fontSize: 32,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.6,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.8,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       headlineMedium: base.headlineMedium?.copyWith(
         fontSize: 26,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.5,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       headlineSmall: base.headlineSmall?.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
+        fontSize: 21,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.3,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       titleLarge: base.titleLarge?.copyWith(
         fontSize: 18,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.2,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       titleMedium: base.titleMedium?.copyWith(
         fontSize: 15,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       titleSmall: base.titleSmall?.copyWith(
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: onSurfaceMuted,
         letterSpacing: 0.2,
-        fontFamilyFallback: krFallback,
       ),
-      bodyLarge: base.bodyLarge?.copyWith(
-        fontSize: 15,
-        color: onSurface,
-        fontFamilyFallback: krFallback,
-      ),
-      bodyMedium: base.bodyMedium?.copyWith(
-        fontSize: 14,
-        color: onSurface,
-        fontFamilyFallback: krFallback,
-      ),
-      bodySmall: base.bodySmall?.copyWith(
-        fontSize: 12,
-        color: onSurfaceMuted,
-        fontFamilyFallback: krFallback,
-      ),
+      bodyLarge: base.bodyLarge?.copyWith(fontSize: 15, color: onSurface),
+      bodyMedium: base.bodyMedium?.copyWith(fontSize: 14, color: onSurface),
+      bodySmall: base.bodySmall?.copyWith(fontSize: 12, color: onSurfaceMuted),
       labelLarge: base.labelLarge?.copyWith(
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: onSurface,
-        fontFamilyFallback: krFallback,
       ),
       labelSmall: base.labelSmall?.copyWith(
         fontSize: 11,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: onSurfaceMuted,
-        letterSpacing: 0.6,
-        fontFamilyFallback: krFallback,
+        letterSpacing: 0.5,
       ),
     );
   }
 
-  // ── Themes ───────────────────────────────────────────────
   static ThemeData lightTheme = _buildTheme(
     brightness: Brightness.light,
     background: AppColors.lightBackground,
@@ -296,19 +239,16 @@ class AppTheme {
   }) {
     final isDark = brightness == Brightness.dark;
     final textTheme = _textTheme(onSurface, onSurfaceMuted);
-    const primary = AppColors.primary;
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      primaryColor: primary,
+      primaryColor: AppColors.primary,
       scaffoldBackgroundColor: background,
-      fontFamily: GoogleFonts.inter().fontFamily,
-      // Inter에 한글이 없으므로 ThemeData 수준에서도 폴백 지정.
-      fontFamilyFallback: <String>[GoogleFonts.notoSansKr().fontFamily!],
+      fontFamily: GoogleFonts.notoSansKr().fontFamily,
       colorScheme: ColorScheme(
         brightness: brightness,
-        primary: primary,
+        primary: AppColors.primary,
         onPrimary: Colors.white,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
@@ -333,13 +273,13 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.card),
-          side: BorderSide(color: border, width: 0.5),
+          side: BorderSide(color: border, width: 0.8),
         ),
       ),
-      dividerTheme: DividerThemeData(color: border, thickness: 0.5),
+      dividerTheme: DividerThemeData(color: border, thickness: 0.8),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? surfaceVariant : const Color(0xFFF5F6FA),
+        fillColor: isDark ? surfaceVariant : AppColors.lightSurfaceElevated,
         hintStyle: TextStyle(color: onSurfaceMuted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadii.md),
@@ -351,7 +291,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadii._mdSide,
-          borderSide: BorderSide(color: primary.withValues(alpha: 0.55), width: 1.2),
+          borderSide: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.65),
+            width: 1.2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadii._mdSide,
@@ -364,10 +307,12 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: AppColors.primary.withValues(alpha: 0.20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
@@ -381,7 +326,7 @@ class AppTheme {
           foregroundColor: onSurface,
           side: BorderSide(color: border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.md),
+            borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
@@ -391,22 +336,24 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: primary),
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
-        indicatorColor: primary.withValues(alpha: 0.15),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.10),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontSize: 11,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? primary : onSurfaceMuted,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? AppColors.primary : onSurfaceMuted,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(color: selected ? primary : onSurfaceMuted);
+          return IconThemeData(
+            color: selected ? AppColors.primary : onSurfaceMuted,
+          );
         }),
       ),
       bottomSheetTheme: BottomSheetThemeData(
@@ -418,8 +365,8 @@ class AppTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? surfaceVariant : const Color(0xFF323232),
-        contentTextStyle: TextStyle(color: isDark ? onSurface : Colors.white),
+        backgroundColor: isDark ? surfaceVariant : const Color(0xFF111318),
+        contentTextStyle: const TextStyle(color: Colors.white),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.md),
@@ -427,13 +374,12 @@ class AppTheme {
       ),
       iconTheme: IconThemeData(color: onSurfaceMuted),
       textTheme: textTheme,
-      splashColor: primary.withValues(alpha: 0.08),
-      highlightColor: primary.withValues(alpha: 0.04),
+      splashColor: AppColors.primary.withValues(alpha: 0.08),
+      highlightColor: AppColors.primary.withValues(alpha: 0.04),
     );
   }
 }
 
-/// Internal helper for reused BorderRadius instances in InputDecorationTheme.
 class BorderRadii {
   BorderRadii._();
   static final BorderRadius _mdSide = BorderRadius.circular(AppRadii.md);

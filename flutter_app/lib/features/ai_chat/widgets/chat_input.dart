@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 
-// ============================================================
-// [Phase 3] chat_input.dart
-// Glass pill 통합 입력 — 테마 연동 (Option A).
-//   라이트: 흰 pill + 검정 텍스트
-//   다크:   surfaceContainerHighest (#1A1A24) pill + 흰 텍스트
-// Focus 시 violet 보더 + glow.
-// ============================================================
-
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
   final bool isLoading;
@@ -35,11 +27,11 @@ class _ChatInputState extends State<ChatInput> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
-    _controller.addListener(() {
-      if (!mounted) return;
-      setState(() => _charCount = _controller.text.length);
-    });
+    _controller = TextEditingController()
+      ..addListener(() {
+        if (!mounted) return;
+        setState(() => _charCount = _controller.text.length);
+      });
     _focusNode = FocusNode()
       ..addListener(() {
         if (!mounted) return;
@@ -56,31 +48,21 @@ class _ChatInputState extends State<ChatInput> {
 
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isEmpty || widget.isLoading) return;
+    if (text.isEmpty || widget.isLoading || _charCount > widget.maxLength)
+      return;
     HapticFeedback.lightImpact();
     widget.onSend(text);
     _controller.clear();
-    _charCount = 0;
+    setState(() => _charCount = 0);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Option A: 테마 따름
-    final pillBg = isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white;
-    final pillFg = isDark ? theme.colorScheme.onSurface : Colors.black;
-    final hintColor = isDark
-        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-        : const Color(0xFF6B7280);
-    final idleBorderColor = isDark
-        ? theme.colorScheme.outline.withValues(alpha: 0.5)
-        : const Color(0xFFE5E7EB);
-
-    final isEmpty = _controller.text.trim().isEmpty;
+    final hintColor = theme.colorScheme.onSurface.withValues(alpha: 0.42);
     final overLimit = _charCount > widget.maxLength;
-    final canSend = !isEmpty && !widget.isLoading;
+    final canSend =
+        _controller.text.trim().isNotEmpty && !widget.isLoading && !overLimit;
 
     return SafeArea(
       top: false,
@@ -94,49 +76,38 @@ class _ChatInputState extends State<ChatInput> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 글자 수 카운터 (80% 이상)
             if (_charCount > widget.maxLength * 0.8)
               Padding(
-                padding: const EdgeInsets.only(
-                  right: AppSpacing.md,
-                  bottom: 6,
-                ),
+                padding: const EdgeInsets.only(right: AppSpacing.md, bottom: 6),
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Text(
                     '$_charCount/${widget.maxLength}',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: overLimit ? theme.colorScheme.error : hintColor,
-                      fontWeight:
-                          overLimit ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
               ),
-
-            // Pill composer — 테마 연동 (Option A)
             AnimatedContainer(
               duration: AppMotion.fast,
               curve: AppMotion.emphasized,
               decoration: BoxDecoration(
-                color: pillBg,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppRadii.pill),
                 border: Border.all(
                   color: _focused
                       ? AppColors.primary.withValues(alpha: 0.55)
-                      : idleBorderColor,
-                  width: _focused ? 1.4 : 0.8,
+                      : theme.colorScheme.outline,
+                  width: _focused ? 1.2 : 0.8,
                 ),
-                boxShadow: _focused
-                    ? AppGlow.small()
-                    : [
-                        BoxShadow(
-                          color: Colors.black
-                              .withValues(alpha: isDark ? 0.30 : 0.06),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.07),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               padding: const EdgeInsets.only(
                 left: AppSpacing.lg,
@@ -157,18 +128,14 @@ class _ChatInputState extends State<ChatInput> {
                       maxLength: widget.maxLength,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _handleSend(),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: pillFg,
-                        height: 1.35,
-                      ),
+                      style: theme.textTheme.bodyLarge?.copyWith(height: 1.35),
                       cursorColor: AppColors.primary,
-                      cursorWidth: 1.6,
                       decoration: InputDecoration(
                         isCollapsed: true,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.md + 2,
                         ),
-                        hintText: 'AI에게 메시지 입력…',
+                        hintText: '오늘 지출을 말하듯 입력해보세요',
                         hintStyle: TextStyle(color: hintColor),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -181,7 +148,11 @@ class _ChatInputState extends State<ChatInput> {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  _buildSendButton(canSend: canSend),
+                  _SendButton(
+                    canSend: canSend,
+                    isLoading: widget.isLoading,
+                    onTap: _handleSend,
+                  ),
                 ],
               ),
             ),
@@ -190,9 +161,22 @@ class _ChatInputState extends State<ChatInput> {
       ),
     );
   }
+}
 
-  Widget _buildSendButton({required bool canSend}) {
-    if (widget.isLoading) {
+class _SendButton extends StatelessWidget {
+  final bool canSend;
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  const _SendButton({
+    required this.canSend,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
       return const SizedBox(
         width: 40,
         height: 40,
@@ -213,7 +197,7 @@ class _ChatInputState extends State<ChatInput> {
       button: true,
       label: 'Send message',
       child: GestureDetector(
-        onTap: canSend ? _handleSend : null,
+        onTap: canSend ? onTap : null,
         child: AnimatedContainer(
           duration: AppMotion.fast,
           curve: AppMotion.emphasized,
@@ -221,13 +205,11 @@ class _ChatInputState extends State<ChatInput> {
           height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: canSend ? AppGradients.brand : null,
             color: canSend
-                ? null
-                : Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.08),
+                ? AppColors.primary
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.08),
             boxShadow: canSend ? AppGlow.small() : null,
           ),
           child: Icon(
@@ -235,10 +217,9 @@ class _ChatInputState extends State<ChatInput> {
             size: 20,
             color: canSend
                 ? Colors.white
-                : Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.35),
+                : Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.35),
           ),
         ),
       ),

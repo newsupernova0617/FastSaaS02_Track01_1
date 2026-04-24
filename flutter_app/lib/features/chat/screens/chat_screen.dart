@@ -3,11 +3,13 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/features/ai_chat/widgets/chat_input.dart';
 import 'package:flutter_app/features/chat/adapters/chat_ui_adapter.dart';
 import 'package:flutter_app/features/chat/widgets/session_sidebar.dart';
 import 'package:flutter_app/features/chat/providers/session_provider.dart';
+import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/chat_provider.dart';
 import 'package:flutter_app/shared/widgets/empty_state.dart';
@@ -37,9 +39,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: '대화 제목을 입력하세요',
-            ),
+            decoration: const InputDecoration(hintText: '대화 제목을 입력하세요'),
           ),
           actions: [
             TextButton(
@@ -61,14 +61,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (result != null && mounted) {
       try {
-        final sessionId =
-            await ref.read(createSessionProvider(result).future);
+        final sessionId = await ref.read(createSessionProvider(result).future);
         ref.read(activeSessionIdProvider.notifier).state = sessionId;
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('오류: $e')));
         }
       }
     }
@@ -78,15 +77,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       await ref.read(deleteSessionProvider(sessionId).future);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('대화가 삭제되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('대화가 삭제되었습니다')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }
@@ -117,9 +116,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('전송 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('전송 실패: $e')));
         setState(() {
           _optimistic.remove(optimistic);
         });
@@ -149,7 +148,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 data: (sessions) => SessionSidebar(
                   activeSessionId: activeSessionId,
                   onSessionSelect: (sessionId) {
-                    ref.read(activeSessionIdProvider.notifier).state = sessionId;
+                    ref.read(activeSessionIdProvider.notifier).state =
+                        sessionId;
                     _optimistic.clear();
                   },
                   onNewSession: _createNewSession,
@@ -211,12 +211,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         Expanded(
           child: Consumer(
             builder: (context, ref, _) {
-              final messagesAsync =
-                  ref.watch(chatMessagesProvider(activeSessionId));
+              final messagesAsync = ref.watch(
+                chatMessagesProvider(activeSessionId),
+              );
 
               return messagesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => EmptyState(
                   icon: Icons.error_outline,
                   title: '메시지를 불러오지 못했습니다',
@@ -252,8 +252,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       unreadMessagesLabel: '읽지 않은 메시지',
                     ),
                     typingIndicatorOptions: TypingIndicatorOptions(
-                      typingUsers:
-                          _isSending ? [ChatUIAdapter.aiUser()] : const [],
+                      typingUsers: _isSending
+                          ? [ChatUIAdapter.aiUser()]
+                          : const [],
                     ),
                     customMessageBuilder:
                         (message, {required int messageWidth}) =>
@@ -291,8 +292,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         border: Border(
-          bottom:
-              BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.25)),
+          bottom: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.25),
+          ),
         ),
       ),
       child: SafeArea(
@@ -302,13 +304,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_back_rounded),
               tooltip: '돌아가기',
-              onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
+              onPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/home'),
             ),
             if (isMobile)
               IconButton(
                 icon: const Icon(Icons.menu_rounded),
                 tooltip: '대화 목록',
-                onPressed: () => _showSessionsSheet(activeSessionId, sessionsAsync),
+                onPressed: () =>
+                    _showSessionsSheet(activeSessionId, sessionsAsync),
               ),
             Container(
               width: 28,
@@ -319,7 +323,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 shape: BoxShape.circle,
                 boxShadow: AppGlow.small(),
               ),
-              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 16),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.white,
+                size: 16,
+              ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
@@ -348,8 +356,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       Text(
                         _isSending ? 'AI 응답 중…' : 'AI 준비 완료',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.55),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.55,
+                          ),
                         ),
                       ),
                     ],
@@ -425,9 +434,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final bubbleColor = isUser
         ? theme.colorScheme.primary
         : theme.colorScheme.surfaceContainerHighest;
-    final textColor = isUser
-        ? Colors.white
-        : theme.colorScheme.onSurface;
+    final textColor = isUser ? Colors.white : theme.colorScheme.onSurface;
 
     return Container(
       constraints: BoxConstraints(maxWidth: messageWidth.toDouble()),
@@ -437,8 +444,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
-        crossAxisAlignment:
-            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (text.isNotEmpty)
@@ -448,10 +456,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           if (actionType != null) ...[
             const SizedBox(height: AppSpacing.sm),
+            if (actionType == 'read') _buildReadPreview(metadata),
+            if (actionType == 'read') const SizedBox(height: AppSpacing.sm),
             _buildActionButton(actionType, metadata),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildReadPreview(Map<String, dynamic> metadata) {
+    final rawTransactions = metadata['transactions'] ?? metadata['result'];
+    if (rawTransactions is! List || rawTransactions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final transactions = rawTransactions
+        .whereType<Map<String, dynamic>>()
+        .map(Transaction.fromJson)
+        .take(3)
+        .toList();
+    if (transactions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        for (final tx in transactions)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: _ChatTransactionPreview(transaction: tx),
+          ),
+      ],
     );
   }
 
@@ -470,11 +504,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           onTap: () => context.go('/record'),
         );
       case 'read':
-        return _actionBtn(
-          icon: Icons.calendar_today,
-          label: '달력에서 보기',
-          onTap: () => context.go('/calendar'),
-        );
+        return const SizedBox.shrink();
       case 'report':
         final report = metadata['report'];
         if (report is Map<String, dynamic> && report['id'] != null) {
@@ -531,11 +561,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? theme.colorScheme.surfaceContainerHighest
         : Colors.white;
     final inputFg = isDark ? theme.colorScheme.onSurface : Colors.black;
-    final inputStyle = TextStyle(
-      fontSize: 14,
-      height: 1.4,
-      color: inputFg,
-    );
+    final inputStyle = TextStyle(fontSize: 14, height: 1.4, color: inputFg);
 
     if (isDark) {
       return DarkChatTheme(
@@ -563,6 +589,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       sentMessageBodyTextStyle: sentTextStyle,
       receivedMessageBodyTextStyle: receivedTextStyle,
       inputTextStyle: inputStyle,
+    );
+  }
+}
+
+class _ChatTransactionPreview extends StatelessWidget {
+  final Transaction transaction;
+
+  const _ChatTransactionPreview({required this.transaction});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isExpense = transaction.type == 'expense';
+    final color = isExpense ? AppColors.expense : AppColors.income;
+    final amount = NumberFormat('#,###', 'ko_KR').format(transaction.amount);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isExpense
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded,
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              transaction.memo?.isNotEmpty == true
+                  ? transaction.memo!
+                  : transaction.category ?? '미분류',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            '${isExpense ? '-' : '+'}$amount원',
+            style: theme.textTheme.labelSmall?.copyWith(color: color),
+          ),
+        ],
+      ),
     );
   }
 }

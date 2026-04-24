@@ -30,9 +30,7 @@ class SessionSidebar extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('대화 삭제'),
-        content: const Text(
-          '대화와 모든 메시지가 영구 삭제됩니다. 되돌릴 수 없습니다.',
-        ),
+        content: const Text('대화와 모든 메시지가 영구 삭제됩니다. 되돌릴 수 없습니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -43,9 +41,7 @@ class SessionSidebar extends ConsumerWidget {
               onDeleteSession?.call(session.id);
               Navigator.pop(context);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.expense,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.expense),
             child: const Text('삭제'),
           ),
         ],
@@ -86,14 +82,17 @@ class SessionSidebar extends ConsumerWidget {
               height: 48,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: AppGradients.brand,
-                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
                   boxShadow: AppGlow.small(),
                 ),
                 child: ElevatedButton.icon(
                   onPressed: onNewSession,
-                  icon: const Icon(Icons.add_rounded,
-                      size: 18, color: Colors.white),
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     '새 대화',
                     style: TextStyle(
@@ -105,7 +104,7 @@ class SessionSidebar extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
                     ),
                   ),
                 ),
@@ -122,38 +121,37 @@ class SessionSidebar extends ConsumerWidget {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : sessions.isEmpty
-                    ? Center(
-                        child: Text(
-                          '아직 대화가 없어요',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
-                          ),
+                ? Center(
+                    child: Text(
+                      '아직 대화가 없어요',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
                         ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.sm,
-                        ),
-                        itemCount: sessions.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 4),
-                        itemBuilder: (context, index) {
-                          final session = sessions[index];
-                          final isActive = activeSessionId == session.id;
-                          return _SessionTile(
-                            session: session,
-                            isActive: isActive,
-                            formattedDate: _formatDate(session.createdAt),
-                            onTap: () => onSessionSelect(session.id),
-                            onDelete: onDeleteSession == null
-                                ? null
-                                : () => _showDeleteConfirmation(
-                                    context, session),
-                          );
-                        },
                       ),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.sm,
+                    ),
+                    itemCount: sessions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 4),
+                    itemBuilder: (context, index) {
+                      final session = sessions[index];
+                      final isActive = activeSessionId == session.id;
+                      return _SessionTile(
+                        session: session,
+                        isActive: isActive,
+                        formattedDate: _formatDate(session.createdAt),
+                        onTap: () => onSessionSelect(session.id),
+                        onDelete: onDeleteSession == null
+                            ? null
+                            : () => _showDeleteConfirmation(context, session),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -209,9 +207,8 @@ class _SessionTile extends StatelessWidget {
                   height: 24,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    gradient: AppGradients.brand,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(2),
-                    boxShadow: AppGlow.small(),
                   ),
                 ),
               Expanded(
@@ -226,18 +223,21 @@ class _SessionTile extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: isActive
                             ? theme.colorScheme.onSurface
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.85),
-                        fontWeight:
-                            isActive ? FontWeight.w700 : FontWeight.w500,
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.85,
+                              ),
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       formattedDate,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ],
@@ -249,12 +249,13 @@ class _SessionTile extends StatelessWidget {
                   icon: Icon(
                     Icons.delete_outline_rounded,
                     size: 18,
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                   tooltip: '대화 삭제',
-                  constraints:
-                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   padding: EdgeInsets.zero,
                 ),
             ],

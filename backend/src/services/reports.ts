@@ -107,7 +107,7 @@ export async function updateReportTitle(
   // Update report (userId filter ensures data isolation)
   const updated = await db
     .update(reports)
-    .set({ title: trimmedTitle, updatedAt: new Date() })
+    .set({ title: trimmedTitle, updatedAt: new Date().toISOString() })
     .where(and(eq(reports.id, reportId), eq(reports.userId, userId)))
     .returning();
 

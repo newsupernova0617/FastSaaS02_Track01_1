@@ -13,14 +13,14 @@ import 'package:flutter_app/core/theme/app_theme.dart';
 
 // 다회 카테고리 컬러 — 브랜드 계열 + 보완색. 다크 배경에서 가독 우선.
 const List<Color> _chartPalette = [
-  AppColors.primary,       // violet
-  AppColors.secondary,     // cyan
-  AppColors.income,        // emerald
-  AppColors.warning,       // amber
-  AppColors.expense,       // red
-  AppColors.primarySoft,   // violet-soft
+  AppColors.primary,
+  AppColors.secondary,
+  AppColors.income,
+  AppColors.warning,
+  AppColors.expense,
+  AppColors.primarySoft,
   AppColors.secondarySoft, // cyan-soft
-  Color(0xFFA855F7),       // violet-500 alt
+  Color(0xFF93C5FD),
 ];
 
 class ReportChart extends StatelessWidget {
@@ -39,7 +39,8 @@ class ReportChart extends StatelessWidget {
     if (rawData == null) return const SizedBox.shrink();
 
     final labels = (rawData['labels'] as List<dynamic>?)?.cast<String>() ?? [];
-    final values = (rawData['values'] as List<dynamic>?)
+    final values =
+        (rawData['values'] as List<dynamic>?)
             ?.map((v) => (v as num).toDouble())
             .toList() ??
         [];
@@ -100,9 +101,7 @@ class ReportChart extends StatelessWidget {
       case 'line':
         return _buildLineChart(context, labels, values);
       default:
-        return Center(
-          child: Text('Unknown chart type: $chartType'),
-        );
+        return Center(child: Text('Unknown chart type: $chartType'));
     }
   }
 
@@ -162,12 +161,6 @@ class ReportChart extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -208,8 +201,7 @@ class ReportChart extends StatelessWidget {
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(4),
               ),
-              // Gradient fill matches brand
-              gradient: AppGradients.brand,
+              color: AppColors.primary,
             ),
           ],
         ),
@@ -236,8 +228,12 @@ class ReportChart extends StatelessWidget {
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: labels.isNotEmpty,
@@ -262,10 +258,8 @@ class ReportChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 36,
-              getTitlesWidget: (value, meta) => Text(
-                _formatNumber(value.toInt()),
-                style: tickStyle,
-              ),
+              getTitlesWidget: (value, meta) =>
+                  Text(_formatNumber(value.toInt()), style: tickStyle),
             ),
           ),
         ),
@@ -303,8 +297,12 @@ class ReportChart extends StatelessWidget {
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: labels.isNotEmpty,
@@ -338,7 +336,7 @@ class ReportChart extends StatelessWidget {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            gradient: AppGradients.brand,
+            color: AppColors.primary,
             barWidth: 2.5,
             dotData: FlDotData(
               show: true,
@@ -351,14 +349,7 @@ class ReportChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.25),
-                  AppColors.secondary.withValues(alpha: 0.02),
-                ],
-              ),
+              color: AppColors.primary.withValues(alpha: 0.10),
             ),
           ),
         ],

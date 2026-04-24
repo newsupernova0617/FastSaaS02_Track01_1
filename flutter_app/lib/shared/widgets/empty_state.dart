@@ -28,44 +28,61 @@ class EmptyState extends StatelessWidget {
     final muted = theme.colorScheme.onSurface.withValues(alpha: 0.55);
 
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.10),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 36, color: theme.colorScheme.primary),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(color: theme.colorScheme.outline, width: 0.8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
+                ),
+                child: Icon(icon, size: 34, color: theme.colorScheme.primary),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  subtitle!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: muted,
+                    height: 1.45,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+              ],
+            ],
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodyMedium?.copyWith(color: muted),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton(
-              onPressed: onAction,
-              child: Text(actionLabel!),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

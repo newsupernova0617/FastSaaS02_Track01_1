@@ -16,57 +16,80 @@ import '../../core/api/api_client.dart';
 // ============================================================
 
 // 리포트 목록 조회 (month: 필터, limit: 최대 개수)
-final getReportsProvider = FutureProvider.family<List<ReportSummary>, ({String? month, int limit})>(
-  (ref, params) async {
-    final apiClient = ref.watch(apiClientProvider);
-    return apiClient.getReports(
-      month: params.month,
-      limit: params.limit,
-    );
-  },
-);
+final getReportsProvider =
+    FutureProvider.family<List<ReportSummary>, ({String? month, int limit})>((
+      ref,
+      params,
+    ) async {
+      final apiClient = ref.watch(apiClientProvider);
+      return apiClient.getReports(month: params.month, limit: params.limit);
+    });
 
 // Get single report detail
-final getReportDetailProvider = FutureProvider.family<ReportDetail, int>(
-  (ref, reportId) async {
-    final apiClient = ref.watch(apiClientProvider);
-    return apiClient.getReportDetail(reportId);
-  },
-);
+final getReportDetailProvider = FutureProvider.family<ReportDetail, int>((
+  ref,
+  reportId,
+) async {
+  final apiClient = ref.watch(apiClientProvider);
+  return apiClient.getReportDetail(reportId);
+});
 
 // Save a new report
-final saveReportProvider = FutureProvider.family<int, Report>(
-  (ref, report) async {
-    final apiClient = ref.watch(apiClientProvider);
-    return apiClient.saveReport(
-      reportType: ReportType.fromString(report.reportType) ?? ReportType.monthly_summary,
-      title: report.title,
-      subtitle: report.subtitle,
-      reportData: report.reportData,
-      params: report.params,
-    );
-  },
-);
+final saveReportProvider = FutureProvider.family<int, Report>((
+  ref,
+  report,
+) async {
+  final apiClient = ref.watch(apiClientProvider);
+  return apiClient.saveReport(
+    reportType:
+        ReportType.fromString(report.reportType) ?? ReportType.monthly_summary,
+    title: report.title,
+    subtitle: report.subtitle,
+    reportData: report.reportData,
+    params: report.params,
+  );
+});
+
+final generateScheduledReportProvider =
+    FutureProvider.family<
+      int,
+      ({String period, String? month, String? weekStart, String? weekEnd})
+    >((ref, params) async {
+      final apiClient = ref.watch(apiClientProvider);
+      final id = await apiClient.generateScheduledReport(
+        period: params.period,
+        month: params.month,
+        weekStart: params.weekStart,
+        weekEnd: params.weekEnd,
+      );
+      ref.invalidate(getReportsProvider((month: null, limit: 50)));
+      if (params.month != null) {
+        ref.invalidate(getReportsProvider((month: params.month, limit: 50)));
+      }
+      return id;
+    });
 
 // Delete a report
-final deleteReportProvider = FutureProvider.family<void, int>(
-  (ref, reportId) async {
-    final apiClient = ref.watch(apiClientProvider);
-    return apiClient.deleteReport(reportId);
-  },
-);
+final deleteReportProvider = FutureProvider.family<void, int>((
+  ref,
+  reportId,
+) async {
+  final apiClient = ref.watch(apiClientProvider);
+  return apiClient.deleteReport(reportId);
+});
 
 // Update report title
-final updateReportProvider = FutureProvider.family<void, (int, String)>(
-  (ref, args) async {
-    final (reportId, newTitle) = args;
-    final apiClient = ref.watch(apiClientProvider);
+final updateReportProvider = FutureProvider.family<void, (int, String)>((
+  ref,
+  args,
+) async {
+  final (reportId, newTitle) = args;
+  final apiClient = ref.watch(apiClientProvider);
 
-    await apiClient.updateReport(reportId, newTitle);
+  await apiClient.updateReport(reportId, newTitle);
 
-    // Invalidate report detail cache so UI refreshes
-    ref.invalidate(getReportDetailProvider(reportId));
-    // Invalidate report list cache
-    ref.invalidate(getReportsProvider((month: null, limit: 50)));
-  },
-);
+  // Invalidate report detail cache so UI refreshes
+  ref.invalidate(getReportDetailProvider(reportId));
+  // Invalidate report list cache
+  ref.invalidate(getReportsProvider((month: null, limit: 50)));
+});

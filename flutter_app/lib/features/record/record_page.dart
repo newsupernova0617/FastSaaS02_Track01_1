@@ -9,6 +9,7 @@ import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/core/constants/categories.dart';
 import 'package:flutter_app/core/constants/category_icons.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
+import 'package:flutter_app/shared/widgets/glass_card.dart';
 import 'package:flutter_app/shared/widgets/glowing_number.dart';
 
 // ============================================================
@@ -91,9 +92,9 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       lastDate: DateTime.now(),
       builder: (c, child) => Theme(
         data: Theme.of(c).copyWith(
-          colorScheme: Theme.of(c).colorScheme.copyWith(
-                primary: AppColors.primary,
-              ),
+          colorScheme: Theme.of(
+            c,
+          ).colorScheme.copyWith(primary: AppColors.primary),
         ),
         child: child!,
       ),
@@ -131,13 +132,15 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       final dateStr =
           '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
 
-      await ref.read(addTransactionProvider({
-        'transactionType': _transactionType,
-        'amount': amount,
-        'category': _selectedCategory,
-        'date': dateStr,
-        if (_memo.isNotEmpty) 'memo': _memo,
-      }).future);
+      await ref.read(
+        addTransactionProvider({
+          'transactionType': _transactionType,
+          'amount': amount,
+          'category': _selectedCategory,
+          'date': dateStr,
+          if (_memo.isNotEmpty) 'memo': _memo,
+        }).future,
+      );
 
       if (!mounted) return;
       HapticFeedback.mediumImpact();
@@ -215,64 +218,80 @@ class _RecordPageState extends ConsumerState<RecordPage> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: AppSpacing.xl),
 
-                    // Hero amount
-                    _HeroAmount(
-                      amountText: _amountText,
-                      displayText: _amountController.text,
-                      onChanged: _formatAmountInput,
-                      controller: _amountController,
+                    GlassCard(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.xl,
+                        AppSpacing.lg,
+                        AppSpacing.xl,
+                      ),
+                      child: _HeroAmount(
+                        amountText: _amountText,
+                        displayText: _amountController.text,
+                        onChanged: _formatAmountInput,
+                        controller: _amountController,
+                      ),
                     ),
 
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.lg),
 
-                    // Type segmented
-                    _TypeSegmented(
-                      value: _transactionType,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _transactionType = v;
-                          _selectedCategory = null;
-                        });
-                      },
+                    GlassCard(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: _TypeSegmented(
+                        value: _transactionType,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _transactionType = v;
+                            _selectedCategory = null;
+                          });
+                        },
+                      ),
                     ),
 
                     const SizedBox(height: AppSpacing.xl),
 
                     // Categories
-                    Text('카테고리',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
-                          letterSpacing: 0.5,
-                        )),
+                    Text(
+                      '카테고리',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.md),
-                    _CategoryGrid(
-                      categories: categories,
-                      selected: _selectedCategory,
-                      onSelect: (c) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _selectedCategory = c);
-                      },
+                    GlassCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: _CategoryGrid(
+                        categories: categories,
+                        selected: _selectedCategory,
+                        onSelect: (c) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _selectedCategory = c);
+                        },
+                      ),
                     ),
 
                     const SizedBox(height: AppSpacing.xl),
 
                     // Memo
-                    Text('메모 (선택)',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
-                          letterSpacing: 0.5,
-                        )),
+                    Text(
+                      '메모 (선택)',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     TextField(
                       controller: _memoController,
@@ -335,10 +354,12 @@ class _HeroAmount extends StatelessWidget {
 
     return Column(
       children: [
-        Text('₩',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            )),
+        Text(
+          '₩',
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+        ),
         const SizedBox(height: 4),
 
         // Invisible text field captures input; the displayed value is the
@@ -427,9 +448,7 @@ class _TypeSegmented extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 2),
           decoration: BoxDecoration(
             gradient: selected
-                ? LinearGradient(
-                    colors: [color.withValues(alpha: 0.9), color],
-                  )
+                ? LinearGradient(colors: [color.withValues(alpha: 0.9), color])
                 : null,
             borderRadius: BorderRadius.circular(AppRadii.pill),
             boxShadow: selected
@@ -520,8 +539,8 @@ class _CatChip extends StatelessWidget {
           vertical: AppSpacing.sm + 2,
         ),
         decoration: BoxDecoration(
-          gradient: selected ? AppGradients.brand : null,
-          color: selected ? null : theme.colorScheme.surfaceContainerHighest,
+          gradient: null,
+          color: selected ? AppColors.primary : AppColors.lightSurfaceElevated,
           borderRadius: BorderRadius.circular(AppRadii.pill),
           border: Border.all(
             color: selected
@@ -534,19 +553,21 @@ class _CatChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: selected
-                    ? Colors.white
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75)),
+            Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? Colors.white
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            ),
             const SizedBox(width: 6),
-            Text(label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: selected
-                      ? Colors.white
-                      : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                )),
+            Text(
+              label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: selected ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -579,8 +600,8 @@ class _SubmitCta extends StatelessWidget {
         height: 58,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: AppGradients.brand,
-            borderRadius: BorderRadius.circular(AppRadii.lg),
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(AppRadii.pill),
             boxShadow: enabled ? AppGlow.medium() : null,
           ),
           child: ElevatedButton(
@@ -591,7 +612,7 @@ class _SubmitCta extends StatelessWidget {
               disabledBackgroundColor: Colors.transparent,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
             ),
             child: isLoading

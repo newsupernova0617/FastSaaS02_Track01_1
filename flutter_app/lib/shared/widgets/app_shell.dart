@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/shared/providers/ai_feature_provider.dart';
 import 'package:flutter_app/shared/widgets/glow_nav_bar.dart';
 
 // ============================================================
@@ -11,10 +13,11 @@ import 'package:flutter_app/shared/widgets/glow_nav_bar.dart';
 // floats above the body so pages can draw into the full screen.
 // ============================================================
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   final Widget child;
+  final String location;
 
-  const AppShell({super.key, required this.child});
+  const AppShell({super.key, required this.child, required this.location});
 
   static const List<GlowNavItem> _items = [
     GlowNavItem(
@@ -48,10 +51,10 @@ class AppShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final location = GoRouterState.of(context).uri.path;
     final index = _indexFor(location);
+    final aiFeatureEnabled = ref.watch(aiFeatureUiProvider);
 
     return Scaffold(
       extendBody: true,
@@ -75,7 +78,7 @@ class AppShell extends StatelessWidget {
             child: GlowNavBar(
               currentIndex: index,
               items: _items,
-              onAiTap: () => context.push('/chat'),
+              onAiTap: () => context.push(aiFeatureEnabled ? '/ai' : '/chat'),
               onTap: (i) {
                 switch (i) {
                   case 0:

@@ -82,6 +82,11 @@ export class AIReportService {
       filters.push(lte(transactions.date, endDateStr));
     }
 
+    if (params?.weekStart && params?.weekEnd) {
+      filters.push(gte(transactions.date, params.weekStart as string));
+      filters.push(lte(transactions.date, params.weekEnd as string));
+    }
+
     if (params?.category) {
       filters.push(eq(transactions.category, params.category as string));
     }
@@ -100,6 +105,8 @@ export class AIReportService {
       byCategory: {} as Record<string, { income: number; expense: number }>,
       transactionCount: txns.length,
       dateRange: params?.month || 'all time',
+      weekStart: params?.weekStart,
+      weekEnd: params?.weekEnd,
     };
 
     txns.forEach((txn: any) => {
@@ -176,6 +183,7 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
    */
   private getReportTitle(reportType: string, params?: Record<string, unknown>): string {
     const titles = {
+      'weekly_summary': `Weekly Summary`,
       'monthly_summary': `Monthly Summary`,
       'category_detail': `Category Analysis`,
       'spending_pattern': `Spending Pattern Analysis`,
@@ -191,6 +199,9 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
   private getReportSubtitle(reportType: string, params?: Record<string, unknown>): string | undefined {
     if (params?.month) {
       return `for ${params.month}`;
+    }
+    if (params?.weekStart && params?.weekEnd) {
+      return `for ${params.weekStart} to ${params.weekEnd}`;
     }
     return undefined;
   }

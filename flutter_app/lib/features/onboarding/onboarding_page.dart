@@ -6,12 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/onboarding_provider.dart';
-
-// ============================================================
-// [Phase 3] onboarding_page.dart
-// Native-rendered 4-slide intro. No PNG assets — gradient mesh
-// background + FontAwesome mark + animated pill indicator.
-// ============================================================
+import 'package:flutter_app/shared/widgets/glass_card.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -27,23 +22,23 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   static const List<_Slide> _pages = [
     _Slide(
       icon: FontAwesomeIcons.wandMagicSparkles,
-      title: '대화로 기록하는 가계부',
-      subtitle: '"어제 점심 만원 썼어" 한 마디면\nAI가 카테고리·금액·날짜를 자동으로 분류해요.',
+      title: '말로 기록하세요',
+      subtitle: '"어제 점심 12,000원"처럼 말하면 AI가 금액, 날짜, 카테고리를 정리합니다.',
     ),
     _Slide(
       icon: FontAwesomeIcons.chartLine,
-      title: '한눈에 보는 소비 패턴',
-      subtitle: '월별 대시보드·카테고리 분석·AI 리포트로\n내 돈이 어디로 가는지 명확해집니다.',
+      title: '흐름을 한눈에 봅니다',
+      subtitle: '월별 지출, 카테고리 변화, 소비 패턴을 카드와 차트로 빠르게 확인하세요.',
     ),
     _Slide(
       icon: FontAwesomeIcons.lightbulb,
-      title: 'AI가 읽어주는 내 소비',
-      subtitle: '패턴의 변화와 이상 신호를\nAI가 먼저 알려드려요.',
+      title: 'AI가 먼저 알려줍니다',
+      subtitle: '평소와 다른 지출이나 반복되는 습관을 발견하면 간단한 인사이트로 보여줍니다.',
     ),
     _Slide(
       icon: FontAwesomeIcons.rocket,
       title: '준비 완료',
-      subtitle: '이제 첫 지출을 기록해 볼까요?',
+      subtitle: '첫 지출을 기록하고 랜딩페이지에서 본 그 경험을 실제 앱에서 시작하세요.',
     ),
   ];
 
@@ -75,40 +70,24 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final isLast = _index == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background gradient blobs — shift on page change
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 800),
-            child: _BackgroundField(key: ValueKey(_index), index: _index),
-          ),
-
+          const _LandingBackground(),
           SafeArea(
             child: Column(
               children: [
-                // Skip
                 Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: TextButton(
                       onPressed: _finish,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      child: Text(
-                        isLast ? '' : '건너뛰기',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      child: Text(isLast ? '' : '건너뛰기'),
                     ),
                   ),
                 ),
-
                 Expanded(
                   child: PageView.builder(
                     controller: _controller,
@@ -121,8 +100,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     },
                   ),
                 ),
-
-                // Indicator
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                   child: Row(
@@ -132,23 +109,23 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       return AnimatedContainer(
                         duration: AppMotion.medium,
                         curve: AppMotion.emphasized,
-                        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                        width: active ? 28 : 8,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                        ),
+                        width: active ? 30 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          gradient: active ? AppGradients.brand : null,
                           color: active
-                              ? null
-                              : Colors.white.withValues(alpha: 0.25),
+                              ? AppColors.primary
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.14,
+                                ),
                           borderRadius: BorderRadius.circular(AppRadii.pill),
-                          boxShadow: active ? AppGlow.small() : null,
                         ),
                       );
                     }),
                   ),
                 ),
-
-                // Continue button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg,
@@ -158,40 +135,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   ),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 58,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.brand,
-                        borderRadius: BorderRadius.circular(AppRadii.lg),
-                        boxShadow: AppGlow.medium(),
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _next,
+                      icon: Icon(
+                        isLast
+                            ? Icons.check_rounded
+                            : Icons.arrow_forward_rounded,
                       ),
-                      child: ElevatedButton(
-                        onPressed: _next,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadii.lg),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              isLast ? '시작하기' : '다음',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Icon(Icons.arrow_forward_rounded,
-                                color: Colors.white, size: 20),
-                          ],
-                        ),
-                      ),
+                      label: Text(isLast ? '시작하기' : '다음'),
                     ),
                   ),
                 ),
@@ -208,6 +160,7 @@ class _Slide {
   final IconData icon;
   final String title;
   final String subtitle;
+
   const _Slide({
     required this.icon,
     required this.title,
@@ -218,6 +171,7 @@ class _Slide {
 class _SlideView extends StatelessWidget {
   final _Slide slide;
   final bool isActive;
+
   const _SlideView({required this.slide, required this.isActive});
 
   @override
@@ -226,118 +180,129 @@ class _SlideView extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Gradient ring with icon — animates on enter
-          Container(
-            width: 160,
-            height: 160,
-            decoration: BoxDecoration(
-              gradient: AppGradients.brand,
-              shape: BoxShape.circle,
-              boxShadow: AppGlow.hero(),
-            ),
-            child: Center(
-              child: Container(
-                width: 132,
-                height: 132,
-                decoration: BoxDecoration(
-                  color: AppColors.darkBackground,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: FaIcon(
-                    slide.icon,
-                    size: 56,
-                    color: Colors.white,
+      child: Center(
+        child: GlassCard(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xxl,
+            AppSpacing.xl,
+            AppSpacing.xxl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadii.xl),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Center(
+                      child: FaIcon(
+                        slide.icon,
+                        size: 44,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                  .animate(target: isActive ? 1 : 0)
+                  .scaleXY(
+                    begin: 0.94,
+                    end: 1.0,
+                    duration: 360.ms,
+                    curve: AppMotion.emphasized,
+                  )
+                  .fadeIn(duration: 280.ms),
+              const SizedBox(height: AppSpacing.xxl),
+              Text(
+                    slide.title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                    textAlign: TextAlign.center,
+                  )
+                  .animate(target: isActive ? 1 : 0)
+                  .fadeIn(delay: 90.ms, duration: 360.ms)
+                  .slideY(
+                    begin: 0.08,
+                    end: 0,
+                    curve: AppMotion.emphasizedDecel,
                   ),
-                ),
-              ),
-            ),
-          )
-              .animate(target: isActive ? 1 : 0)
-              .scaleXY(begin: 0.92, end: 1.0, duration: 400.ms, curve: AppMotion.emphasized)
-              .fadeIn(duration: 300.ms),
-
-          const SizedBox(height: AppSpacing.xxl),
-
-          Text(
-            slide.title,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
-            ),
-            textAlign: TextAlign.center,
-          )
-              .animate(target: isActive ? 1 : 0)
-              .fadeIn(delay: 100.ms, duration: 400.ms)
-              .slideY(begin: 0.1, end: 0, curve: AppMotion.emphasizedDecel),
-
-          const SizedBox(height: AppSpacing.md),
-
-          Text(
-            slide.subtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withValues(alpha: 0.65),
-              height: 1.55,
-            ),
-            textAlign: TextAlign.center,
-          )
-              .animate(target: isActive ? 1 : 0)
-              .fadeIn(delay: 200.ms, duration: 400.ms)
-              .slideY(begin: 0.1, end: 0, curve: AppMotion.emphasizedDecel),
-        ],
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                    slide.subtitle,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.62,
+                      ),
+                      height: 1.55,
+                    ),
+                    textAlign: TextAlign.center,
+                  )
+                  .animate(target: isActive ? 1 : 0)
+                  .fadeIn(delay: 160.ms, duration: 360.ms)
+                  .slideY(
+                    begin: 0.08,
+                    end: 0,
+                    curve: AppMotion.emphasizedDecel,
+                  ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _BackgroundField extends StatelessWidget {
-  final int index;
-  const _BackgroundField({super.key, required this.index});
+class _LandingBackground extends StatelessWidget {
+  const _LandingBackground();
 
   @override
   Widget build(BuildContext context) {
-    // Each slide nudges the blob positions for variety
-    final positions = [
-      (const Alignment(-0.8, -0.6), const Alignment(0.9, 0.8)),
-      (const Alignment(-0.3, -1.0), const Alignment(1.0, 0.2)),
-      (const Alignment(-1.0, 0.2), const Alignment(0.5, 1.0)),
-      (const Alignment(0.0, -0.5), const Alignment(0.0, 1.0)),
-    ];
-    final (violetAlign, cyanAlign) = positions[index % positions.length];
-
     return Stack(
       fit: StackFit.expand,
       children: [
-        Container(color: AppColors.darkBackground),
-        Align(
-          alignment: violetAlign,
-          child: Container(
-            width: 520,
-            height: 520,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.violetBlob,
-            ),
+        Container(color: AppColors.lightBackground),
+        Positioned(
+          top: -100,
+          left: -120,
+          child: _BlurCircle(
+            size: 300,
+            color: AppColors.primary.withValues(alpha: 0.10),
           ),
         ),
-        Align(
-          alignment: cyanAlign,
-          child: Container(
-            width: 440,
-            height: 440,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppGradients.cyanBlob,
-            ),
+        Positioned(
+          bottom: 80,
+          right: -130,
+          child: _BlurCircle(
+            size: 260,
+            color: AppColors.secondary.withValues(alpha: 0.08),
           ),
         ),
-        // Fog
-        Container(color: Colors.black.withValues(alpha: 0.35)),
       ],
+    );
+  }
+}
+
+class _BlurCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _BlurCircle({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [BoxShadow(color: color, blurRadius: 80, spreadRadius: 40)],
+      ),
     );
   }
 }

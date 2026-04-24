@@ -51,8 +51,9 @@ Payload schemas for each type:
 
 5. REPORT: User asks for financial analysis or summary
    {"type":"report","payload":{"reportType":"monthly_summary","params":{"month":"YYYY-MM"}},"confidence":0.9}
-   - reportType: one of monthly_summary, category_detail, spending_pattern, anomaly, suggestion
-   - params: {month: "YYYY-MM"} or {category: "식비"} if specified
+   {"type":"report","payload":{"reportType":"weekly_summary","params":{"weekStart":"YYYY-MM-DD","weekEnd":"YYYY-MM-DD"}},"confidence":0.9}
+   - reportType: one of weekly_summary, monthly_summary, category_detail, spending_pattern, anomaly, suggestion
+   - params: {month: "YYYY-MM"}, {weekStart: "YYYY-MM-DD", weekEnd: "YYYY-MM-DD"}, or {category: "식비"} if specified
 
 6. CLARIFY: User input is ambiguous or missing critical fields (confidence < 0.7)
    {"type":"clarify","payload":{"message":"커피를 찾았어요! 얼마를 썼나요?","missingFields":["amount"],"partialData":{"transactionType":"expense","category":"식비","memo":"커피"},"confidence":0.65}

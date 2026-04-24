@@ -8,9 +8,11 @@ import 'package:flutter_app/shared/widgets/app_shell.dart';
 import 'package:flutter_app/features/auth/login_page.dart';
 import 'package:flutter_app/features/onboarding/onboarding_page.dart';
 import 'package:flutter_app/features/home/home_page.dart';
+import 'package:flutter_app/features/ai_hub/ai_hub_page.dart';
 import 'package:flutter_app/features/record/record_page.dart';
 import 'package:flutter_app/features/calendar/calendar_page.dart';
 import 'package:flutter_app/features/stats/stats_page.dart';
+import 'package:flutter_app/features/reports/monthly_report_page.dart';
 import 'package:flutter_app/features/reports/report_detail_page.dart';
 import 'package:flutter_app/features/chat/screens/chat_screen.dart';
 import 'package:flutter_app/features/settings/settings_page.dart';
@@ -40,10 +42,7 @@ CustomTransitionPage<T> _fadeScale<T>({
       );
       return FadeTransition(
         opacity: curved,
-        child: Transform.scale(
-          scale: 0.98 + curved.value * 0.02,
-          child: child,
-        ),
+        child: Transform.scale(scale: 0.98 + curved.value * 0.02, child: child),
       );
     },
   );
@@ -156,6 +155,29 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             _fadeScale(key: state.pageKey, child: const ChatScreen()),
       ),
 
+      GoRoute(
+        path: '/ai',
+        name: 'aiHub',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const AiHubPage()),
+      ),
+
+      GoRoute(
+        path: '/ai-search',
+        name: 'aiSearch',
+        parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) => '/chat',
+      ),
+
+      GoRoute(
+        path: '/monthly-report',
+        name: 'monthlyReport',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const MonthlyReportPage()),
+      ),
+
       // Report detail
       GoRoute(
         path: '/report/:id',
@@ -173,7 +195,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       // Shell routes ─────────────────────────────────────────
       ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
+        builder: (context, state, child) =>
+            AppShell(child: child, location: state.uri.path),
         routes: [
           GoRoute(
             path: '/home',

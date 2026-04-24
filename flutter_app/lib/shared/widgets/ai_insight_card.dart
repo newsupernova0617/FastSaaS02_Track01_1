@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 
-// ============================================================
-// [Phase 3] ai_insight_card.dart
-// A subtle card that surfaces an AI-generated insight paired with 1-2
-// action chips. Gradient hairline border + soft violet tint background.
-// ============================================================
-
 class AIInsightCard extends StatelessWidget {
   final String title;
   final String body;
@@ -17,23 +11,20 @@ class AIInsightCard extends StatelessWidget {
     super.key,
     this.title = 'AI Insight',
     required this.body,
-    this.leadingIcon = Icons.auto_awesome,
+    this.leadingIcon = Icons.auto_awesome_rounded,
     this.actions = const [],
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.primary.withValues(alpha: 0.08)
-            : AppColors.primary.withValues(alpha: 0.05),
+        color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppRadii.card),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+          color: AppColors.primary.withValues(alpha: 0.18),
           width: 0.8,
         ),
       ),
@@ -44,20 +35,20 @@ class AIInsightCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
-                decoration: const BoxDecoration(
-                  gradient: AppGradients.brand,
-                  shape: BoxShape.circle,
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
-                child: Icon(leadingIcon, size: 16, color: Colors.white),
+                child: Icon(leadingIcon, size: 17, color: AppColors.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 title,
                 style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -65,7 +56,10 @@ class AIInsightCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             body,
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+            ),
           ),
           if (actions.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),

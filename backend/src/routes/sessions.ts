@@ -755,6 +755,7 @@ How can I help with your finances?`;
               type: payload.type || null,
               count: results.length,
             },
+            transactions: results,
           });
 
           aiMessage = await db.insert(chatMessages).values({
