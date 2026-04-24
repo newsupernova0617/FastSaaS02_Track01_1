@@ -63,6 +63,7 @@ final generateScheduledReportProvider =
         weekEnd: params.weekEnd,
       );
       ref.invalidate(getReportsProvider((month: null, limit: 50)));
+      ref.invalidate(getReportsProvider((month: null, limit: 20)));
       if (params.month != null) {
         ref.invalidate(getReportsProvider((month: params.month, limit: 50)));
       }

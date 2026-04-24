@@ -26,11 +26,22 @@ export function createDb(client: Client) {
     return drizzle(client, { schema });
 }
 
+let cachedDbKey: string | undefined;
+let cachedClient: Client | undefined;
+let cachedDb: ReturnType<typeof createDb> | undefined;
+
 export function getDb(env: Env) {
-    // Turso(SQLite 호스팅 서비스)에 연결하기 위한 클라이언트 생성
-    const client = createClient({
+    const key = `${env.TURSO_DB_URL}\0${env.TURSO_AUTH_TOKEN}`;
+
+    if (cachedDb && cachedClient && cachedDbKey === key) {
+        return cachedDb;
+    }
+
+    cachedClient = createClient({
         url: env.TURSO_DB_URL,
         authToken: env.TURSO_AUTH_TOKEN,
     });
-    return createDb(client);
+    cachedDb = createDb(cachedClient);
+    cachedDbKey = key;
+    return cachedDb;
 }

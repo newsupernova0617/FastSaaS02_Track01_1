@@ -68,7 +68,6 @@ export async function callLLM(
 // }
 
 async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<string> {
-  console.log('[OpenAI API Call] Starting request to api.openai.com');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -83,13 +82,7 @@ async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<st
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    console.error('[OpenAI API Error]', {
-      status: response.status,
-      statusText: response.statusText,
-      error: err,
-    });
-    throw new Error(`OpenAI API error: ${response.status} ${JSON.stringify(err)}`);
+    throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json() as { choices: { message: { content: string } }[] };
@@ -99,7 +92,6 @@ async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<st
 }
 
 async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<string> {
-  console.log('[Gemini API Call] Starting request to generativelanguage.googleapis.com');
   const systemMsg = messages.find((m) => m.role === 'system');
   const userMessages = messages.filter((m) => m.role !== 'system');
 
@@ -123,13 +115,7 @@ async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<st
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    console.error('[Gemini API Error]', {
-      status: response.status,
-      statusText: response.statusText,
-      error: err,
-    });
-    throw new Error(`Gemini API error: ${response.status} ${JSON.stringify(err)}`);
+    throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json() as { candidates: { content: { parts: { text: string }[] } }[] };
@@ -143,11 +129,6 @@ async function callWorkersAI(
   config: LLMConfig,
   ai: any // Cloudflare Workers AI binding from Env
 ): Promise<string> {
-  console.log('[Workers AI Call] Starting request to Cloudflare Workers AI');
-  console.log('[Workers AI Call] Model:', config.modelName);
-  console.log('[Workers AI Call] Messages count:', messages.length);
-
-  // Format messages for Cloudflare Workers AI
   const formattedMessages = messages.map((m) => ({
     role: m.role,
     content: m.content,
@@ -159,104 +140,55 @@ async function callWorkersAI(
       max_tokens: 4096, // Increased for complex responses like reports
     });
 
-    console.log('[Workers AI Call] Raw response:', response);
-
-    // Debug: Log response structure in detail
-    if (response.choices && Array.isArray(response.choices)) {
-      console.log('[Workers AI Call] Choices count:', response.choices.length);
-      const choice = response.choices[0];
-      if (choice) {
-        console.log('[Workers AI Call] First choice keys:', Object.keys(choice));
-        console.log('[Workers AI Call] Message type:', typeof choice.message);
-        if (choice.message) {
-          console.log('[Workers AI Call] Message keys:', Object.keys(choice.message));
-          console.log('[Workers AI Call] Message content type:', typeof choice.message.content);
-          console.log('[Workers AI Call] Message content value:', choice.message.content);
-        }
-      }
-    }
-
-    // Extract text from response - handle OpenAI format (choices array)
     let text: string | undefined;
+    const choice = Array.isArray(response?.choices) ? response.choices[0] : undefined;
+    const message = choice && typeof choice === 'object' ? choice.message : undefined;
 
-    // Try OpenAI format first (choices[0].message.content)
-    if (response.choices && Array.isArray(response.choices) && response.choices.length > 0) {
-      const choice = response.choices[0];
-      if (choice && typeof choice === 'object') {
-        const message = choice.message;
-
-        // Debug each step
-        console.log('[Workers AI Call] Step 1: message =', message);
-
-        if (message && typeof message === 'object') {
-          console.log('[Workers AI Call] Step 2: message.content =', message.content);
-          // message could be { content: string } or just a string
-          if (typeof message.content === 'string') {
-            text = message.content;
-            console.log('[Workers AI Call] Step 3: Using message.content');
-          } else if (typeof message === 'string') {
-            text = message;
-            console.log('[Workers AI Call] Step 3: Using message as string');
-          }
-
-          // Fallback to reasoning_content if content is null (for long responses)
-          if (!text && message.reasoning_content && typeof message.reasoning_content === 'string') {
-            console.log('[Workers AI Call] Step 3.5: Falling back to reasoning_content');
-            // reasoning_content contains thinking/reasoning, not the actual response
-            // This indicates the model response was cut off - we should error rather than use it
-            console.error('[Workers AI Call] WARNING: Response was cut off, using reasoning_content as fallback');
-            // Don't use reasoning_content - it's not the actual response
-            // Instead, this indicates max_tokens was too small
-            text = undefined;
-          }
-        }
+    if (typeof message === 'string') {
+      text = message;
+    } else if (message && typeof message === 'object') {
+      if (typeof message.content === 'string') {
+        text = message.content;
+      } else if (typeof message.reasoning_content === 'string') {
+        throw new Error('Response was truncated - increase max_tokens or reduce context size');
       }
-    }
-
-    // Fallback to direct response field
-    if (!text && response.response) {
-      console.log('[Workers AI Call] Fallback 1: Using response.response');
-      text = response.response;
-    }
-
-    // Fallback to result.response
-    if (!text && response.result?.response) {
-      console.log('[Workers AI Call] Fallback 2: Using response.result.response');
-      text = response.result.response;
     }
 
     if (!text) {
-      console.error('[Workers AI Error] No text extracted from response');
-      console.error('[Workers AI Error] Full response:', response);
-
-      // Check if this was a token limit issue
-      const hasReasoningContent = response.choices?.[0]?.message?.reasoning_content;
-      if (hasReasoningContent) {
-        console.error('[Workers AI Error] Response appears to have been cut off (reasoning_content present, content empty)');
-        throw new Error('Response was truncated - increase max_tokens or reduce context size');
+      if (typeof response?.response === 'string') {
+        text = response.response;
+      } else if (typeof response?.result?.response === 'string') {
+        text = response.result.response;
       }
+    }
 
-      // Try to extract anything that looks like text
-      try {
-        const jsonStr = JSON.stringify(response, null, 2);
-        console.error('[Workers AI Error] Stringified response:', jsonStr);
-      } catch (e) {
-        console.error('[Workers AI Error] Could not stringify response:', e);
-      }
+    if (!text) {
       throw new Error('No response from Workers AI');
     }
 
-    console.log('[Workers AI Call] Extracted text:', text);
     return text;
   } catch (error) {
-    console.error('[Workers AI Error]', {
-      model: config.modelName,
-      error: error instanceof Error ? error.message : String(error),
-      fullError: error,
-    });
     throw new Error(`Workers AI error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+
+/*
+Legacy debug logging kept for rollback/reference only.
+
+console.log('[Workers AI Call] Starting request to Cloudflare Workers AI');
+console.log('[Workers AI Call] Model:', config.modelName);
+console.log('[Workers AI Call] Messages count:', messages.length);
+console.log('[Workers AI Call] Raw response:', response);
+console.log('[Workers AI Call] Choices count:', response.choices.length);
+console.log('[Workers AI Call] Extracted text:', text);
+console.error('[Workers AI Error] Full response:', response);
+console.error('[Workers AI Error] Stringified response:', jsonStr);
+console.error('[Workers AI Error]', {
+  model: config.modelName,
+  error: error instanceof Error ? error.message : String(error),
+  fullError: error,
+});
+*/
 
 /**
  * Build LLMConfig from environment variables.

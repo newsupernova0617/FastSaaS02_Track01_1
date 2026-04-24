@@ -25,13 +25,23 @@ app.get('/', (c) => c.text('Hello! FastSaaS Backend is running!'));
 // capacitor://는 모바일 앱, pages.dev는 프로덕션
 // ALLOWED_ORIGINS env var (comma-separated) overrides the defaults when set
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4321', 'http://localhost:3000', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev', 'https://fastsaas2.fastsaas2.workers.dev'];
+let cachedOriginsRaw: string | undefined;
+let cachedAllowedOrigins = DEFAULT_ALLOWED_ORIGINS;
+
+function getAllowedOrigins(envOrigins: string | undefined): string[] {
+  if (!envOrigins) return DEFAULT_ALLOWED_ORIGINS;
+  if (cachedOriginsRaw === envOrigins) return cachedAllowedOrigins;
+
+  cachedOriginsRaw = envOrigins;
+  cachedAllowedOrigins = envOrigins
+    .split(',')
+    .map((origin: string) => origin.trim())
+    .filter(Boolean);
+  return cachedAllowedOrigins;
+}
 
 app.use('*', async (c, next) => {
-  const envOrigins = c.env.ALLOWED_ORIGINS;
-  const allowedOrigins = envOrigins
-    ? envOrigins.split(',').map((o: string) => o.trim()).filter(Boolean)
-    : DEFAULT_ALLOWED_ORIGINS;
-  return cors({ origin: allowedOrigins })(c, next);
+  return cors({ origin: getAllowedOrigins(c.env.ALLOWED_ORIGINS) })(c, next);
 });
 
 // 로깅 미들웨어: 모든 요청/응답 기록

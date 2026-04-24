@@ -87,7 +87,7 @@ describe('loggingMiddleware', () => {
       expect(logSpy).toHaveBeenCalled();
     });
 
-    it('logs request body content for POST', async () => {
+    it('does not log request body content for POST', async () => {
       const app = buildApp();
 
       await app.request('/test', {
@@ -96,9 +96,10 @@ describe('loggingMiddleware', () => {
         body: JSON.stringify({ amount: 5000 }),
       });
 
-      // At least one call should contain the body field
       const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
-      expect(allOutput).toMatch(/amount|Request Body/i);
+      expect(allOutput).not.toMatch(/amount|Request Body/i);
+      expect(allOutput).toMatch(/POST/);
+      expect(allOutput).toMatch(/\/test/);
     });
 
     it('logs the response status code', async () => {
@@ -147,7 +148,7 @@ describe('loggingMiddleware', () => {
       expect(allOutput).not.toContain(sensitiveValue);
     });
 
-    it('masks token fields in the request body', async () => {
+    it('does not log token fields in the request body', async () => {
       const app = buildApp();
       const secretToken = 'my-secret-access-token-789';
 
@@ -159,11 +160,11 @@ describe('loggingMiddleware', () => {
 
       const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(secretToken);
-      // The mask indicator should appear
-      expect(allOutput).toContain('MASKED');
+      expect(allOutput).toMatch(/POST/);
+      expect(allOutput).toMatch(/\/test/);
     });
 
-    it('masks password fields in the request body', async () => {
+    it('does not log password fields in the request body', async () => {
       const app = buildApp();
       const password = 'my-super-password-123';
 
@@ -175,7 +176,8 @@ describe('loggingMiddleware', () => {
 
       const allOutput = logSpy.mock.calls.map((args: unknown[]) => JSON.stringify(args)).join('\n');
       expect(allOutput).not.toContain(password);
-      expect(allOutput).toContain('MASKED');
+      expect(allOutput).toMatch(/POST/);
+      expect(allOutput).toMatch(/\/test/);
     });
   });
 

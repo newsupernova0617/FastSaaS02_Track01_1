@@ -36,6 +36,7 @@ import * as messages from '../services/messages';
 import { saveMessage, getChatHistory, clearChatHistory, saveMessageToSession } from '../services/chat';
 import { AIReportService } from '../services/ai-report';
 import { getSession } from '../services/sessions';
+import { buildSearchSummary } from '../services/search-summary';
 import type { ActionType } from '../types/ai';
 import { and, eq, isNull, desc, inArray, sql } from 'drizzle-orm';
 import { clarificationService } from '../services/clarifications';
@@ -403,6 +404,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
 
         const totalAmount = results.reduce((sum, t) => sum + t.amount, 0);
         const message = messages.generateReadMessage(results, totalAmount, payload);
+        const summary = buildSearchSummary(results, totalAmount, payload);
         const metadata = buildMetadata('read', {
           action: {
             month,
@@ -410,6 +412,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
             type: payload.type || null,
             count: results.length,
           },
+          summary,
           transactions: results,
         });
         await saveMessageToSession(db, userId, sessionId, 'assistant', message, metadata);

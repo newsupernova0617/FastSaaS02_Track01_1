@@ -48,7 +48,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
           final parts = monthStr.split('-');
           if (parts.length == 2) {
             setState(() {
-              _selectedDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+              _selectedDate = DateTime(
+                int.parse(parts[0]),
+                int.parse(parts[1]),
+              );
             });
           }
         } catch (_) {
@@ -75,8 +78,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
           elevation: 0,
           bottom: TabBar(
             labelColor: theme.appBarTheme.foregroundColor,
-            unselectedLabelColor:
-                theme.appBarTheme.foregroundColor?.withValues(alpha: 0.65),
+            unselectedLabelColor: theme.appBarTheme.foregroundColor?.withValues(
+              alpha: 0.65,
+            ),
             indicatorColor: theme.appBarTheme.foregroundColor,
             indicatorWeight: 3,
             labelStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -133,7 +137,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       title: '오류가 발생했습니다',
       subtitle: error.toString(),
       actionLabel: '재시도',
-      onAction: () => ref.invalidate(summaryProvider(_formatMonthYear(_selectedDate))),
+      onAction: () =>
+          ref.invalidate(summaryProvider(_formatMonthYear(_selectedDate))),
     );
   }
 
@@ -147,10 +152,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final expenseSummary = summary.where((s) => s.type == 'expense').toList();
     final incomeSummary = summary.where((s) => s.type == 'income').toList();
 
-    final totalExpense =
-        expenseSummary.fold<num>(0, (sum, s) => sum + s.total);
-    final totalIncome =
-        incomeSummary.fold<num>(0, (sum, s) => sum + s.total);
+    final totalExpense = expenseSummary.fold<num>(0, (sum, s) => sum + s.total);
+    final totalIncome = incomeSummary.fold<num>(0, (sum, s) => sum + s.total);
     final netAmount = totalIncome - totalExpense;
 
     final categoryColors = _getCategoryColors();
@@ -328,8 +331,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               icon: const Icon(Icons.chevron_left_rounded),
               color: theme.colorScheme.primary,
               onPressed: () => setState(
-                () => _selectedDate =
-                    DateTime(_selectedDate.year, _selectedDate.month - 1),
+                () => _selectedDate = DateTime(
+                  _selectedDate.year,
+                  _selectedDate.month - 1,
+                ),
               ),
             ),
             Expanded(
@@ -347,8 +352,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               icon: const Icon(Icons.chevron_right_rounded),
               color: theme.colorScheme.primary,
               onPressed: () => setState(
-                () => _selectedDate =
-                    DateTime(_selectedDate.year, _selectedDate.month + 1),
+                () => _selectedDate = DateTime(
+                  _selectedDate.year,
+                  _selectedDate.month + 1,
+                ),
               ),
             ),
           ],
@@ -387,7 +394,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: muted)),
+                Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: muted),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '${amount.toStringAsFixed(0)}원',
@@ -425,37 +435,51 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               // 파이차트는 정사각형 영역에서 가장 잘 렌더. AspectRatio 1로
               // 강제하여 Row의 비어있는 수직 공간을 활용하고, radius도 좁은
               // 너비에서 잘리지 않도록 줄였음.
-              AspectRatio(
-                aspectRatio: 1,
-                child: PieChart(
-                  PieChartData(
-                    sections: _buildPieChartData(data, colors, touched, total),
-                    centerSpaceRadius: 38,
-                    sectionsSpace: 3,
-                    startDegreeOffset: -90,
-                    pieTouchData: PieTouchData(
-                      touchCallback: (event, response) {
-                        if (!event.isInterestedForInteractions ||
-                            response == null ||
-                            response.touchedSection == null) {
-                          onTouch(null);
-                          return;
-                        }
-                        onTouch(response.touchedSection!.touchedSectionIndex);
-                      },
+              Flexible(
+                flex: 5,
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: PieChart(
+                      PieChartData(
+                        sections: _buildPieChartData(
+                          data,
+                          colors,
+                          touched,
+                          total,
+                        ),
+                        centerSpaceRadius: 38,
+                        sectionsSpace: 3,
+                        startDegreeOffset: -90,
+                        pieTouchData: PieTouchData(
+                          touchCallback: (event, response) {
+                            if (!event.isInterestedForInteractions ||
+                                response == null ||
+                                response.touchedSection == null) {
+                              onTouch(null);
+                              return;
+                            }
+                            onTouch(
+                              response.touchedSection!.touchedSectionIndex,
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
+                flex: 4,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: data.take(6).toList().asMap().entries.map((entry) {
                     final i = entry.key;
                     final item = entry.value;
-                    final color = colors[item.category] ??
+                    final color =
+                        colors[item.category] ??
                         theme.colorScheme.onSurface.withValues(alpha: 0.3);
                     final isActive = touched == i;
                     return Padding(
@@ -475,11 +499,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                             child: Text(
                               item.category,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight:
-                                    isActive ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isActive
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                                 color: isActive
                                     ? theme.colorScheme.onSurface
-                                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                                    : theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.75,
+                                      ),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -538,7 +565,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       child: Column(
         children: summary.map((item) {
           final pct = totalAmount == 0 ? 0.0 : item.total / totalAmount;
-          final color = categoryColors[item.category] ??
+          final color =
+              categoryColors[item.category] ??
               theme.colorScheme.onSurface.withValues(alpha: 0.3);
 
           return Padding(
@@ -642,9 +670,9 @@ class SavedReportsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reportsAsync = ref.watch(getReportsProvider(
-      (month: null, limit: 50),
-    ));
+    final reportsAsync = ref.watch(
+      getReportsProvider((month: null, limit: 50)),
+    );
 
     return reportsAsync.when(
       loading: () => const Padding(
@@ -656,9 +684,8 @@ class SavedReportsTab extends ConsumerWidget {
         title: '리포트 목록을 불러오지 못했습니다',
         subtitle: error.toString(),
         actionLabel: '재시도',
-        onAction: () => ref.invalidate(
-          getReportsProvider((month: null, limit: 50)),
-        ),
+        onAction: () =>
+            ref.invalidate(getReportsProvider((month: null, limit: 50))),
       ),
       data: (reports) {
         if (reports.isEmpty) {

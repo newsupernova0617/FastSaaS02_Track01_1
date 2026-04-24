@@ -16,6 +16,8 @@ import 'package:flutter_app/shared/providers/report_provider.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/shared/models/report.dart';
 import 'package:flutter_app/shared/providers/ai_action_provider.dart';
+import 'package:flutter_app/shared/widgets/ai_search_result_card.dart';
+import 'package:flutter_app/shared/widgets/ai_insight_card.dart';
 import 'package:flutter_app/shared/widgets/animated_count_text.dart';
 import 'package:flutter_app/shared/widgets/glowing_number.dart';
 import 'package:flutter_app/shared/widgets/gradient_hero_card.dart';
@@ -326,8 +328,9 @@ class _HomeAiResponseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final transactions = response.transactions.take(3).toList();
+    final transactions = response.transactions;
     final reportId = response.reportId;
+    final isReadResult = response.type == 'read';
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -380,17 +383,19 @@ class _HomeAiResponseCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(response.message!, style: theme.textTheme.bodyMedium),
           ],
-          if (transactions.isNotEmpty) ...[
+          if (isReadResult && transactions.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            for (final tx in transactions)
+            AiSearchResultCard(
+              transactions: transactions,
+              metadata: response.metadata,
+              query: prompt,
+            ),
+          ] else if (transactions.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            for (final tx in transactions.take(3))
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: _InlineTransactionResult(transaction: tx),
-              ),
-            if (response.transactions.length > transactions.length)
-              Text(
-                '외 ${response.transactions.length - transactions.length}건',
-                style: theme.textTheme.bodySmall,
               ),
           ],
           if (reportId != null) ...[
@@ -458,6 +463,154 @@ class _InlineTransactionResult extends StatelessWidget {
   }
 }
 
+/*
+// Legacy home read-result UI. Preserved for rollback/reference after replacing
+// it with shared/widgets/ai_search_result_card.dart.
+class _HomeReadResultPanel extends StatefulWidget {
+  final List<Transaction> transactions;
+  final AiActionResponse response;
+
+  const _HomeReadResultPanel({
+    required this.transactions,
+    required this.response,
+  });
+
+  @override
+  State<_HomeReadResultPanel> createState() => _HomeReadResultPanelState();
+}
+
+class _HomeReadResultPanelState extends State<_HomeReadResultPanel> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currency = NumberFormat('#,###', 'ko_KR');
+    final transactions = widget.transactions;
+    final visibleTransactions = _expanded
+        ? transactions
+        : transactions.take(5).toList();
+    final total = transactions.fold<num>(0, (sum, tx) => sum + tx.amount);
+    final average = transactions.isEmpty ? 0 : total / transactions.length;
+    final action = widget.response.metadata?['action'];
+    final category = action is Map<String, dynamic>
+        ? action['category'] as String?
+        : null;
+    final month = action is Map<String, dynamic>
+        ? action['month'] as String?
+        : null;
+    final title = [
+      if (month != null) month,
+      if (category != null) category,
+      '조회 결과',
+    ].join(' · ');
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: theme.textTheme.labelLarge),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: _ReadMetric(
+                  label: '총액',
+                  value: '${currency.format(total.round())}원',
+                  emphasized: true,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ReadMetric(label: '건수', value: '${transactions.length}건'),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ReadMetric(
+                  label: '평균',
+                  value: '${currency.format(average.round())}원',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (final tx in visibleTransactions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: _InlineTransactionResult(transaction: tx),
+            ),
+          if (transactions.length > 5)
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _expanded = !_expanded),
+                icon: Icon(
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                ),
+                label: Text(_expanded ? '접기' : '전체 ${transactions.length}건 보기'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  const _ReadMetric({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: emphasized
+            ? theme.colorScheme.primary.withValues(alpha: 0.10)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: theme.textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: emphasized ? theme.colorScheme.primary : null,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+*/
+
 class _AutoReportsSection extends StatelessWidget {
   final AsyncValue<List<ReportSummary>> reports;
   final String selectedPeriod;
@@ -509,18 +662,17 @@ class _AutoReportsSection extends StatelessWidget {
             final monthly = _latestByType(items, 'monthly_summary');
             final isWeekly = selectedPeriod == 'weekly';
             final report = isWeekly ? weekly : monthly;
-            return _ReportStatusCard(
-              title: isWeekly ? '주간 리포트' : '월간 리포트',
-              subtitle:
-                  report?.title ??
-                  (isWeekly ? '이번 주 리포트 생성 대기 중' : '이번 달 리포트 생성 대기 중'),
-              icon: isWeekly
-                  ? Icons.calendar_view_week_rounded
-                  : Icons.calendar_month_rounded,
-              onTap: report == null
-                  ? () => context.push('/monthly-report')
-                  : () => context.push('/report/${report.id}'),
-            );
+            if (report == null) {
+              return _ReportStatusCard(
+                title: isWeekly ? '주간 리포트' : '월간 리포트',
+                subtitle: isWeekly ? '이번 주 리포트 생성 대기 중' : '이번 달 리포트 생성 대기 중',
+                icon: isWeekly
+                    ? Icons.calendar_view_week_rounded
+                    : Icons.calendar_month_rounded,
+                onTap: () => context.push('/monthly-report'),
+              );
+            }
+            return _InlineReportPreview(reportId: report.id);
           },
         ),
       ],
@@ -545,23 +697,308 @@ class _ReportPeriodTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'weekly',
-          label: Text('주간'),
-          icon: Icon(Icons.calendar_view_week_rounded),
+    final theme = Theme.of(context);
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.55),
+          width: 0.8,
         ),
-        ButtonSegment(
-          value: 'monthly',
-          label: Text('월간'),
-          icon: Icon(Icons.calendar_month_rounded),
-        ),
-      ],
-      selected: {selectedPeriod},
-      showSelectedIcon: false,
-      onSelectionChanged: (selection) => onChanged(selection.first),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ReportPeriodTab(
+              label: '주간',
+              icon: Icons.calendar_view_week_rounded,
+              selected: selectedPeriod == 'weekly',
+              onTap: () => onChanged('weekly'),
+            ),
+          ),
+          Expanded(
+            child: _ReportPeriodTab(
+              label: '월간',
+              icon: Icons.calendar_month_rounded,
+              selected: selectedPeriod == 'monthly',
+              onTap: () => onChanged('monthly'),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+}
+
+class _ReportPeriodTab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ReportPeriodTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = selected
+        ? Colors.white
+        : theme.colorScheme.onSurface.withValues(alpha: 0.62);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.emphasized,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: selected ? AppGradients.brand : null,
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          boxShadow: selected ? AppGlow.small() : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: textColor),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: textColor,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineReportPreview extends ConsumerWidget {
+  final int reportId;
+
+  const _InlineReportPreview({required this.reportId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detail = ref.watch(getReportDetailProvider(reportId));
+    return detail.when(
+      loading: () => const SizedBox(
+        height: 118,
+        width: double.infinity,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => _ReportStatusCard(
+        title: '리포트를 불러오지 못했습니다',
+        subtitle: '상세 화면에서 다시 확인해 주세요.',
+        icon: Icons.error_outline_rounded,
+        onTap: () => context.push('/report/$reportId'),
+      ),
+      data: (report) => _ReportPreviewCard(report: report),
+    );
+  }
+}
+
+class _ReportPreviewCard extends StatelessWidget {
+  final ReportDetail report;
+
+  const _ReportPreviewCard({required this.report});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final sections = report.reportData.take(2).toList();
+    final createdAt = DateTime.tryParse(report.createdAt);
+    final dateLabel = createdAt == null
+        ? report.createdAt
+        : DateFormat('yyyy.MM.dd', 'ko_KR').format(createdAt);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.45),
+          width: 0.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: AppGradients.brand,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
+                child: const Icon(
+                  Icons.auto_graph_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      report.title,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      report.subtitle ?? dateLabel,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.55,
+                        ),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (sections.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            for (final section in sections)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _ReportPreviewSection(section: section),
+              ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.md),
+            Text('아직 표시할 요약이 없습니다.', style: theme.textTheme.bodyMedium),
+          ],
+          const SizedBox(height: AppSpacing.xs),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/report/${report.id}'),
+              icon: const Icon(Icons.open_in_new_rounded, size: 18),
+              label: const Text('상세 보기'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportPreviewSection extends StatelessWidget {
+  final Map<String, dynamic> section;
+
+  const _ReportPreviewSection({required this.section});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = _readText(['title', 'label']) ?? '핵심 요약';
+    final value = _readText(['metric', 'value', 'amount']);
+    final body = _readText(['summary', 'description', 'content', 'text']);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.55,
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle_rounded,
+            size: 18,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (value != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                if (body != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _readText(List<String> keys) {
+    for (final key in keys) {
+      final value = section[key];
+      if (value == null) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
+    }
+    return null;
   }
 }
 
@@ -805,8 +1242,9 @@ class _DeltaBadge extends StatelessWidget {
 }
 
 // ────────────────────────────────────────────────────────────
-// AI Insight section (client-side rule based)
+// AI Insight section (currently hidden; kept for quick rollback)
 // ────────────────────────────────────────────────────────────
+// ignore: unused_element
 class _InsightSection extends ConsumerWidget {
   final AsyncValue<List<SummaryRow>> thisMonth;
   final AsyncValue<List<SummaryRow>> lastMonth;
@@ -841,14 +1279,12 @@ class _InsightSection extends ConsumerWidget {
     );
   }
 
-  /// Returns a short Korean insight or null if data is insufficient.
   String? _computeInsight(
     List<SummaryRow> thisMonth,
     List<SummaryRow> lastMonth,
   ) {
     if (thisMonth.isEmpty || lastMonth.isEmpty) return null;
 
-    // Build category map for each month (expense only).
     final now = <String, num>{};
     for (final r in thisMonth) {
       if (r.type != 'expense') continue;
@@ -861,7 +1297,6 @@ class _InsightSection extends ConsumerWidget {
     }
     if (now.isEmpty) return null;
 
-    // Find largest percentage increase vs last month (minimum threshold).
     String? topCat;
     double topDelta = 0;
     num topNow = 0;
@@ -883,7 +1318,6 @@ class _InsightSection extends ConsumerWidget {
           '현재 ₩${currency.format(topNow.round())}입니다.';
     }
 
-    // Fallback: highlight the largest single category this month.
     final largest = now.entries.reduce((a, b) => a.value >= b.value ? a : b);
     final pct =
         largest.value / now.values.fold<num>(0, (sum, v) => sum + v) * 100;

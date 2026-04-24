@@ -45,6 +45,7 @@ import {
 import * as messages from '../services/messages';
 import { AIReportService } from '../services/ai-report';
 import { clarificationService } from '../services/clarifications';
+import { buildSearchSummary } from '../services/search-summary';
 import {
   createSession,
   listSessions,
@@ -748,6 +749,7 @@ How can I help with your finances?`;
 
           const totalAmount = results.reduce((sum, t) => sum + t.amount, 0);
           const message = messages.generateReadMessage(results, totalAmount, payload);
+          const summary = buildSearchSummary(results, totalAmount, payload);
           const metadata = buildMetadata('read', {
             action: {
               month,
@@ -755,6 +757,7 @@ How can I help with your finances?`;
               type: payload.type || null,
               count: results.length,
             },
+            summary,
             transactions: results,
           });
 

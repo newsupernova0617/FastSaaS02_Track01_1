@@ -57,7 +57,7 @@ export class ReportService {
       query = query.where(
         and(
           eq(reports.userId, userId),
-          sql`${reports.createdAt} LIKE ${month}%`
+          sql`${reports.createdAt} LIKE ${`${month}%`}`
         )
       );
     }

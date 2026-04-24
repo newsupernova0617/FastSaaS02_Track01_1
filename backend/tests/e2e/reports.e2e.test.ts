@@ -118,28 +118,18 @@ describe('Reports — isolation and edge cases', () => {
   // 3. month filter with invalid value → 500 (known Drizzle chaining bug)
   //
   //    The ReportService.getReports method chains a second .where() call on
-  //    the query when `month` is provided, which produces invalid SQL
-  //    ("near ')': syntax error") with the libsql driver.
-  //
-  //    This test documents the CURRENT behaviour rather than ideal behaviour.
-  //    The bug lives in backend/src/services/reports.ts — the second .where()
-  //    call should be merged into the initial .where() condition instead.
-  //
-  //    TODO: fix getReports to use a single and(...) condition, then change
-  //    this assertion to expect 200 with an empty array.
+  //    Invalid month filters should not produce malformed SQL.
   // -----------------------------------------------------------------------
 
-  it('month query param with invalid value → 500 (Drizzle double-.where() bug)', async () => {
+  it('month query param with invalid value → 200 with empty list', async () => {
     const aliceHeaders = await authHeaders('alice');
     const res = await appHandle.app.fetch(
       new Request('http://test/api/reports?month=not-a-month', { headers: aliceHeaders }),
       appHandle.env as any
     );
-    // Known bug: ReportService.getReports chains .where() twice when month is
-    // provided, causing a SQL syntax error. The route catches the exception and
-    // returns 500. This assertion pins the regression so fixing the bug is
-    // detectable (change this to 200 after the fix).
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.reports).toEqual([]);
   });
 
   // -----------------------------------------------------------------------

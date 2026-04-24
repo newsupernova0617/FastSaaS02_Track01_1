@@ -3,7 +3,6 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/features/ai_chat/widgets/chat_input.dart';
 import 'package:flutter_app/features/chat/adapters/chat_ui_adapter.dart';
@@ -12,6 +11,7 @@ import 'package:flutter_app/features/chat/providers/session_provider.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/chat_provider.dart';
+import 'package:flutter_app/shared/widgets/ai_search_result_card.dart';
 import 'package:flutter_app/shared/widgets/empty_state.dart';
 
 // ============================================================
@@ -436,6 +436,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : theme.colorScheme.surfaceContainerHighest;
     final textColor = isUser ? Colors.white : theme.colorScheme.onSurface;
 
+    if (!isUser && actionType == 'read') {
+      return SizedBox(
+        width: messageWidth.toDouble(),
+        child: _buildReadResultMessage(metadata, text),
+      );
+    }
+
     return Container(
       constraints: BoxConstraints(maxWidth: messageWidth.toDouble()),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -456,7 +463,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           if (actionType != null) ...[
             const SizedBox(height: AppSpacing.sm),
-            if (actionType == 'read') _buildReadPreview(metadata),
+            if (actionType == 'read') _buildReadPreview(metadata, text),
             if (actionType == 'read') const SizedBox(height: AppSpacing.sm),
             _buildActionButton(actionType, metadata),
           ],
@@ -465,7 +472,66 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildReadPreview(Map<String, dynamic> metadata) {
+  Widget _buildReadResultMessage(Map<String, dynamic> metadata, String text) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.45),
+          width: 0.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: AppGradients.brand,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
+                child: const Icon(
+                  Icons.manage_search_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text('AI 검색 결과', style: theme.textTheme.titleMedium),
+              ),
+            ],
+          ),
+          if (text.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              text,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          _buildReadPreview(metadata, text),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReadPreview(Map<String, dynamic> metadata, String text) {
     final rawTransactions = metadata['transactions'] ?? metadata['result'];
     if (rawTransactions is! List || rawTransactions.isEmpty) {
       return const SizedBox.shrink();
@@ -474,18 +540,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final transactions = rawTransactions
         .whereType<Map<String, dynamic>>()
         .map(Transaction.fromJson)
-        .take(3)
         .toList();
     if (transactions.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      children: [
-        for (final tx in transactions)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-            child: _ChatTransactionPreview(transaction: tx),
-          ),
-      ],
+    return AiSearchResultCard(
+      transactions: transactions,
+      metadata: metadata,
+      query: text,
     );
   }
 
@@ -593,6 +654,148 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
+/*
+// Legacy chat read-result UI. Preserved for rollback/reference after replacing
+// it with shared/widgets/ai_search_result_card.dart.
+class _ChatReadResultPreview extends StatefulWidget {
+  final List<Transaction> transactions;
+  final Map<String, dynamic> metadata;
+
+  const _ChatReadResultPreview({
+    required this.transactions,
+    required this.metadata,
+  });
+
+  @override
+  State<_ChatReadResultPreview> createState() => _ChatReadResultPreviewState();
+}
+
+class _ChatReadResultPreviewState extends State<_ChatReadResultPreview> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currency = NumberFormat('#,###', 'ko_KR');
+    final transactions = widget.transactions;
+    final visibleTransactions = _expanded
+        ? transactions
+        : transactions.take(5).toList();
+    final total = transactions.fold<num>(0, (sum, tx) => sum + tx.amount);
+    final average = transactions.isEmpty ? 0 : total / transactions.length;
+    final action = widget.metadata['action'];
+    final category = action is Map<String, dynamic>
+        ? action['category'] as String?
+        : null;
+    final month = action is Map<String, dynamic>
+        ? action['month'] as String?
+        : null;
+    final label = [
+      if (month != null) month,
+      if (category != null) category,
+      '거래 조회',
+    ].join(' · ');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.52),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.35),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: theme.textTheme.labelSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _ChatReadMetric(
+                label: '총액',
+                value: '${currency.format(total.round())}원',
+                emphasized: true,
+              ),
+              _ChatReadMetric(label: '건수', value: '${transactions.length}건'),
+              _ChatReadMetric(
+                label: '평균',
+                value: '${currency.format(average.round())}원',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          for (final tx in visibleTransactions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: _ChatTransactionPreview(transaction: tx),
+            ),
+          if (transactions.length > 5)
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _expanded = !_expanded),
+                icon: Icon(
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                ),
+                label: Text(_expanded ? '접기' : '전체 ${transactions.length}건 보기'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatReadMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  const _ChatReadMetric({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      constraints: const BoxConstraints(minWidth: 88),
+      padding: const EdgeInsets.all(AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: emphasized
+            ? theme.colorScheme.primary.withValues(alpha: 0.10)
+            : theme.colorScheme.surface.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: theme.textTheme.labelSmall),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: emphasized ? theme.colorScheme.primary : null,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ChatTransactionPreview extends StatelessWidget {
   final Transaction transaction;
 
@@ -604,6 +807,18 @@ class _ChatTransactionPreview extends StatelessWidget {
     final isExpense = transaction.type == 'expense';
     final color = isExpense ? AppColors.expense : AppColors.income;
     final amount = NumberFormat('#,###', 'ko_KR').format(transaction.amount);
+    final date = DateTime.tryParse(transaction.date);
+    final dateLabel = date == null
+        ? transaction.date
+        : DateFormat('M.d', 'ko_KR').format(date);
+    final title = transaction.memo?.isNotEmpty == true
+        ? transaction.memo!
+        : transaction.category ?? '미분류';
+    final subtitle = [
+      dateLabel,
+      transaction.category ?? '미분류',
+      transaction.type == 'expense' ? '지출' : '수입',
+    ].join(' · ');
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -626,15 +841,28 @@ class _ChatTransactionPreview extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(
-              transaction.memo?.isNotEmpty == true
-                  ? transaction.memo!
-                  : transaction.category ?? '미분류',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
           Text(
@@ -646,3 +874,4 @@ class _ChatTransactionPreview extends StatelessWidget {
     );
   }
 }
+*/
