@@ -846,6 +846,7 @@ How can I help with your finances?`;
             title: report.title,
             subtitle: report.subtitle,
             reportData: JSON.stringify(report.sections),
+            summaryData: JSON.stringify(report.summary),
             params: JSON.stringify(reportPayload.params || {}),
           }).returning().get();
 

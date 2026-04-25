@@ -30,12 +30,41 @@ class ReportSummary with _$ReportSummary {
 }
 
 @freezed
+class ReportBreakdownItem with _$ReportBreakdownItem {
+  const factory ReportBreakdownItem({
+    required String label,
+    required num amount,
+    required num ratio,
+  }) = _ReportBreakdownItem;
+
+  factory ReportBreakdownItem.fromJson(Map<String, dynamic> json) =>
+      _$ReportBreakdownItemFromJson(json);
+}
+
+@freezed
+class ReportSummaryData with _$ReportSummaryData {
+  const factory ReportSummaryData({
+    required String periodLabel,
+    required num totalExpense,
+    required num totalIncome,
+    required num netAmount,
+    num? deltaPercent,
+    String? insight,
+    required List<ReportBreakdownItem> breakdown,
+  }) = _ReportSummaryData;
+
+  factory ReportSummaryData.fromJson(Map<String, dynamic> json) =>
+      _$ReportSummaryDataFromJson(json);
+}
+
+@freezed
 class ReportDetail with _$ReportDetail {
   const factory ReportDetail({
     required int id,
     required String reportType,
     required String title,
     String? subtitle,
+    ReportSummaryData? summary,
     required List<Map<String, dynamic>> reportData,
     required Map<String, dynamic> params,
     required String createdAt,
@@ -51,10 +80,10 @@ class Report with _$Report {
     required String reportType,
     required String title,
     String? subtitle,
+    ReportSummaryData? summary,
     required List<Map<String, dynamic>> reportData,
     required Map<String, dynamic> params,
   }) = _Report;
 
-  factory Report.fromJson(Map<String, dynamic> json) =>
-      _$ReportFromJson(json);
+  factory Report.fromJson(Map<String, dynamic> json) => _$ReportFromJson(json);
 }

@@ -23,22 +23,22 @@ class AppShell extends ConsumerWidget {
     GlowNavItem(
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
-      label: 'Home',
+      label: '홈',
     ),
     GlowNavItem(
       icon: Icons.calendar_month_outlined,
       selectedIcon: Icons.calendar_month_rounded,
-      label: 'Calendar',
+      label: '달력',
     ),
     GlowNavItem(
       icon: Icons.auto_graph_outlined,
       selectedIcon: Icons.auto_graph_rounded,
-      label: 'Stats',
+      label: '통계',
     ),
     GlowNavItem(
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings_rounded,
-      label: 'Settings',
+      label: '설정',
     ),
   ];
 

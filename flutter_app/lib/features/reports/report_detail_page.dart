@@ -73,6 +73,7 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
         reportType: report.reportType,
         title: customTitle ?? report.title,
         subtitle: report.subtitle,
+        summary: report.summary,
         reportData: report.reportData,
         params: report.params,
       );

@@ -7,6 +7,7 @@ import aiRouter from './routes/ai';
 import reportsRouter from './routes/reports';
 import sessionsRouter from './routes/sessions';
 import waitlistRouter from './routes/waitlist';
+import contactRequestsRouter from './routes/contact-requests';
 import { userNotesRoutes } from './routes/user-notes';
 import { userNotesService } from './services/user-notes';
 import { VectorizeService } from './services/vectorize';
@@ -60,6 +61,7 @@ app.route('/api/users', usersRoute);
 app.route('/api/ai', aiRouter);
 app.route('/api/reports', reportsRouter);
 app.route('/api/sessions', sessionsRouter);
+app.route('/api/contact-requests', contactRequestsRouter);
 
 // User Notes 라우트 마운트
 // VectorizeService는 각 요청에서 env를 통해 초기화되어야 함

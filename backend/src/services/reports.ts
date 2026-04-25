@@ -8,6 +8,7 @@ export interface SaveReportInput {
   title: string;
   subtitle?: string;
   reportData: Record<string, unknown>[];
+  summaryData?: Record<string, unknown> | null;
   params: Record<string, unknown>;
 }
 
@@ -31,6 +32,7 @@ export class ReportService {
         title: input.title,
         subtitle: input.subtitle || null,
         reportData: JSON.stringify(input.reportData),
+        summaryData: input.summaryData ? JSON.stringify(input.summaryData) : null,
         params: JSON.stringify(input.params),
       })
       .returning();

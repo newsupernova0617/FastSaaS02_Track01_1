@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" rx="56" fill="#FFFFFF"/>
+  <rect x="48" y="48" width="1104" height="534" rx="40" fill="#F7F7F8"/>
+  <circle cx="1012" cy="126" r="132" fill="#E8F0FF"/>
+  <circle cx="1080" cy="470" r="180" fill="#FFF1F0"/>
+  <text x="96" y="170" fill="#2563EB" font-size="34" font-family="Arial, sans-serif" font-weight="700">FastSaaS</text>
+  <text x="96" y="254" fill="#111318" font-size="72" font-family="Arial, sans-serif" font-weight="800">AI 가계부</text>
+  <text x="96" y="330" fill="#111318" font-size="72" font-family="Arial, sans-serif" font-weight="800">콘텐츠 마케팅</text>
+  <text x="96" y="410" fill="#69707D" font-size="30" font-family="Arial, sans-serif">가계부, 예산, 절약, 앱 비교까지</text>
+  <text x="96" y="454" fill="#69707D" font-size="30" font-family="Arial, sans-serif">검색 유입과 전환을 함께 만드는 블로그</text>
+</svg>

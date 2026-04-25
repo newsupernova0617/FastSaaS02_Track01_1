@@ -7,7 +7,7 @@ interface Props {
 
 const { platform, disabled = true, href = '#' } = Astro.props;
 const isAndroid = platform === 'android';
-const sublabel = isAndroid ? 'GET IT ON' : 'Download on the';
+const sublabel = '다운로드';
 const label = isAndroid ? 'Google Play' : 'App Store';
 ---
 

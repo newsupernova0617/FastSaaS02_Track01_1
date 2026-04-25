@@ -129,11 +129,29 @@ export interface ReportSection {
   data?: Record<string, any>;
 }
 
+/** Top-level summary optimized for home/list previews */
+export interface ReportBreakdownItem {
+  label: string;
+  amount: number;
+  ratio: number;
+}
+
+export interface ReportSummaryData {
+  periodLabel: string;
+  totalExpense: number;
+  totalIncome: number;
+  netAmount: number;
+  deltaPercent?: number;
+  insight?: string;
+  breakdown: ReportBreakdownItem[];
+}
+
 /** Generated financial report */
 export interface Report {
   reportType: ReportPayload['reportType'];
   title: string;
   subtitle?: string;
   sections: ReportSection[];
+  summary: ReportSummaryData;
   generatedAt: string;
 }

@@ -13,7 +13,7 @@ class AiFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'AI assistant',
+      label: 'AI 도우미 열기',
       child: GestureDetector(
         onTap: () {
           HapticFeedback.mediumImpact();

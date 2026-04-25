@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
+import 'package:flutter_app/shared/widgets/category_icon_badge.dart';
 
-// ============================================================
-// [공유 위젯] transaction_tile.dart
-// 거래 목록 한 줄. CalendarPage / 이후 ReportDetail 등에서 재사용.
-// 카테고리 이모지 + 카테고리명 + 메모 + 금액 + 삭제 버튼.
-// 라이트/다크 모드 모두 지원.
-// ============================================================
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback? onDelete;
@@ -20,26 +16,8 @@ class TransactionTile extends StatelessWidget {
     this.onTap,
   });
 
-  static const _categoryEmojis = {
-    '식비': '🍽️',
-    '교통': '🚗',
-    '쇼핑': '🛍️',
-    '의료': '⚕️',
-    '문화여가': '🎬',
-    '월세': '🏠',
-    '기타': '📦',
-    '월급': '💰',
-    '부업': '💼',
-    '용돈': '💸',
-  };
-
-  String _emoji(String? category) => _categoryEmojis[category] ?? '📌';
-
   String _formatCurrency(num value) {
-    return '₩${value.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    )}';
+    return '₩${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
   }
 
   @override
@@ -65,24 +43,14 @@ class TransactionTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              // Category icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadii.md),
-                ),
-                child: Center(
-                  child: Text(
-                    _emoji(transaction.category),
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                ),
+              CategoryIconBadge(
+                category: transaction.category,
+                color: accent,
+                size: 48,
+                iconSize: 20,
+                borderRadius: AppRadii.md,
               ),
               const SizedBox(width: AppSpacing.md),
-
-              // Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +82,9 @@ class TransactionTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         transaction.memo!,
-                        style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -122,8 +92,6 @@ class TransactionTile extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Delete button
               if (onDelete != null) ...[
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(

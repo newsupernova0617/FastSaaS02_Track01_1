@@ -15,6 +15,8 @@ import 'package:flutter_app/features/stats/stats_page.dart';
 import 'package:flutter_app/features/reports/monthly_report_page.dart';
 import 'package:flutter_app/features/reports/report_detail_page.dart';
 import 'package:flutter_app/features/chat/screens/chat_screen.dart';
+import 'package:flutter_app/features/contact/contact_page.dart';
+import 'package:flutter_app/features/help/help_page.dart';
 import 'package:flutter_app/features/settings/settings_page.dart';
 
 // ============================================================
@@ -176,6 +178,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _fadeScale(key: state.pageKey, child: const MonthlyReportPage()),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const HelpPage()),
+      ),
+      GoRoute(
+        path: '/contact',
+        name: 'contact',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _fadeScale(key: state.pageKey, child: const ContactPage()),
       ),
 
       // Report detail

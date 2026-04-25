@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
+import 'package:flutter_app/shared/widgets/ai_loading_status.dart';
 
 class ChatInput extends StatefulWidget {
   final Function(String) onSend;
   final bool isLoading;
   final int maxLength;
+  final String? pendingPrompt;
 
   const ChatInput({
     super.key,
     required this.onSend,
     this.isLoading = false,
     this.maxLength = 500,
+    this.pendingPrompt,
   });
 
   @override
@@ -76,6 +79,10 @@ class _ChatInputState extends State<ChatInput> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.isLoading) ...[
+              AiLoadingStatus(prompt: widget.pendingPrompt, dense: true),
+              const SizedBox(height: AppSpacing.sm),
+            ],
             if (_charCount > widget.maxLength * 0.8)
               Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.md, bottom: 6),
@@ -195,7 +202,7 @@ class _SendButton extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Send message',
+      label: '메시지 보내기',
       child: GestureDetector(
         onTap: canSend ? onTap : null,
         child: AnimatedContainer(

@@ -262,6 +262,512 @@ abstract class _ReportSummary implements ReportSummary {
       throw _privateConstructorUsedError;
 }
 
+ReportBreakdownItem _$ReportBreakdownItemFromJson(Map<String, dynamic> json) {
+  return _ReportBreakdownItem.fromJson(json);
+}
+
+/// @nodoc
+mixin _$ReportBreakdownItem {
+  String get label => throw _privateConstructorUsedError;
+  num get amount => throw _privateConstructorUsedError;
+  num get ratio => throw _privateConstructorUsedError;
+
+  /// Serializes this ReportBreakdownItem to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of ReportBreakdownItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ReportBreakdownItemCopyWith<ReportBreakdownItem> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ReportBreakdownItemCopyWith<$Res> {
+  factory $ReportBreakdownItemCopyWith(
+    ReportBreakdownItem value,
+    $Res Function(ReportBreakdownItem) then,
+  ) = _$ReportBreakdownItemCopyWithImpl<$Res, ReportBreakdownItem>;
+  @useResult
+  $Res call({String label, num amount, num ratio});
+}
+
+/// @nodoc
+class _$ReportBreakdownItemCopyWithImpl<$Res, $Val extends ReportBreakdownItem>
+    implements $ReportBreakdownItemCopyWith<$Res> {
+  _$ReportBreakdownItemCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ReportBreakdownItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = null,
+    Object? amount = null,
+    Object? ratio = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            label: null == label
+                ? _value.label
+                : label // ignore: cast_nullable_to_non_nullable
+                      as String,
+            amount: null == amount
+                ? _value.amount
+                : amount // ignore: cast_nullable_to_non_nullable
+                      as num,
+            ratio: null == ratio
+                ? _value.ratio
+                : ratio // ignore: cast_nullable_to_non_nullable
+                      as num,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$ReportBreakdownItemImplCopyWith<$Res>
+    implements $ReportBreakdownItemCopyWith<$Res> {
+  factory _$$ReportBreakdownItemImplCopyWith(
+    _$ReportBreakdownItemImpl value,
+    $Res Function(_$ReportBreakdownItemImpl) then,
+  ) = __$$ReportBreakdownItemImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String label, num amount, num ratio});
+}
+
+/// @nodoc
+class __$$ReportBreakdownItemImplCopyWithImpl<$Res>
+    extends _$ReportBreakdownItemCopyWithImpl<$Res, _$ReportBreakdownItemImpl>
+    implements _$$ReportBreakdownItemImplCopyWith<$Res> {
+  __$$ReportBreakdownItemImplCopyWithImpl(
+    _$ReportBreakdownItemImpl _value,
+    $Res Function(_$ReportBreakdownItemImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of ReportBreakdownItem
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? label = null,
+    Object? amount = null,
+    Object? ratio = null,
+  }) {
+    return _then(
+      _$ReportBreakdownItemImpl(
+        label: null == label
+            ? _value.label
+            : label // ignore: cast_nullable_to_non_nullable
+                  as String,
+        amount: null == amount
+            ? _value.amount
+            : amount // ignore: cast_nullable_to_non_nullable
+                  as num,
+        ratio: null == ratio
+            ? _value.ratio
+            : ratio // ignore: cast_nullable_to_non_nullable
+                  as num,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ReportBreakdownItemImpl implements _ReportBreakdownItem {
+  const _$ReportBreakdownItemImpl({
+    required this.label,
+    required this.amount,
+    required this.ratio,
+  });
+
+  factory _$ReportBreakdownItemImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ReportBreakdownItemImplFromJson(json);
+
+  @override
+  final String label;
+  @override
+  final num amount;
+  @override
+  final num ratio;
+
+  @override
+  String toString() {
+    return 'ReportBreakdownItem(label: $label, amount: $amount, ratio: $ratio)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ReportBreakdownItemImpl &&
+            (identical(other.label, label) || other.label == label) &&
+            (identical(other.amount, amount) || other.amount == amount) &&
+            (identical(other.ratio, ratio) || other.ratio == ratio));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, label, amount, ratio);
+
+  /// Create a copy of ReportBreakdownItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ReportBreakdownItemImplCopyWith<_$ReportBreakdownItemImpl> get copyWith =>
+      __$$ReportBreakdownItemImplCopyWithImpl<_$ReportBreakdownItemImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ReportBreakdownItemImplToJson(this);
+  }
+}
+
+abstract class _ReportBreakdownItem implements ReportBreakdownItem {
+  const factory _ReportBreakdownItem({
+    required final String label,
+    required final num amount,
+    required final num ratio,
+  }) = _$ReportBreakdownItemImpl;
+
+  factory _ReportBreakdownItem.fromJson(Map<String, dynamic> json) =
+      _$ReportBreakdownItemImpl.fromJson;
+
+  @override
+  String get label;
+  @override
+  num get amount;
+  @override
+  num get ratio;
+
+  /// Create a copy of ReportBreakdownItem
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ReportBreakdownItemImplCopyWith<_$ReportBreakdownItemImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+ReportSummaryData _$ReportSummaryDataFromJson(Map<String, dynamic> json) {
+  return _ReportSummaryData.fromJson(json);
+}
+
+/// @nodoc
+mixin _$ReportSummaryData {
+  String get periodLabel => throw _privateConstructorUsedError;
+  num get totalExpense => throw _privateConstructorUsedError;
+  num get totalIncome => throw _privateConstructorUsedError;
+  num get netAmount => throw _privateConstructorUsedError;
+  num? get deltaPercent => throw _privateConstructorUsedError;
+  String? get insight => throw _privateConstructorUsedError;
+  List<ReportBreakdownItem> get breakdown => throw _privateConstructorUsedError;
+
+  /// Serializes this ReportSummaryData to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of ReportSummaryData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $ReportSummaryDataCopyWith<ReportSummaryData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ReportSummaryDataCopyWith<$Res> {
+  factory $ReportSummaryDataCopyWith(
+    ReportSummaryData value,
+    $Res Function(ReportSummaryData) then,
+  ) = _$ReportSummaryDataCopyWithImpl<$Res, ReportSummaryData>;
+  @useResult
+  $Res call({
+    String periodLabel,
+    num totalExpense,
+    num totalIncome,
+    num netAmount,
+    num? deltaPercent,
+    String? insight,
+    List<ReportBreakdownItem> breakdown,
+  });
+}
+
+/// @nodoc
+class _$ReportSummaryDataCopyWithImpl<$Res, $Val extends ReportSummaryData>
+    implements $ReportSummaryDataCopyWith<$Res> {
+  _$ReportSummaryDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of ReportSummaryData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? periodLabel = null,
+    Object? totalExpense = null,
+    Object? totalIncome = null,
+    Object? netAmount = null,
+    Object? deltaPercent = freezed,
+    Object? insight = freezed,
+    Object? breakdown = null,
+  }) {
+    return _then(
+      _value.copyWith(
+            periodLabel: null == periodLabel
+                ? _value.periodLabel
+                : periodLabel // ignore: cast_nullable_to_non_nullable
+                      as String,
+            totalExpense: null == totalExpense
+                ? _value.totalExpense
+                : totalExpense // ignore: cast_nullable_to_non_nullable
+                      as num,
+            totalIncome: null == totalIncome
+                ? _value.totalIncome
+                : totalIncome // ignore: cast_nullable_to_non_nullable
+                      as num,
+            netAmount: null == netAmount
+                ? _value.netAmount
+                : netAmount // ignore: cast_nullable_to_non_nullable
+                      as num,
+            deltaPercent: freezed == deltaPercent
+                ? _value.deltaPercent
+                : deltaPercent // ignore: cast_nullable_to_non_nullable
+                      as num?,
+            insight: freezed == insight
+                ? _value.insight
+                : insight // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            breakdown: null == breakdown
+                ? _value.breakdown
+                : breakdown // ignore: cast_nullable_to_non_nullable
+                      as List<ReportBreakdownItem>,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$ReportSummaryDataImplCopyWith<$Res>
+    implements $ReportSummaryDataCopyWith<$Res> {
+  factory _$$ReportSummaryDataImplCopyWith(
+    _$ReportSummaryDataImpl value,
+    $Res Function(_$ReportSummaryDataImpl) then,
+  ) = __$$ReportSummaryDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String periodLabel,
+    num totalExpense,
+    num totalIncome,
+    num netAmount,
+    num? deltaPercent,
+    String? insight,
+    List<ReportBreakdownItem> breakdown,
+  });
+}
+
+/// @nodoc
+class __$$ReportSummaryDataImplCopyWithImpl<$Res>
+    extends _$ReportSummaryDataCopyWithImpl<$Res, _$ReportSummaryDataImpl>
+    implements _$$ReportSummaryDataImplCopyWith<$Res> {
+  __$$ReportSummaryDataImplCopyWithImpl(
+    _$ReportSummaryDataImpl _value,
+    $Res Function(_$ReportSummaryDataImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of ReportSummaryData
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? periodLabel = null,
+    Object? totalExpense = null,
+    Object? totalIncome = null,
+    Object? netAmount = null,
+    Object? deltaPercent = freezed,
+    Object? insight = freezed,
+    Object? breakdown = null,
+  }) {
+    return _then(
+      _$ReportSummaryDataImpl(
+        periodLabel: null == periodLabel
+            ? _value.periodLabel
+            : periodLabel // ignore: cast_nullable_to_non_nullable
+                  as String,
+        totalExpense: null == totalExpense
+            ? _value.totalExpense
+            : totalExpense // ignore: cast_nullable_to_non_nullable
+                  as num,
+        totalIncome: null == totalIncome
+            ? _value.totalIncome
+            : totalIncome // ignore: cast_nullable_to_non_nullable
+                  as num,
+        netAmount: null == netAmount
+            ? _value.netAmount
+            : netAmount // ignore: cast_nullable_to_non_nullable
+                  as num,
+        deltaPercent: freezed == deltaPercent
+            ? _value.deltaPercent
+            : deltaPercent // ignore: cast_nullable_to_non_nullable
+                  as num?,
+        insight: freezed == insight
+            ? _value.insight
+            : insight // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        breakdown: null == breakdown
+            ? _value._breakdown
+            : breakdown // ignore: cast_nullable_to_non_nullable
+                  as List<ReportBreakdownItem>,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ReportSummaryDataImpl implements _ReportSummaryData {
+  const _$ReportSummaryDataImpl({
+    required this.periodLabel,
+    required this.totalExpense,
+    required this.totalIncome,
+    required this.netAmount,
+    this.deltaPercent,
+    this.insight,
+    required final List<ReportBreakdownItem> breakdown,
+  }) : _breakdown = breakdown;
+
+  factory _$ReportSummaryDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ReportSummaryDataImplFromJson(json);
+
+  @override
+  final String periodLabel;
+  @override
+  final num totalExpense;
+  @override
+  final num totalIncome;
+  @override
+  final num netAmount;
+  @override
+  final num? deltaPercent;
+  @override
+  final String? insight;
+  final List<ReportBreakdownItem> _breakdown;
+  @override
+  List<ReportBreakdownItem> get breakdown {
+    if (_breakdown is EqualUnmodifiableListView) return _breakdown;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_breakdown);
+  }
+
+  @override
+  String toString() {
+    return 'ReportSummaryData(periodLabel: $periodLabel, totalExpense: $totalExpense, totalIncome: $totalIncome, netAmount: $netAmount, deltaPercent: $deltaPercent, insight: $insight, breakdown: $breakdown)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ReportSummaryDataImpl &&
+            (identical(other.periodLabel, periodLabel) ||
+                other.periodLabel == periodLabel) &&
+            (identical(other.totalExpense, totalExpense) ||
+                other.totalExpense == totalExpense) &&
+            (identical(other.totalIncome, totalIncome) ||
+                other.totalIncome == totalIncome) &&
+            (identical(other.netAmount, netAmount) ||
+                other.netAmount == netAmount) &&
+            (identical(other.deltaPercent, deltaPercent) ||
+                other.deltaPercent == deltaPercent) &&
+            (identical(other.insight, insight) || other.insight == insight) &&
+            const DeepCollectionEquality().equals(
+              other._breakdown,
+              _breakdown,
+            ));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    periodLabel,
+    totalExpense,
+    totalIncome,
+    netAmount,
+    deltaPercent,
+    insight,
+    const DeepCollectionEquality().hash(_breakdown),
+  );
+
+  /// Create a copy of ReportSummaryData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ReportSummaryDataImplCopyWith<_$ReportSummaryDataImpl> get copyWith =>
+      __$$ReportSummaryDataImplCopyWithImpl<_$ReportSummaryDataImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ReportSummaryDataImplToJson(this);
+  }
+}
+
+abstract class _ReportSummaryData implements ReportSummaryData {
+  const factory _ReportSummaryData({
+    required final String periodLabel,
+    required final num totalExpense,
+    required final num totalIncome,
+    required final num netAmount,
+    final num? deltaPercent,
+    final String? insight,
+    required final List<ReportBreakdownItem> breakdown,
+  }) = _$ReportSummaryDataImpl;
+
+  factory _ReportSummaryData.fromJson(Map<String, dynamic> json) =
+      _$ReportSummaryDataImpl.fromJson;
+
+  @override
+  String get periodLabel;
+  @override
+  num get totalExpense;
+  @override
+  num get totalIncome;
+  @override
+  num get netAmount;
+  @override
+  num? get deltaPercent;
+  @override
+  String? get insight;
+  @override
+  List<ReportBreakdownItem> get breakdown;
+
+  /// Create a copy of ReportSummaryData
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$ReportSummaryDataImplCopyWith<_$ReportSummaryDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 ReportDetail _$ReportDetailFromJson(Map<String, dynamic> json) {
   return _ReportDetail.fromJson(json);
 }
@@ -272,6 +778,7 @@ mixin _$ReportDetail {
   String get reportType => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get subtitle => throw _privateConstructorUsedError;
+  ReportSummaryData? get summary => throw _privateConstructorUsedError;
   List<Map<String, dynamic>> get reportData =>
       throw _privateConstructorUsedError;
   Map<String, dynamic> get params => throw _privateConstructorUsedError;
@@ -299,10 +806,13 @@ abstract class $ReportDetailCopyWith<$Res> {
     String reportType,
     String title,
     String? subtitle,
+    ReportSummaryData? summary,
     List<Map<String, dynamic>> reportData,
     Map<String, dynamic> params,
     String createdAt,
   });
+
+  $ReportSummaryDataCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -324,6 +834,7 @@ class _$ReportDetailCopyWithImpl<$Res, $Val extends ReportDetail>
     Object? reportType = null,
     Object? title = null,
     Object? subtitle = freezed,
+    Object? summary = freezed,
     Object? reportData = null,
     Object? params = null,
     Object? createdAt = null,
@@ -346,6 +857,10 @@ class _$ReportDetailCopyWithImpl<$Res, $Val extends ReportDetail>
                 ? _value.subtitle
                 : subtitle // ignore: cast_nullable_to_non_nullable
                       as String?,
+            summary: freezed == summary
+                ? _value.summary
+                : summary // ignore: cast_nullable_to_non_nullable
+                      as ReportSummaryData?,
             reportData: null == reportData
                 ? _value.reportData
                 : reportData // ignore: cast_nullable_to_non_nullable
@@ -361,6 +876,20 @@ class _$ReportDetailCopyWithImpl<$Res, $Val extends ReportDetail>
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of ReportDetail
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ReportSummaryDataCopyWith<$Res>? get summary {
+    if (_value.summary == null) {
+      return null;
+    }
+
+    return $ReportSummaryDataCopyWith<$Res>(_value.summary!, (value) {
+      return _then(_value.copyWith(summary: value) as $Val);
+    });
   }
 }
 
@@ -378,10 +907,14 @@ abstract class _$$ReportDetailImplCopyWith<$Res>
     String reportType,
     String title,
     String? subtitle,
+    ReportSummaryData? summary,
     List<Map<String, dynamic>> reportData,
     Map<String, dynamic> params,
     String createdAt,
   });
+
+  @override
+  $ReportSummaryDataCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -402,6 +935,7 @@ class __$$ReportDetailImplCopyWithImpl<$Res>
     Object? reportType = null,
     Object? title = null,
     Object? subtitle = freezed,
+    Object? summary = freezed,
     Object? reportData = null,
     Object? params = null,
     Object? createdAt = null,
@@ -424,6 +958,10 @@ class __$$ReportDetailImplCopyWithImpl<$Res>
             ? _value.subtitle
             : subtitle // ignore: cast_nullable_to_non_nullable
                   as String?,
+        summary: freezed == summary
+            ? _value.summary
+            : summary // ignore: cast_nullable_to_non_nullable
+                  as ReportSummaryData?,
         reportData: null == reportData
             ? _value._reportData
             : reportData // ignore: cast_nullable_to_non_nullable
@@ -449,6 +987,7 @@ class _$ReportDetailImpl implements _ReportDetail {
     required this.reportType,
     required this.title,
     this.subtitle,
+    this.summary,
     required final List<Map<String, dynamic>> reportData,
     required final Map<String, dynamic> params,
     required this.createdAt,
@@ -466,6 +1005,8 @@ class _$ReportDetailImpl implements _ReportDetail {
   final String title;
   @override
   final String? subtitle;
+  @override
+  final ReportSummaryData? summary;
   final List<Map<String, dynamic>> _reportData;
   @override
   List<Map<String, dynamic>> get reportData {
@@ -487,7 +1028,7 @@ class _$ReportDetailImpl implements _ReportDetail {
 
   @override
   String toString() {
-    return 'ReportDetail(id: $id, reportType: $reportType, title: $title, subtitle: $subtitle, reportData: $reportData, params: $params, createdAt: $createdAt)';
+    return 'ReportDetail(id: $id, reportType: $reportType, title: $title, subtitle: $subtitle, summary: $summary, reportData: $reportData, params: $params, createdAt: $createdAt)';
   }
 
   @override
@@ -501,6 +1042,7 @@ class _$ReportDetailImpl implements _ReportDetail {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.subtitle, subtitle) ||
                 other.subtitle == subtitle) &&
+            (identical(other.summary, summary) || other.summary == summary) &&
             const DeepCollectionEquality().equals(
               other._reportData,
               _reportData,
@@ -518,6 +1060,7 @@ class _$ReportDetailImpl implements _ReportDetail {
     reportType,
     title,
     subtitle,
+    summary,
     const DeepCollectionEquality().hash(_reportData),
     const DeepCollectionEquality().hash(_params),
     createdAt,
@@ -543,6 +1086,7 @@ abstract class _ReportDetail implements ReportDetail {
     required final String reportType,
     required final String title,
     final String? subtitle,
+    final ReportSummaryData? summary,
     required final List<Map<String, dynamic>> reportData,
     required final Map<String, dynamic> params,
     required final String createdAt,
@@ -559,6 +1103,8 @@ abstract class _ReportDetail implements ReportDetail {
   String get title;
   @override
   String? get subtitle;
+  @override
+  ReportSummaryData? get summary;
   @override
   List<Map<String, dynamic>> get reportData;
   @override
@@ -583,6 +1129,7 @@ mixin _$Report {
   String get reportType => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get subtitle => throw _privateConstructorUsedError;
+  ReportSummaryData? get summary => throw _privateConstructorUsedError;
   List<Map<String, dynamic>> get reportData =>
       throw _privateConstructorUsedError;
   Map<String, dynamic> get params => throw _privateConstructorUsedError;
@@ -605,9 +1152,12 @@ abstract class $ReportCopyWith<$Res> {
     String reportType,
     String title,
     String? subtitle,
+    ReportSummaryData? summary,
     List<Map<String, dynamic>> reportData,
     Map<String, dynamic> params,
   });
+
+  $ReportSummaryDataCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -628,6 +1178,7 @@ class _$ReportCopyWithImpl<$Res, $Val extends Report>
     Object? reportType = null,
     Object? title = null,
     Object? subtitle = freezed,
+    Object? summary = freezed,
     Object? reportData = null,
     Object? params = null,
   }) {
@@ -645,6 +1196,10 @@ class _$ReportCopyWithImpl<$Res, $Val extends Report>
                 ? _value.subtitle
                 : subtitle // ignore: cast_nullable_to_non_nullable
                       as String?,
+            summary: freezed == summary
+                ? _value.summary
+                : summary // ignore: cast_nullable_to_non_nullable
+                      as ReportSummaryData?,
             reportData: null == reportData
                 ? _value.reportData
                 : reportData // ignore: cast_nullable_to_non_nullable
@@ -656,6 +1211,20 @@ class _$ReportCopyWithImpl<$Res, $Val extends Report>
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of Report
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ReportSummaryDataCopyWith<$Res>? get summary {
+    if (_value.summary == null) {
+      return null;
+    }
+
+    return $ReportSummaryDataCopyWith<$Res>(_value.summary!, (value) {
+      return _then(_value.copyWith(summary: value) as $Val);
+    });
   }
 }
 
@@ -671,9 +1240,13 @@ abstract class _$$ReportImplCopyWith<$Res> implements $ReportCopyWith<$Res> {
     String reportType,
     String title,
     String? subtitle,
+    ReportSummaryData? summary,
     List<Map<String, dynamic>> reportData,
     Map<String, dynamic> params,
   });
+
+  @override
+  $ReportSummaryDataCopyWith<$Res>? get summary;
 }
 
 /// @nodoc
@@ -693,6 +1266,7 @@ class __$$ReportImplCopyWithImpl<$Res>
     Object? reportType = null,
     Object? title = null,
     Object? subtitle = freezed,
+    Object? summary = freezed,
     Object? reportData = null,
     Object? params = null,
   }) {
@@ -710,6 +1284,10 @@ class __$$ReportImplCopyWithImpl<$Res>
             ? _value.subtitle
             : subtitle // ignore: cast_nullable_to_non_nullable
                   as String?,
+        summary: freezed == summary
+            ? _value.summary
+            : summary // ignore: cast_nullable_to_non_nullable
+                  as ReportSummaryData?,
         reportData: null == reportData
             ? _value._reportData
             : reportData // ignore: cast_nullable_to_non_nullable
@@ -730,6 +1308,7 @@ class _$ReportImpl implements _Report {
     required this.reportType,
     required this.title,
     this.subtitle,
+    this.summary,
     required final List<Map<String, dynamic>> reportData,
     required final Map<String, dynamic> params,
   }) : _reportData = reportData,
@@ -744,6 +1323,8 @@ class _$ReportImpl implements _Report {
   final String title;
   @override
   final String? subtitle;
+  @override
+  final ReportSummaryData? summary;
   final List<Map<String, dynamic>> _reportData;
   @override
   List<Map<String, dynamic>> get reportData {
@@ -762,7 +1343,7 @@ class _$ReportImpl implements _Report {
 
   @override
   String toString() {
-    return 'Report(reportType: $reportType, title: $title, subtitle: $subtitle, reportData: $reportData, params: $params)';
+    return 'Report(reportType: $reportType, title: $title, subtitle: $subtitle, summary: $summary, reportData: $reportData, params: $params)';
   }
 
   @override
@@ -775,6 +1356,7 @@ class _$ReportImpl implements _Report {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.subtitle, subtitle) ||
                 other.subtitle == subtitle) &&
+            (identical(other.summary, summary) || other.summary == summary) &&
             const DeepCollectionEquality().equals(
               other._reportData,
               _reportData,
@@ -789,6 +1371,7 @@ class _$ReportImpl implements _Report {
     reportType,
     title,
     subtitle,
+    summary,
     const DeepCollectionEquality().hash(_reportData),
     const DeepCollectionEquality().hash(_params),
   );
@@ -812,6 +1395,7 @@ abstract class _Report implements Report {
     required final String reportType,
     required final String title,
     final String? subtitle,
+    final ReportSummaryData? summary,
     required final List<Map<String, dynamic>> reportData,
     required final Map<String, dynamic> params,
   }) = _$ReportImpl;
@@ -824,6 +1408,8 @@ abstract class _Report implements Report {
   String get title;
   @override
   String? get subtitle;
+  @override
+  ReportSummaryData? get summary;
   @override
   List<Map<String, dynamic>> get reportData;
   @override

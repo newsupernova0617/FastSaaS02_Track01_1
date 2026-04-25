@@ -80,6 +80,7 @@ export const reports = sqliteTable('reports', {
     title: text('title').notNull(),
     subtitle: text('subtitle'),
     reportData: text('report_data').notNull(), // JSON string
+    summaryData: text('summary_data'), // JSON string for preview/home cards
     params: text('params').notNull(), // JSON string
     createdAt: text('created_at').default(sql`(datetime('now'))`),
     updatedAt: text('updated_at').default(sql`(datetime('now'))`),
@@ -111,6 +112,23 @@ export const waitlist = sqliteTable('waitlist', {
     email:     text('email').notNull().unique(),
     createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
+
+export const contactRequests = sqliteTable('contact_requests', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id').notNull().references(() => users.id),
+    type: text('type', {
+        enum: ['bug', 'feature', 'account', 'billing', 'other']
+    }).notNull(),
+    title: text('title').notNull(),
+    details: text('details').notNull(),
+    status: text('status', {
+        enum: ['new', 'in_progress', 'resolved']
+    }).notNull().default('new'),
+    metadata: text('metadata').notNull().default('{}'),
+    adminNote: text('admin_note'),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
 export interface TransactionSnapshot {
   type: 'income' | 'expense';
   amount: number;
@@ -131,10 +149,11 @@ export type ChatMessage = typeof chatMessages.$inferSelect;
 export type NewChatMessage = typeof chatMessages.$inferInsert;
 export type Report = Omit<
   typeof reports.$inferSelect,
-  'createdAt' | 'updatedAt'
+  'createdAt' | 'updatedAt' | 'summaryData'
 > & {
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
+  summaryData?: string | null;
 };
 export type NewReport = typeof reports.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -143,3 +162,5 @@ export type UserNote = typeof userNotes.$inferSelect;
 export type NewUserNote = typeof userNotes.$inferInsert;
 export type KnowledgeBaseItem = typeof knowledgeBase.$inferSelect;
 export type NewKnowledgeBaseItem = typeof knowledgeBase.$inferInsert;
+export type ContactRequest = typeof contactRequests.$inferSelect;
+export type NewContactRequest = typeof contactRequests.$inferInsert;

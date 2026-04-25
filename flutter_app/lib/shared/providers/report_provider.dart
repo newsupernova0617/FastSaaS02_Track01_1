@@ -45,6 +45,7 @@ final saveReportProvider = FutureProvider.family<int, Report>((
         ReportType.fromString(report.reportType) ?? ReportType.monthly_summary,
     title: report.title,
     subtitle: report.subtitle,
+    summaryData: report.summary?.toJson(),
     reportData: report.reportData,
     params: report.params,
   );

@@ -20,11 +20,11 @@ class AppConstants {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxdm5lcGVtcGxzZGtrYXdibWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE5MTQsImV4cCI6MjA5MDE1NzkxNH0.X_zFEwbdSwSWNkkhgGRGp_VnmiJvhXZG1D-h45FovTQ';
 
   // 앱 기본 정보
-  static const String appName = 'Mingun';
+  static const String appName = '머니메이트';
   static const String appVersion = '1.0.0';
 
   // API 타임아웃 설정 (초 단위)
-  static const int apiTimeoutSeconds = 30;    // 응답 대기 최대 시간
+  static const int apiTimeoutSeconds = 30; // 응답 대기 최대 시간
   static const int connectTimeoutSeconds = 10; // 연결 시도 최대 시간
 
   // API 엔드포인트 경로 (apiBaseUrl 뒤에 붙음)

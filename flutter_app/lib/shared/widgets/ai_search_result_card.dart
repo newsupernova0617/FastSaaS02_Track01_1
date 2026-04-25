@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
+import 'package:flutter_app/shared/widgets/category_icon_badge.dart';
 
 class AiSearchResultCard extends StatefulWidget {
   final List<Transaction> transactions;
@@ -43,6 +44,7 @@ class _AiSearchResultCardState extends State<AiSearchResultCard> {
         ? widget.transactions
         : widget.transactions.take(5).toList();
     final periodLabel = _text(summary['periodLabel']) ?? _monthLabel ?? '조회 기간';
+    // ignore: unused_local_variable
     final categoryLabel =
         _text(summary['categoryLabel']) ?? _categoryLabel ?? '전체';
     final insight = _text(summary['insight']) ?? _fallbackInsight(breakdown);
@@ -68,12 +70,13 @@ class _AiSearchResultCardState extends State<AiSearchResultCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.showHeader) ...[
-            _SearchQueryPill(
-              query: widget.query ?? '$periodLabel $categoryLabel',
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
+          // Legacy query pill kept for rollback/reference only.
+          // if (widget.showHeader) ...[
+          //   _SearchQueryPill(
+          //     query: widget.query ?? '$periodLabel $categoryLabel',
+          //   ),
+          //   const SizedBox(height: AppSpacing.md),
+          // ],
           Text(
             periodLabel,
             style: theme.textTheme.labelSmall?.copyWith(
@@ -241,6 +244,7 @@ class _BreakdownItem {
   const _BreakdownItem({required this.label, required this.amount});
 }
 
+// ignore: unused_element
 class _SearchQueryPill extends StatelessWidget {
   final String query;
 
@@ -360,7 +364,10 @@ class _SearchTransactionRow extends StatelessWidget {
         : transaction.category ?? '미분류';
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.55,
@@ -369,14 +376,14 @@ class _SearchTransactionRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isExpense
-                ? Icons.arrow_downward_rounded
-                : Icons.arrow_upward_rounded,
+          CategoryIconBadge(
+            category: transaction.category,
             color: color,
-            size: 16,
+            size: 28,
+            iconSize: 12,
+            circular: true,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,6 +394,7 @@ class _SearchTransactionRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -403,7 +411,10 @@ class _SearchTransactionRow extends StatelessWidget {
           ),
           Text(
             '${isExpense ? '-' : '+'}$amount원',
-            style: theme.textTheme.labelLarge?.copyWith(color: color),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

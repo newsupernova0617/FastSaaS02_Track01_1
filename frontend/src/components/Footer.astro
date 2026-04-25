@@ -8,11 +8,14 @@ const year = new Date().getFullYear();
     <div class="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
       <div>
         <p class="text-lg font-extrabold tracking-tight text-base-content">{site.brand}</p>
-        <p class="mt-1 text-sm text-base-content/50">말로 하는 가장 쉬운 가계부.</p>
-        <p class="mt-3 text-xs text-base-content/40">© {year} {site.brand}. All rights reserved.</p>
+        <p class="mt-1 text-sm text-base-content/50">말로 하는 가계부 서비스입니다.</p>
+        <p class="mt-3 text-xs text-base-content/40">© {year} {site.brand}. 모든 권리 보유.</p>
       </div>
 
       <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        <a href="/blog" class="font-medium text-base-content/70 transition hover:text-base-content">
+          블로그
+        </a>
         <a href="/privacy" class="font-medium text-base-content/70 transition hover:text-base-content">
           개인정보처리방침
         </a>

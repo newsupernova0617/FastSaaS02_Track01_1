@@ -35,6 +35,7 @@ const SaveReportSchema = z.object({
   title: z.string().min(1).max(200),
   subtitle: z.string().max(100).optional(),
   reportData: z.array(z.record(z.string(), z.unknown())),
+  summaryData: z.record(z.string(), z.unknown()).optional(),
   params: z.record(z.string(), z.unknown()),
 });
 
@@ -144,6 +145,7 @@ router.post('/generate', reportWriteRateLimit, async (c) => {
       title: report.title,
       subtitle: report.subtitle,
       reportData: JSON.stringify(report.sections),
+      summaryData: JSON.stringify(report.summary),
       params: paramsKey,
     }).returning().get();
 
@@ -223,6 +225,7 @@ router.get('/:id', async (c) => {
         title: report.title,
         subtitle: report.subtitle,
         reportData: JSON.parse(report.reportData),
+        summary: report.summaryData ? JSON.parse(report.summaryData) : null,
         params: JSON.parse(report.params),
         createdAt: report.createdAt,
       },

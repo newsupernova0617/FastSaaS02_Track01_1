@@ -22,7 +22,7 @@ class App extends StatelessWidget {
           final themeMode = ref.watch(themeModeProvider);
 
           return MaterialApp.router(
-            title: 'Mingun',
+            title: '머니메이트',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeMode,
@@ -30,9 +30,9 @@ class App extends StatelessWidget {
             builder: (context, child) {
               if (kIsWeb) {
                 return MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    viewInsets: MediaQuery.of(context).viewInsets,
-                  ),
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(viewInsets: MediaQuery.of(context).viewInsets),
                   child: child!,
                 );
               }

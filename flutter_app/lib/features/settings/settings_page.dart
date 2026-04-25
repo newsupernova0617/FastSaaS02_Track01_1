@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
-import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/ai_feature_provider.dart';
+import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/theme_provider.dart';
 import 'package:flutter_app/shared/widgets/glass_card.dart';
 
-// ============================================================
-// [설정 화면] settings_page.dart
-// 테마 모드 / 계정 / 앱 정보 관리.
-// ============================================================
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -29,27 +27,22 @@ class SettingsPage extends ConsumerWidget {
         children: [
           if (user != null) _buildAccountCard(theme, user),
           const SizedBox(height: AppSpacing.lg),
-
           _sectionTitle(theme, '디스플레이'),
           const SizedBox(height: AppSpacing.sm),
-          _buildThemeCard(context, ref, themeMode, theme),
+          _buildThemeCard(ref, themeMode, theme),
           const SizedBox(height: AppSpacing.lg),
-
           _sectionTitle(theme, 'AI 기능'),
           const SizedBox(height: AppSpacing.sm),
           _buildAiFeatureCard(ref, aiFeatureEnabled, theme),
           const SizedBox(height: AppSpacing.lg),
-
-          _sectionTitle(theme, 'UI 복구'),
+          _sectionTitle(theme, '복구'),
           const SizedBox(height: AppSpacing.sm),
           _buildRollbackInfoCard(theme),
           const SizedBox(height: AppSpacing.lg),
-
           _sectionTitle(theme, '정보'),
           const SizedBox(height: AppSpacing.sm),
           _buildInfoCard(context, theme),
           const SizedBox(height: AppSpacing.xl),
-
           _buildLogoutButton(context, ref),
         ],
       ),
@@ -155,8 +148,8 @@ class SettingsPage extends ConsumerWidget {
           Icons.auto_awesome_rounded,
           color: enabled ? AppColors.primary : theme.iconTheme.color,
         ),
-        title: const Text('새 AI 기능 UI 사용'),
-        subtitle: const Text('끄면 중앙 AI 버튼이 기존 채팅 화면으로 돌아갑니다.'),
+        title: const Text('실험적 AI 기능 UI 사용'),
+        subtitle: const Text('화면 중앙 AI 버튼과 확장 UI를 함께 사용합니다.'),
       ),
     );
   }
@@ -173,10 +166,10 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('랜딩 이전 UI 복원', style: theme.textTheme.titleMedium),
+                Text('이전 UI 복구', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(
-                  r'개발 환경에서 flutter_app\tool\restore_legacy_ui.ps1을 실행하면 보관된 legacy_ui 파일로 복원합니다.',
+                  r'개발 환경에서는 flutter_app\tool\restore_legacy_ui.ps1 실행으로 legacy_ui 기준 복구가 가능합니다.',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -187,12 +180,7 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemeCard(
-    BuildContext context,
-    WidgetRef ref,
-    ThemeMode current,
-    ThemeData theme,
-  ) {
+  Widget _buildThemeCard(WidgetRef ref, ThemeMode current, ThemeData theme) {
     final items = <({ThemeMode mode, String label, IconData icon})>[
       (mode: ThemeMode.system, label: '시스템 설정', icon: Icons.brightness_auto),
       (mode: ThemeMode.light, label: '라이트', icon: Icons.light_mode),
@@ -275,7 +263,7 @@ class SettingsPage extends ConsumerWidget {
             ),
             title: const Text('앱 버전'),
             trailing: Text(
-              '1.0.0',
+              AppConstants.appVersion,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
@@ -300,8 +288,44 @@ class SettingsPage extends ConsumerWidget {
             onTap: () {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(const SnackBar(content: Text('준비 중입니다')));
+              ).showSnackBar(const SnackBar(content: Text('준비 중입니다.')));
             },
+          ),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.help_outline_rounded,
+              color: theme.colorScheme.primary,
+            ),
+            title: const Text('도움말'),
+            subtitle: const Text('자주 묻는 질문과 사용 가이드를 확인합니다.'),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+            onTap: () => context.push('/help'),
+          ),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.mail_outline_rounded,
+              color: theme.colorScheme.primary,
+            ),
+            title: const Text('문의하기'),
+            subtitle: const Text('문제 제보, 기능 제안, 계정 문의를 접수합니다.'),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+            onTap: () => context.push('/contact'),
           ),
         ],
       ),

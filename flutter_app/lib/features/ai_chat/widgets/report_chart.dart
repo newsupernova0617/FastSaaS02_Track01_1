@@ -101,7 +101,7 @@ class ReportChart extends StatelessWidget {
       case 'line':
         return _buildLineChart(context, labels, values);
       default:
-        return Center(child: Text('Unknown chart type: $chartType'));
+        return Center(child: Text('알 수 없는 차트 형식: $chartType'));
     }
   }
 

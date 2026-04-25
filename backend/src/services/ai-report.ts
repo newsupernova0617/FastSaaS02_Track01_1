@@ -1,7 +1,23 @@
 import { eq, gte, lte, and, isNull } from 'drizzle-orm';
-import type { ReportPayload, Report } from '../types/ai';
+import type {
+  ReportPayload,
+  Report,
+  ReportSummaryData,
+  ReportBreakdownItem,
+} from '../types/ai';
 import { transactions } from '../db/schema';
 import { callLLM, type LLMConfig } from './llm';
+
+interface AggregatedTransactionData {
+  totalIncome: number;
+  totalExpense: number;
+  byCategory: Record<string, { income: number; expense: number }>;
+  transactionCount: number;
+  dateRange: string;
+  weekStart?: string;
+  weekEnd?: string;
+  month?: string;
+}
 
 export class AIReportService {
   private config: LLMConfig;
@@ -37,18 +53,24 @@ export class AIReportService {
       reportType,
       params
     );
+    const comparisonParams = this.getComparisonParams(reportType, params);
+    const comparisonData = comparisonParams
+      ? await this.aggregateTransactionData(db, userId, reportType, comparisonParams)
+      : null;
 
     // Generate report sections using AI
     const reportSections = await this.generateReportSections(
       reportType,
       transactionData
     );
+    const summary = this.buildSummary(reportType, params, transactionData, comparisonData);
 
     return {
       reportType,
       title: this.getReportTitle(reportType, params),
       subtitle: this.getReportSubtitle(reportType, params),
       sections: reportSections,
+      summary,
       generatedAt: new Date().toISOString(),
     };
   }
@@ -66,7 +88,7 @@ export class AIReportService {
     userId: string,
     reportType: string,
     params?: Record<string, unknown>
-  ): Promise<string> {
+  ): Promise<AggregatedTransactionData> {
     // Build query filters
     const filters = [eq(transactions.userId, userId), isNull(transactions.deletedAt)];
 
@@ -104,9 +126,14 @@ export class AIReportService {
       totalExpense: 0,
       byCategory: {} as Record<string, { income: number; expense: number }>,
       transactionCount: txns.length,
-      dateRange: params?.month || 'all time',
-      weekStart: params?.weekStart,
-      weekEnd: params?.weekEnd,
+      dateRange: params?.month
+        ? String(params.month)
+        : params?.weekStart && params?.weekEnd
+          ? `${params.weekStart} - ${params.weekEnd}`
+          : 'all time',
+      weekStart: params?.weekStart ? String(params.weekStart) : undefined,
+      weekEnd: params?.weekEnd ? String(params.weekEnd) : undefined,
+      month: params?.month ? String(params.month) : undefined,
     };
 
     txns.forEach((txn: any) => {
@@ -120,7 +147,7 @@ export class AIReportService {
       else aggregated.byCategory[txn.category].expense += txn.amount;
     });
 
-    return JSON.stringify(aggregated);
+    return aggregated;
   }
 
   /**
@@ -131,12 +158,13 @@ export class AIReportService {
    */
   private async generateReportSections(
     reportType: string,
-    transactionData: string
+    transactionData: AggregatedTransactionData
   ) {
+    const transactionDataText = JSON.stringify(transactionData);
     const prompt = `
 You are a financial report generator. Generate a detailed ${reportType} report based on this transaction data:
 
-${transactionData}
+${transactionDataText}
 
 CRITICAL REQUIREMENTS:
 1. Return ONLY and ALWAYS valid JSON in the "sections" object - NEVER explanations or reasoning
@@ -176,6 +204,122 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
     // Parse JSON from response
     const parsed = JSON.parse(responseText);
     return parsed.sections || [];
+  }
+
+  private buildSummary(
+    reportType: string,
+    params: Record<string, unknown> | undefined,
+    current: AggregatedTransactionData,
+    previous: AggregatedTransactionData | null,
+  ): ReportSummaryData {
+    const expenseBase = current.totalExpense > 0 ? current.totalExpense : current.totalIncome;
+    const breakdown = this.buildBreakdown(current.byCategory, expenseBase);
+    const deltaPercent = this.buildDeltaPercent(current, previous);
+    const insight = this.buildInsight(reportType, current, deltaPercent, breakdown);
+
+    return {
+      periodLabel: this.getSummaryPeriodLabel(reportType, params),
+      totalExpense: current.totalExpense,
+      totalIncome: current.totalIncome,
+      netAmount: current.totalIncome - current.totalExpense,
+      deltaPercent,
+      insight,
+      breakdown,
+    };
+  }
+
+  private buildBreakdown(
+    byCategory: AggregatedTransactionData['byCategory'],
+    baseAmount: number,
+  ): ReportBreakdownItem[] {
+    return Object.entries(byCategory)
+      .map(([label, value]) => ({ label, amount: value.expense }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 3)
+      .map((item) => ({
+        label: item.label,
+        amount: item.amount,
+        ratio: baseAmount > 0 ? Math.round((item.amount / baseAmount) * 100) : 0,
+      }));
+  }
+
+  private buildDeltaPercent(
+    current: AggregatedTransactionData,
+    previous: AggregatedTransactionData | null,
+  ): number | undefined {
+    const prevExpense = previous?.totalExpense ?? 0;
+    if (!previous || prevExpense <= 0) return undefined;
+    const delta = ((current.totalExpense - prevExpense) / prevExpense) * 100;
+    return Number.isFinite(delta) ? Number(delta.toFixed(1)) : undefined;
+  }
+
+  private buildInsight(
+    reportType: string,
+    current: AggregatedTransactionData,
+    deltaPercent: number | undefined,
+    breakdown: ReportBreakdownItem[],
+  ): string | undefined {
+    if (breakdown.length === 0 && current.totalExpense === 0 && current.totalIncome === 0) {
+      return '아직 분석할 거래가 충분하지 않습니다.';
+    }
+
+    const top = breakdown[0];
+    const periodLabel = reportType === 'weekly_summary' ? '이번 주' : '이번 달';
+
+    if (top && deltaPercent != null) {
+      const direction = deltaPercent >= 0 ? '늘었습니다' : '줄었습니다';
+      return `${periodLabel}은 ${top.label} 지출이 가장 컸고, 지난 기간보다 ${Math.abs(deltaPercent).toFixed(1)}% ${direction}.`;
+    }
+
+    if (top) {
+      return `${periodLabel}은 ${top.label} 지출이 가장 큰 비중을 차지합니다.`;
+    }
+
+    return undefined;
+  }
+
+  private getSummaryPeriodLabel(
+    reportType: string,
+    params?: Record<string, unknown>,
+  ): string {
+    if (reportType === 'weekly_summary' && params?.weekStart && params?.weekEnd) {
+      return `${params.weekStart} - ${params.weekEnd}`;
+    }
+    if (reportType === 'monthly_summary' && params?.month) {
+      return String(params.month);
+    }
+    return 'all time';
+  }
+
+  private getComparisonParams(
+    reportType: string,
+    params?: Record<string, unknown>,
+  ): Record<string, unknown> | null {
+    if (reportType === 'weekly_summary' && params?.weekStart && params?.weekEnd) {
+      const weekStart = new Date(String(params.weekStart));
+      const prevStart = new Date(weekStart);
+      prevStart.setDate(prevStart.getDate() - 7);
+      const prevEnd = new Date(weekStart);
+      prevEnd.setDate(prevEnd.getDate() - 1);
+      return {
+        weekStart: prevStart.toISOString().split('T')[0],
+        weekEnd: prevEnd.toISOString().split('T')[0],
+      };
+    }
+
+    if (reportType === 'monthly_summary' && params?.month) {
+      const [year, month] = String(params.month).split('-').map((value) => parseInt(value, 10));
+      if (Number.isFinite(year) && Number.isFinite(month)) {
+        const prevMonth = new Date(year, month - 1, 1);
+        prevMonth.setMonth(prevMonth.getMonth() - 1);
+        return {
+          month: `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`,
+        };
+      }
+    }
+
+    return null;
   }
 
   /**

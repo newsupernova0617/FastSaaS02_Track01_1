@@ -92,7 +92,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final name =
         (user?.userMetadata?['name'] as String?) ??
         user?.email?.split('@').first ??
-        'there';
+        '사용자';
 
     return Scaffold(
       extendBody: true,
@@ -828,11 +828,50 @@ class _ReportPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sections = report.reportData.take(2).toList();
+    final summary = report.summary;
     final createdAt = DateTime.tryParse(report.createdAt);
     final dateLabel = createdAt == null
         ? report.createdAt
         : DateFormat('yyyy.MM.dd', 'ko_KR').format(createdAt);
+    final periodLabel = summary?.periodLabel ?? dateLabel;
+    final currency = NumberFormat('#,###', 'ko_KR');
+
+    final metrics = summary == null
+        ? <Widget>[]
+        : [
+            SizedBox(
+              width: 112,
+              child: _SummaryMetricCard(
+                label: '총 지출',
+                value: '${currency.format(summary.totalExpense.round())}?',
+                emphasized: true,
+              ),
+            ),
+            SizedBox(
+              width: 112,
+              child: _SummaryMetricCard(
+                label: summary.totalIncome > 0 ? '총 수입' : '순자산',
+                value: summary.totalIncome > 0
+                    ? '${currency.format(summary.totalIncome.round())}?'
+                    : '${currency.format(summary.netAmount.round())}?',
+              ),
+            ),
+            SizedBox(
+              width: 112,
+              child: _SummaryMetricCard(
+                label: '전월 대비',
+                value: summary.deltaPercent == null
+                    ? '-'
+                    : '${summary.deltaPercent! >= 0 ? '+' : ''}${summary.deltaPercent!.toStringAsFixed(1)}%',
+                accentColor: summary.deltaPercent == null
+                    ? null
+                    : summary.deltaPercent! >= 0
+                    ? AppColors.expense
+                    : AppColors.income,
+              ),
+            ),
+          ];
+    final breakdownItems = summary?.breakdown.take(3).toList() ?? const [];
 
     return Container(
       width: double.infinity,
@@ -875,6 +914,30 @@ class _ReportPreviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
+                      ),
+                      child: Text(
+                        summary == null
+                            ? '리포트 미리보기'
+                            : (report.reportType == 'weekly_summary'
+                                  ? '주간 리포트'
+                                  : '월간 리포트'),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       report.title,
                       style: theme.textTheme.titleMedium,
@@ -891,21 +954,70 @@ class _ReportPreviewCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (summary != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        periodLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.45,
+                          ),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          if (sections.isNotEmpty) ...[
+          if (metrics.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            for (final section in sections)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: _ReportPreviewSection(section: section),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: metrics,
+            ),
+          ],
+          if (summary?.insight != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppRadii.md),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                ),
               ),
-          ] else ...[
+              child: Text(
+                'AI 요약  ${summary!.insight!}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+          if (breakdownItems.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            Text('아직 표시할 요약이 없습니다.', style: theme.textTheme.bodyMedium),
+            Text('상위 3개', style: theme.textTheme.labelLarge),
+            const SizedBox(height: AppSpacing.sm),
+            for (final item in breakdownItems)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                child: _SummaryBreakdownRow(
+                  label: item.label,
+                  amount: '${currency.format(item.amount.round())}?',
+                  ratio: '${item.ratio.toStringAsFixed(0)}%',
+                ),
+              ),
+          ],
+          if (summary == null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text('No preview data yet.', style: theme.textTheme.bodyMedium),
           ],
           const SizedBox(height: AppSpacing.xs),
           SizedBox(
@@ -922,83 +1034,104 @@ class _ReportPreviewCard extends StatelessWidget {
   }
 }
 
-class _ReportPreviewSection extends StatelessWidget {
-  final Map<String, dynamic> section;
+class _SummaryMetricCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool emphasized;
+  final Color? accentColor;
 
-  const _ReportPreviewSection({required this.section});
+  const _SummaryMetricCard({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+    this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = _readText(['title', 'label']) ?? '핵심 요약';
-    final value = _readText(['metric', 'value', 'amount']);
-    final body = _readText(['summary', 'description', 'content', 'text']);
-
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.55,
-        ),
+        color: emphasized
+            ? theme.colorScheme.primary.withValues(alpha: 0.10)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.check_circle_rounded,
-            size: 18,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.labelLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (value != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                if (body != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    body,
-                    style: theme.textTheme.bodySmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
+          Text(label, style: theme.textTheme.labelSmall),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color:
+                  accentColor ??
+                  (emphasized ? theme.colorScheme.primary : null),
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  String? _readText(List<String> keys) {
-    for (final key in keys) {
-      final value = section[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
-    }
-    return null;
+class _SummaryBreakdownRow extends StatelessWidget {
+  final String label;
+  final String amount;
+  final String ratio;
+
+  const _SummaryBreakdownRow({
+    required this.label,
+    required this.amount,
+    required this.ratio,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.42,
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            ratio,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            amount,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1073,12 +1206,12 @@ class _Greeting extends StatelessWidget {
     final theme = Theme.of(context);
     final hour = DateTime.now().hour;
     final greet = hour < 6
-        ? 'Late night'
+        ? '늦은 밤'
         : hour < 12
-        ? 'Good morning'
+        ? '좋은 아침'
         : hour < 18
-        ? 'Good afternoon'
-        : 'Good evening';
+        ? '좋은 오후'
+        : '좋은 저녁';
 
     return Row(
       children: [

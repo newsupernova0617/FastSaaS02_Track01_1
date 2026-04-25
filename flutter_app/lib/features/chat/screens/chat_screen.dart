@@ -27,6 +27,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isSending = false;
+  String? _pendingPrompt;
   final List<types.Message> _optimistic = [];
 
   Future<void> _createNewSession() async {
@@ -105,6 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     setState(() {
       _optimistic.insert(0, optimistic);
       _isSending = true;
+      _pendingPrompt = text;
     });
 
     try {
@@ -113,6 +115,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref.invalidate(chatMessagesProvider(sessionId));
       setState(() {
         _optimistic.remove(optimistic);
+        _pendingPrompt = null;
       });
     } catch (e) {
       if (mounted) {
@@ -121,11 +124,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ).showSnackBar(SnackBar(content: Text('전송 실패: $e')));
         setState(() {
           _optimistic.remove(optimistic);
+          _pendingPrompt = null;
         });
       }
     } finally {
       if (mounted) {
-        setState(() => _isSending = false);
+        setState(() {
+          _isSending = false;
+          _pendingPrompt = null;
+        });
       }
     }
   }
@@ -263,6 +270,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     // + gradient 전송 버튼 + haptic. flutter_chat_ui 기본 입력창 대체.
                     customBottomWidget: ChatInput(
                       isLoading: _isSending,
+                      pendingPrompt: _pendingPrompt,
                       onSend: (text) => _handleSend(
                         types.PartialText(text: text),
                         activeSessionId,

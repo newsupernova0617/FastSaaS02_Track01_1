@@ -22,10 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 로거 초기화 — debug 이상 레벨 로그 출력, 민감정보(토큰 등) 마스킹
-  Logger.init(
-    minLogLevel: LogLevel.debug,
-    maskSensitiveData: true,
-  );
+  Logger.init(minLogLevel: LogLevel.debug, maskSensitiveData: true);
 
   // .env 파일에서 API URL, Supabase 키 등 환경변수 로드
   await dotenv.load(fileName: '.env');
@@ -66,7 +63,7 @@ void main() async {
           await ForegroundServiceManager.hasNotificationPermission();
       if (granted) {
         await ForegroundServiceManager.startForegroundService(
-          title: 'FastSaaS 가계부',
+          title: '머니메이트',
           body: '알림을 눌러 거래를 바로 입력하세요\n예) 점심 8000원 / 교통비 1250원',
         );
       } else {

@@ -1,0 +1,126 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Footer from '../../components/Footer.astro';
+
+const categoryLabels = {
+  'money-basics': '돈 관리 기초',
+  'life-stages': '상황별 가이드',
+  'saving-tips': '절약 실전',
+  'app-guides': '앱 사용 가이드',
+} as const;
+
+const posts = (await getCollection('blog'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+
+const featuredPosts = posts.filter((post) => post.data.featured);
+const origin = Astro.site?.toString() ?? 'https://fastsaas.pages.dev';
+const blogUrl = new URL('/blog/', origin).toString();
+const itemList = posts.map((post, index) => ({
+  '@context': 'https://schema.org',
+  '@type': 'ListItem',
+  position: index + 1,
+  url: new URL(`/blog/${post.data.slug}/`, origin).toString(),
+  name: post.data.title,
+}));
+---
+
+<BaseLayout
+  title="블로그"
+  description="가계부와 돈 관리에 대한 실용적인 가이드를 정리한 블로그입니다."
+  ogImage="/og-default.svg"
+  structuredData={[
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'FastSaaS 블로그',
+      url: blogUrl,
+      description: '가계부와 돈 관리에 대한 실용적인 가이드를 정리한 블로그입니다.',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: itemList,
+    },
+  ]}
+>
+  <main class="bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_38%),linear-gradient(to_bottom,_#ffffff,_#f7f7f8)]">
+    <section class="mx-auto max-w-6xl px-6 pb-10 pt-20">
+      <div class="max-w-3xl reveal">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary/70">Blog</p>
+        <h1 class="mt-4 text-4xl font-black text-base-content sm:text-5xl">
+          가계부와 돈 관리를 더 쉽게 만드는 글
+        </h1>
+        <p class="mt-5 text-lg leading-8 text-base-content/70">
+          가계부 작성법, 예산 관리, 절약 습관, 앱 선택 기준까지 실제로 도움이 되는 내용만 정리합니다.
+        </p>
+      </div>
+    </section>
+
+    {featuredPosts.length > 0 && (
+      <section class="mx-auto max-w-6xl px-6 pb-8">
+        <div class="mb-5 flex items-center justify-between">
+          <h2 class="text-2xl font-extrabold text-base-content">추천 글</h2>
+          <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            Featured
+          </span>
+        </div>
+        <div class="grid gap-5 md:grid-cols-2">
+          {featuredPosts.map((post) => (
+            <a
+              href={`/blog/${post.data.slug}/`}
+              class="group rounded-[28px] border border-base-300 bg-white p-7 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl"
+            >
+              <div class="flex items-center gap-3 text-xs font-semibold text-base-content/50">
+                <span class="rounded-full bg-secondary/10 px-3 py-1 text-secondary">
+                  {categoryLabels[post.data.category]}
+                </span>
+                <span>{post.data.publishDate.toLocaleDateString('ko-KR')}</span>
+              </div>
+              <h3 class="mt-4 text-2xl font-black leading-tight text-base-content transition group-hover:text-primary">
+                {post.data.title}
+              </h3>
+              <p class="mt-4 text-sm leading-7 text-base-content/70">{post.data.excerpt}</p>
+              <div class="mt-6 flex flex-wrap gap-2">
+                {post.data.tags.slice(0, 3).map((tag) => (
+                  <span class="rounded-full bg-base-200 px-3 py-1 text-xs font-medium text-base-content/65">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="mx-auto max-w-6xl px-6 pb-24 pt-8">
+      <div class="mb-5 flex items-center justify-between">
+        <h2 class="text-2xl font-extrabold text-base-content">전체 글</h2>
+        <span class="text-sm text-base-content/50">{posts.length} posts</span>
+      </div>
+      <div class="grid gap-4">
+        {posts.map((post) => (
+          <a
+            href={`/blog/${post.data.slug}/`}
+            class="group rounded-[24px] border border-base-300 bg-white/90 p-6 transition duration-200 hover:border-primary/20 hover:bg-white hover:shadow-lg"
+          >
+            <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-base-content/50">
+              <span class="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                {categoryLabels[post.data.category]}
+              </span>
+              <span>{post.data.publishDate.toLocaleDateString('ko-KR')}</span>
+              <span>{post.data.readingTime ?? 5}분 읽기</span>
+            </div>
+            <h3 class="mt-3 text-xl font-extrabold text-base-content transition group-hover:text-primary">
+              {post.data.title}
+            </h3>
+            <p class="mt-3 text-sm leading-7 text-base-content/70">{post.data.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

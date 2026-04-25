@@ -140,20 +140,23 @@ class ApiClient {
     required ReportType reportType,
     required String title,
     String? subtitle,
+    Map<String, dynamic>? summaryData,
     required List<Map<String, dynamic>> reportData,
     required Map<String, dynamic> params,
   }) async {
     try {
-      final response = await _dio.post(
-        '/reports',
-        data: {
-          'reportType': reportType.name,
-          'title': title,
-          'subtitle': subtitle,
-          'reportData': reportData,
-          'params': params,
-        },
-      );
+      final data = <String, dynamic>{
+        'reportType': reportType.name,
+        'title': title,
+        'subtitle': subtitle,
+        'reportData': reportData,
+        'params': params,
+      };
+      if (summaryData != null) {
+        data['summaryData'] = summaryData;
+      }
+
+      final response = await _dio.post('/reports', data: data);
 
       if (response.statusCode == 201) {
         return response.data['id'] as int;
@@ -419,6 +422,36 @@ class ApiClient {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AiActionResponse.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<int> submitContactRequest({
+    required String type,
+    required String title,
+    required String details,
+    required Map<String, dynamic> metadata,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/contact-requests',
+        data: {
+          'type': type,
+          'title': title,
+          'details': details,
+          'metadata': metadata,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        final request = response.data['request'] as Map<String, dynamic>;
+        return request['id'] as int;
       }
       throw DioException(
         requestOptions: response.requestOptions,

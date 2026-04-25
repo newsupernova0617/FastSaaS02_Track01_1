@@ -500,6 +500,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
           title: report.title,
           subtitle: report.subtitle,
           reportData: JSON.stringify(report.sections),
+          summaryData: JSON.stringify(report.summary),
           params: JSON.stringify(reportPayload.params || {}),
         }).returning().get();
 
