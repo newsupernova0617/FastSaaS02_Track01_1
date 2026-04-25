@@ -1,0 +1,19 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = '핵심 요약' } = Astro.props;
+---
+
+<section class="my-8 rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,_rgba(37,99,235,0.08),_rgba(255,255,255,0.98))] px-5 py-6 shadow-sm sm:px-7">
+  <div class="mb-4 flex items-center gap-3">
+    <span class="inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-white">
+      {title}
+    </span>
+    <div class="h-px flex-1 bg-slate-200"></div>
+  </div>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <slot />
+  </div>
+</section>

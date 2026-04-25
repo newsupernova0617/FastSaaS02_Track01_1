@@ -1,0 +1,32 @@
+---
+interface Item {
+  text: string;
+}
+
+interface Props {
+  title?: string;
+  items: Item[] | string[];
+}
+
+const { title = '체크리스트', items } = Astro.props;
+const normalizedItems = items.map((item) => (typeof item === 'string' ? item : item.text));
+---
+
+<section class="my-8 rounded-[28px] border border-slate-200 bg-white px-5 py-6 shadow-sm sm:px-7">
+  <div class="mb-4 flex items-center gap-3">
+    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-content">
+      ✓
+    </span>
+    <h3 class="text-xl font-black tracking-tight text-slate-900">{title}</h3>
+  </div>
+  <ul class="space-y-3">
+    {normalizedItems.map((item) => (
+      <li class="flex gap-3 rounded-[18px] bg-slate-50 px-4 py-3 text-[1rem] leading-7 text-slate-700">
+        <span class="mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-100 text-[0.75rem] font-black text-emerald-700">
+          ✓
+        </span>
+        <span>{item}</span>
+      </li>
+    ))}
+  </ul>
+</section>

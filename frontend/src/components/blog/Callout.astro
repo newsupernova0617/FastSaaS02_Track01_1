@@ -1,0 +1,38 @@
+---
+interface Props {
+  title?: string;
+  tone?: 'info' | 'tip' | 'warning';
+}
+
+const { title, tone = 'info' } = Astro.props;
+
+const toneStyles = {
+  info: {
+    wrap: 'border-blue-200 bg-blue-50/80',
+    badge: 'bg-blue-600 text-white',
+  },
+  tip: {
+    wrap: 'border-emerald-200 bg-emerald-50/80',
+    badge: 'bg-emerald-600 text-white',
+  },
+  warning: {
+    wrap: 'border-amber-200 bg-amber-50/90',
+    badge: 'bg-amber-500 text-white',
+  },
+} as const;
+
+const styles = toneStyles[tone];
+---
+
+<aside class={`my-8 rounded-[24px] border px-5 py-5 sm:px-6 ${styles.wrap}`}>
+  {title && (
+    <div class="mb-3">
+      <span class={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold tracking-[0.18em] uppercase ${styles.badge}`}>
+        {title}
+      </span>
+    </div>
+  )}
+  <div class="text-[1rem] leading-8 text-slate-700">
+    <slot />
+  </div>
+</aside>
