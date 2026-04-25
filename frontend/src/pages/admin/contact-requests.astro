@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const apiBase =
   import.meta.env.PUBLIC_API_BASE_URL ??
-  'https://backend.fastsaas2.workers.dev/api';
+  'https://backend.fastsaas2.workers.dev/admin-api';
 ---
 
 <BaseLayout
@@ -111,13 +111,13 @@ const apiBase =
       requestList.innerHTML = '';
 
       try {
-        const response = await fetch(`${apiBase}/contact-requests/admin?${params.toString()}`, {
+        const response = await fetch(`${apiBase}/contact-requests?${params.toString()}`, {
           headers: {
             'x-admin-password': password,
           },
         });
 
-        const data = await response.json();
+        const data = await parseResponse(response);
         if (!response.ok) {
           throw new Error(data.error ?? 'Failed to fetch contact requests');
         }
@@ -198,7 +198,7 @@ const apiBase =
           button.disabled = true;
           button.textContent = '저장 중...';
           try {
-            const response = await fetch(`${apiBase}/contact-requests/admin/${id}`, {
+            const response = await fetch(`${apiBase}/contact-requests/${id}`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ const apiBase =
               body: JSON.stringify({ status, adminNote }),
             });
 
-            const data = await response.json();
+            const data = await parseResponse(response);
             if (!response.ok) {
               throw new Error(data.error ?? 'Failed to update contact request');
             }
@@ -230,6 +230,17 @@ const apiBase =
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
+    }
+
+    async function parseResponse(response) {
+      const text = await response.text();
+      if (!text) return {};
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { error: text };
+      }
     }
 
     loadBtn.addEventListener('click', loadRequests);
