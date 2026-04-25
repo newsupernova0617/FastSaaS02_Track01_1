@@ -8,7 +8,7 @@ export type Env = {
     TURSO_AUTH_TOKEN: string;
     SUPABASE_JWT_SECRET: string;
     SUPABASE_URL: string;
-    ADMIN_USER_IDS?: string;
+    ADMIN_DASHBOARD_PASSWORD?: string;
     // GROQ_API_KEY: string;
     // GROQ_MODEL_NAME?: string;
     GEMINI_API_KEY?: string;

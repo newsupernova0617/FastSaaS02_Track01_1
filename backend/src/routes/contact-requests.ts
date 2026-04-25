@@ -23,21 +23,11 @@ const UpdateContactRequestSchema = z.object({
   adminNote: z.string().max(2000).optional(),
 });
 
-function isAdminUser(c: { env: Env; get: (key: 'userId') => string }) {
-  const userId = c.get('userId');
-  if (
-    (c.env.ENVIRONMENT === 'development' || !c.env.ENVIRONMENT) &&
-    userId === 'e2e-test-admin'
-  ) {
-    return true;
-  }
-
-  const adminIds = (c.env.ADMIN_USER_IDS ?? '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return adminIds.includes(userId);
+function isAdminPasswordValid(c: { env: Env; req: { header: (name: string) => string | undefined } }) {
+  const configuredPassword = c.env.ADMIN_DASHBOARD_PASSWORD;
+  if (!configuredPassword) return false;
+  const providedPassword = c.req.header('x-admin-password');
+  return Boolean(providedPassword && providedPassword === configuredPassword);
 }
 
 router.post('/', async (c) => {
@@ -110,7 +100,7 @@ router.get('/me', async (c) => {
 });
 
 router.get('/admin', async (c) => {
-  if (!isAdminUser(c)) {
+  if (!isAdminPasswordValid(c)) {
     return c.json({ success: false, error: 'Forbidden' }, 403);
   }
 
@@ -157,7 +147,7 @@ router.get('/admin', async (c) => {
 });
 
 router.patch('/admin/:id', async (c) => {
-  if (!isAdminUser(c)) {
+  if (!isAdminPasswordValid(c)) {
     return c.json({ success: false, error: 'Forbidden' }, 403);
   }
 

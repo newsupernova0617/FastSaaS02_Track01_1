@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
@@ -19,6 +20,7 @@ class ContactPage extends ConsumerStatefulWidget {
 class _ContactPageState extends ConsumerState<ContactPage> {
   ContactType _type = ContactType.bug;
   String _reproducible = '항상 재현됨';
+  bool _isSubmitting = false;
 
   final _titleController = TextEditingController();
   final _detailsController = TextEditingController();
@@ -149,9 +151,15 @@ class _ContactPageState extends ConsumerState<ContactPage> {
           SizedBox(
             height: 52,
             child: ElevatedButton.icon(
-              onPressed: _submit,
-              icon: const Icon(Icons.send_rounded),
-              label: const Text('문의 접수 준비'),
+              onPressed: _isSubmitting ? null : _submit,
+              icon: _isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_rounded),
+              label: Text(_isSubmitting ? '접수 중...' : '문의 접수하기'),
             ),
           ),
         ],
@@ -304,7 +312,7 @@ class _ContactPageState extends ConsumerState<ContactPage> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_titleController.text.trim().isEmpty ||
         _detailsController.text.trim().isEmpty) {
       ScaffoldMessenger.of(
@@ -313,13 +321,72 @@ class _ContactPageState extends ConsumerState<ContactPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${_labelFor(_type)} 문의 형식이 준비되었습니다. 전송 연동은 다음 단계에서 연결하면 됩니다.',
-        ),
-      ),
-    );
+    final metadata = <String, dynamic>{
+      'appVersion': AppConstants.appVersion,
+      'platform': _platformLabel(),
+      'currentScreen': '문의하기',
+      'accountEmail': ref.read(currentUserProvider)?.email,
+      if (_type == ContactType.bug) ...{
+        'screen': _screenController.text.trim(),
+        'reproducible': _reproducible,
+        'expected': _expectedController.text.trim(),
+        'actual': _actualController.text.trim(),
+      },
+      if (_type == ContactType.feature) ...{
+        'situation': _situationController.text.trim(),
+        'effect': _effectController.text.trim(),
+      },
+      if (_type == ContactType.account) ...{
+        'issueTime': _timeController.text.trim(),
+        'loginMethod': _loginMethodController.text.trim(),
+      },
+      if (_type == ContactType.billing) ...{
+        'billingType': _billingTypeController.text.trim(),
+        'issueTime': _timeController.text.trim(),
+      },
+    };
+
+    setState(() => _isSubmitting = true);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final id = await apiClient.submitContactRequest(
+        type: _type.name,
+        title: _titleController.text.trim(),
+        details: _detailsController.text.trim(),
+        metadata: metadata,
+      );
+
+      if (!mounted) return;
+
+      _titleController.clear();
+      _detailsController.clear();
+      _screenController.clear();
+      _expectedController.clear();
+      _actualController.clear();
+      _situationController.clear();
+      _effectController.clear();
+      _timeController.clear();
+      _loginMethodController.clear();
+      _billingTypeController.clear();
+
+      setState(() {
+        _type = ContactType.bug;
+        _reproducible = '항상 재현됨';
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('문의가 접수되었습니다. 접수 번호: #$id')));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('문의 접수에 실패했습니다: $error')));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 }
 

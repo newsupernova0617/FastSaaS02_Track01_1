@@ -1,0 +1,237 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const apiBase =
+  import.meta.env.PUBLIC_API_BASE_URL ??
+  'http://localhost:8787/api';
+---
+
+<BaseLayout
+  title="문의 관리자"
+  description="머니메이트 문의 목록을 확인하고 상태를 관리합니다."
+  noindex={true}
+>
+  <main class="mx-auto max-w-6xl px-6 py-14">
+    <div class="mb-8 flex flex-col gap-3">
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Admin</p>
+      <h1 class="text-3xl font-black tracking-tight text-base-content">문의 관리자</h1>
+      <p class="max-w-3xl text-sm text-base-content/65">
+        관리자 비밀번호를 입력한 뒤 문의 목록을 조회하고 상태와 메모를 변경할 수 있습니다.
+      </p>
+    </div>
+
+    <section class="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside class="rounded-[1.5rem] border border-base-300 bg-base-100 p-5 shadow-sm">
+        <div class="space-y-4">
+          <div>
+            <label for="apiBase" class="mb-2 block text-sm font-semibold text-base-content/80">
+              API Base
+            </label>
+            <input
+              id="apiBase"
+              class="input input-bordered w-full"
+              value={apiBase}
+              autocomplete="off"
+            />
+          </div>
+          <div>
+            <label for="adminPassword" class="mb-2 block text-sm font-semibold text-base-content/80">
+              Admin Password
+            </label>
+            <input
+              id="adminPassword"
+              type="password"
+              class="input input-bordered w-full"
+              placeholder="관리자 비밀번호"
+            />
+          </div>
+          <div>
+            <label for="statusFilter" class="mb-2 block text-sm font-semibold text-base-content/80">
+              상태 필터
+            </label>
+            <select id="statusFilter" class="select select-bordered w-full">
+              <option value="">전체</option>
+              <option value="new">new</option>
+              <option value="in_progress">in_progress</option>
+              <option value="resolved">resolved</option>
+            </select>
+          </div>
+          <div>
+            <label for="typeFilter" class="mb-2 block text-sm font-semibold text-base-content/80">
+              유형 필터
+            </label>
+            <select id="typeFilter" class="select select-bordered w-full">
+              <option value="">전체</option>
+              <option value="bug">bug</option>
+              <option value="feature">feature</option>
+              <option value="account">account</option>
+              <option value="billing">billing</option>
+              <option value="other">other</option>
+            </select>
+          </div>
+          <button id="loadBtn" class="btn btn-primary w-full">문의 불러오기</button>
+          <p id="statusMessage" class="text-sm text-base-content/60"></p>
+        </div>
+      </aside>
+
+      <section class="space-y-4">
+        <div id="listSummary" class="text-sm text-base-content/60">아직 불러온 문의가 없습니다.</div>
+        <div id="requestList" class="space-y-4"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module">
+    const apiBaseInput = document.querySelector('#apiBase');
+    const passwordInput = document.querySelector('#adminPassword');
+    const statusFilter = document.querySelector('#statusFilter');
+    const typeFilter = document.querySelector('#typeFilter');
+    const loadBtn = document.querySelector('#loadBtn');
+    const listSummary = document.querySelector('#listSummary');
+    const requestList = document.querySelector('#requestList');
+    const statusMessage = document.querySelector('#statusMessage');
+
+    const savedPassword = localStorage.getItem('adminContactPassword');
+    if (savedPassword) passwordInput.value = savedPassword;
+
+    async function loadRequests() {
+      const password = passwordInput.value.trim();
+      const apiBase = apiBaseInput.value.trim().replace(/\/$/, '');
+      const params = new URLSearchParams();
+      if (statusFilter.value) params.set('status', statusFilter.value);
+      if (typeFilter.value) params.set('type', typeFilter.value);
+
+      if (!password) {
+        statusMessage.textContent = '관리자 비밀번호를 입력해 주세요.';
+        return;
+      }
+
+      localStorage.setItem('adminContactPassword', password);
+      statusMessage.textContent = '불러오는 중...';
+      requestList.innerHTML = '';
+
+      try {
+        const response = await fetch(`${apiBase}/contact-requests/admin?${params.toString()}`, {
+          headers: {
+            'x-admin-password': password,
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error ?? 'Failed to fetch contact requests');
+        }
+
+        renderRequests(data.requests ?? [], apiBase, password);
+        statusMessage.textContent = '목록을 불러왔습니다.';
+      } catch (error) {
+        listSummary.textContent = '문의 목록을 불러오지 못했습니다.';
+        statusMessage.textContent = error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    function renderRequests(items, apiBase, password) {
+      listSummary.textContent = `총 ${items.length}개의 문의`;
+      requestList.innerHTML = '';
+
+      if (items.length === 0) {
+        requestList.innerHTML = `
+          <div class="rounded-[1.25rem] border border-base-300 bg-base-100 p-6 text-sm text-base-content/60 shadow-sm">
+            조건에 맞는 문의가 없습니다.
+          </div>
+        `;
+        return;
+      }
+
+      for (const item of items) {
+        const card = document.createElement('article');
+        card.className = 'rounded-[1.5rem] border border-base-300 bg-base-100 p-5 shadow-sm';
+        const metadata = item.metadata ?? {};
+
+        card.innerHTML = `
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="mb-2 flex flex-wrap gap-2">
+                  <span class="badge badge-outline">${item.type}</span>
+                  <span class="badge badge-primary badge-outline">${item.status}</span>
+                </div>
+                <h2 class="text-lg font-bold text-base-content">${escapeHtml(item.title)}</h2>
+                <p class="mt-1 text-sm text-base-content/60">
+                  ${escapeHtml(item.userName || item.userEmail || item.userId || 'unknown user')} · ${escapeHtml(item.createdAt || '')}
+                </p>
+              </div>
+            </div>
+            <p class="whitespace-pre-wrap text-sm leading-6 text-base-content/80">${escapeHtml(item.details)}</p>
+            <div class="rounded-2xl bg-base-200/70 p-4 text-sm">
+              <p class="mb-2 font-semibold text-base-content/75">자동 첨부 정보</p>
+              <div class="grid gap-2 md:grid-cols-2">
+                ${Object.entries(metadata).map(([key, value]) => `
+                  <div class="rounded-xl bg-base-100 px-3 py-2">
+                    <div class="text-xs uppercase tracking-wide text-base-content/45">${escapeHtml(key)}</div>
+                    <div class="mt-1 text-sm text-base-content/80">${escapeHtml(String(value ?? ''))}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <div class="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)_120px]">
+              <select class="select select-bordered request-status" data-id="${item.id}">
+                <option value="new" ${item.status === 'new' ? 'selected' : ''}>new</option>
+                <option value="in_progress" ${item.status === 'in_progress' ? 'selected' : ''}>in_progress</option>
+                <option value="resolved" ${item.status === 'resolved' ? 'selected' : ''}>resolved</option>
+              </select>
+              <textarea class="textarea textarea-bordered request-note" data-id="${item.id}" placeholder="관리자 메모">${escapeHtml(item.adminNote ?? '')}</textarea>
+              <button class="btn btn-outline save-request" data-id="${item.id}">저장</button>
+            </div>
+          </div>
+        `;
+
+        requestList.appendChild(card);
+      }
+
+      requestList.querySelectorAll('.save-request').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const id = button.dataset.id;
+          const status = requestList.querySelector(`.request-status[data-id="${id}"]`)?.value;
+          const adminNote = requestList.querySelector(`.request-note[data-id="${id}"]`)?.value ?? '';
+
+          button.disabled = true;
+          button.textContent = '저장 중...';
+          try {
+            const response = await fetch(`${apiBase}/contact-requests/admin/${id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-admin-password': password,
+              },
+              body: JSON.stringify({ status, adminNote }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error ?? 'Failed to update contact request');
+            }
+
+            statusMessage.textContent = `#${id} 문의를 저장했습니다.`;
+          } catch (error) {
+            statusMessage.textContent = error instanceof Error ? error.message : String(error);
+          } finally {
+            button.disabled = false;
+            button.textContent = '저장';
+          }
+        });
+      });
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    loadBtn.addEventListener('click', loadRequests);
+  </script>
+</BaseLayout>
