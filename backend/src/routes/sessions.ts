@@ -27,10 +27,11 @@ import type { Variables } from '../middleware/auth';
 import { createRateLimiter } from '../middleware/rateLimit';
 import { chatMessages, transactions, reports, type TransactionSnapshot } from '../db/schema';
 import { eq, desc, isNull, and, inArray, sql } from 'drizzle-orm';
-import { AIService } from '../services/ai';
+import { createAIService } from '../services/ai';
 import { getLLMConfig, callLLM } from '../services/llm';
-import { ContextService } from '../services/context';
-import { VectorizeService } from '../services/vectorize';
+import { contextService as getContextService } from '../services/context';
+import { loadUserAiContext } from '../services/ai-context';
+import { vectorizeService as getVectorizeService } from '../services/vectorize';
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -410,27 +411,15 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
       .get();
 
     // Initialize AI service and context service
-    const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
-    const vectorizeService = new VectorizeService(
+    const aiService = createAIService(getLLMConfig(c.env), c.env.AI);
+    const vectorizeService = getVectorizeService(
       c.env.CLOUDFLARE_ACCOUNT_ID || '',
       c.env.CLOUDFLARE_API_TOKEN || ''
     );
-    const contextService = new ContextService(vectorizeService);
+    const contextService = getContextService(vectorizeService);
 
     // Fetch user context
-    const transactions_ = await db
-      .select()
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)))
-      .orderBy(desc(transactions.date))
-      .limit(10);
-
-    const categoryRows = await db
-      .selectDistinct({ category: transactions.category })
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)));
-
-    const userCategories = categoryRows.map((r: any) => r.category);
+    const { recentTransactions, userCategories } = await loadUserAiContext(db, userId);
 
     // Check for active clarification and merge response if exists
     const activeClarification = await clarificationService.getClarification(db, userId, sessionId);
@@ -497,7 +486,7 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
     // Parse user input with AI and context enrichment
     const action = await aiService.parseUserInput(
       content,
-      transactions_,
+      recentTransactions,
       userCategories,
       userId,
       contextService,

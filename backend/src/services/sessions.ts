@@ -157,25 +157,21 @@ export async function deleteSession(
     // First verify ownership
     const session = await getSession(db, sessionId, userId);
     if (!session) {
-      console.log('[deleteSession] Session not found:', { sessionId, userId });
       return false;
     }
 
-    console.log('[deleteSession] Deleting messages for sessionId:', sessionId);
     // Delete all messages in this session first (cascade)
     await db
       .delete(chatMessages)
       .where(eq(chatMessages.sessionId, sessionId))
       .run();
 
-    console.log('[deleteSession] Deleting session:', sessionId);
     // Delete the session
     await db
       .delete(sessionsTable)
       .where(eq(sessionsTable.id, sessionId))
       .run();
 
-    console.log('[deleteSession] Successfully deleted session:', sessionId);
     return true;
   } catch (error) {
     console.error('[deleteSession] Error:', error);

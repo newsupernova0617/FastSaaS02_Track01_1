@@ -19,9 +19,10 @@ import { transactions, chatMessages, reports } from '../db/schema';
 import type { Variables } from '../middleware/auth';
 import { createRateLimiter } from '../middleware/rateLimit';
 import type { Transaction } from '../db/schema';
-import { AIService } from '../services/ai';
+import { createAIService } from '../services/ai';
 import { getLLMConfig } from '../services/llm';
-import { ContextService } from '../services/context';
+import { contextService as getContextService } from '../services/context';
+import { loadUserAiContext } from '../services/ai-context';
 import {
   validateCreatePayload,
   validateUpdatePayload,
@@ -150,25 +151,13 @@ router.post('/action', aiActionRateLimit, async (c) => {
     // Save user message to session
     await saveMessageToSession(db, userId, sessionId, 'user', text);
 
-    const aiService = new AIService(getLLMConfig(c.env), c.env.AI);
+    const aiService = createAIService(getLLMConfig(c.env), c.env.AI);
 
     // Initialize context service for RAG enhancement
-    const contextService = new ContextService(c.env.VECTORIZE);
+    const contextService = getContextService(c.env.VECTORIZE);
 
     // Fetch user context
-    const recentTransactions = await db
-      .select()
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)))
-      .orderBy(desc(transactions.date))
-      .limit(10);
-
-    const categoryRows = await db
-      .selectDistinct({ category: transactions.category })
-      .from(transactions)
-      .where(and(eq(transactions.userId, userId), isNull(transactions.deletedAt)));
-
-    const userCategories = categoryRows.map((r: { category: string }) => r.category);
+    const { recentTransactions, userCategories } = await loadUserAiContext(db, userId);
 
     // Check for active clarification and merge response if exists
     let processedUserText = text;

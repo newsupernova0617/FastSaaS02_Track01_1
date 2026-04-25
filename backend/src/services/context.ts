@@ -113,6 +113,8 @@ export class ContextService {
    * Retrieve knowledge base items
    */
   private async retrieveKnowledge(db: any, limit: number): Promise<ContextItem[]> {
+    if (limit <= 0) return [];
+
     const items = await db
       .select()
       .from(knowledgeBase)
@@ -135,6 +137,8 @@ export class ContextService {
     userText: string,
     limit: number
   ): Promise<ContextItem[]> {
+    if (limit <= 0) return [];
+
     const items = await db
       .select()
       .from(transactions)
@@ -157,6 +161,8 @@ export class ContextService {
    * Retrieve user notes for context
    */
   private async retrieveNotes(db: any, userId: string, limit: number): Promise<ContextItem[]> {
+    if (limit <= 0) return [];
+
     const items = await db
       .select()
       .from(userNotes)
@@ -207,5 +213,15 @@ export class ContextService {
   }
 }
 
-export const contextService = (vectorizeService: any) =>
-  new ContextService(vectorizeService);
+let cachedContextDependency: any;
+let cachedContextService: ContextService | undefined;
+
+export const contextService = (vectorizeService: any) => {
+  if (cachedContextService && cachedContextDependency === vectorizeService) {
+    return cachedContextService;
+  }
+
+  cachedContextDependency = vectorizeService;
+  cachedContextService = new ContextService(vectorizeService);
+  return cachedContextService;
+};

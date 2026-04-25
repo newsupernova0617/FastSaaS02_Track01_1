@@ -66,19 +66,12 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Get the JWT token from Supabase session
     final token = await getToken();
-
-    print('[AuthInterceptor] onRequest called');
-    print('[AuthInterceptor] Token: ${token != null ? 'EXISTS (${token.length} chars)' : 'NULL'}');
-    print('[AuthInterceptor] URL: ${options.path}');
+    final logger = _getLogger();
+    logger.debug('[AUTH] ${options.method} ${options.path} token=${token != null ? 'yes' : 'no'}');
 
     if (token != null && token.isNotEmpty) {
-      // Attach Bearer token to Authorization header
       options.headers['Authorization'] = 'Bearer $token';
-      print('[AuthInterceptor] Authorization header added');
-    } else {
-      print('[AuthInterceptor] No token, skipping Authorization header');
     }
 
     handler.next(options);
@@ -125,11 +118,11 @@ class AuthInterceptor extends Interceptor {
     _refreshCompleter = Completer<String?>();
     try {
       final logger = _getLogger();
-      logger.info('[AUTH] Refreshing token...');
+      logger.debug('[AUTH] Refreshing token...');
       await refreshToken();
 
       final newToken = await getToken();
-      logger.info('[AUTH] Token refreshed successfully');
+      logger.debug('[AUTH] Token refreshed successfully');
       _refreshCompleter!.complete(newToken);
 
       if (newToken != null) {

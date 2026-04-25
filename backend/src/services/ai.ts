@@ -208,6 +208,18 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
   }
 }
 
+let cachedAIServiceKey: string | undefined;
+let cachedAIServiceBinding: any;
+let cachedAIService: AIService | undefined;
+
 export function createAIService(config: LLMConfig, ai?: any): AIService {
-  return new AIService(config, ai);
+  const key = `${config.provider}\0${config.modelName}\0${config.apiKey}`;
+  if (cachedAIService && cachedAIServiceKey === key && cachedAIServiceBinding === ai) {
+    return cachedAIService;
+  }
+
+  cachedAIService = new AIService(config, ai);
+  cachedAIServiceKey = key;
+  cachedAIServiceBinding = ai;
+  return cachedAIService;
 }

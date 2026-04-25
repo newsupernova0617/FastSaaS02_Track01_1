@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_app/core/logger/logger.dart';
 import 'package:flutter_app/core/auth/supabase_auth.dart';
 
 // ============================================================
@@ -70,7 +71,7 @@ final signInProvider = FutureProvider.family<User?, (String, String)>((ref, cred
     );
     return response.user;
   } catch (e) {
-    print('Sign in error: $e');
+    Logger().error('Sign in failed: $e', error: e);
     rethrow;
   }
 });
@@ -86,7 +87,7 @@ final signUpProvider = FutureProvider.family<User?, (String, String)>((ref, cred
     );
     return response.user;
   } catch (e) {
-    print('Sign up error: $e');
+    Logger().error('Sign up failed: $e', error: e);
     rethrow;
   }
 });
@@ -98,7 +99,7 @@ final signOutProvider = FutureProvider<void>((ref) async {
   try {
     await authService.signOut();
   } catch (e) {
-    print('Sign out error: $e');
+    Logger().error('Sign out failed: $e', error: e);
     rethrow;
   }
 });
@@ -111,7 +112,7 @@ final refreshSessionProvider = FutureProvider<Session?>((ref) async {
     final response = await authService.refreshSession();
     return response.session;
   } catch (e) {
-    print('Refresh session error: $e');
+    Logger().error('Refresh session failed: $e', error: e);
     rethrow;
   }
 });
@@ -123,7 +124,7 @@ final resetPasswordProvider = FutureProvider.family<void, String>((ref, email) a
   try {
     await authService.resetPasswordForEmail(email);
   } catch (e) {
-    print('Reset password error: $e');
+    Logger().error('Reset password failed: $e', error: e);
     rethrow;
   }
 });
@@ -135,7 +136,7 @@ final updatePasswordProvider = FutureProvider.family<void, String>((ref, newPass
   try {
     await authService.updatePassword(newPassword);
   } catch (e) {
-    print('Update password error: $e');
+    Logger().error('Update password failed: $e', error: e);
     rethrow;
   }
 });

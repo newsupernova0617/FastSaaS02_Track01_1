@@ -249,6 +249,35 @@ class ApiClient {
     }
   }
 
+  /// Get the current weekly or monthly report, generating if needed.
+  /// GET /api/reports/current?period=weekly|monthly
+  Future<ReportDetail?> getCurrentReport({
+    required String period,
+    bool force = false,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/reports/current',
+        queryParameters: {
+          'period': period,
+          if (force) 'force': true,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final reportJson = response.data['report'] as Map<String, dynamic>?;
+        if (reportJson == null) return null;
+        return ReportDetail.fromJson(reportJson);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
   /// Delete a report by ID
   /// DELETE /api/reports/:id
   Future<void> deleteReport(int reportId) async {

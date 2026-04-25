@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,7 +11,6 @@ import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/ai_action.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/ai_feature_provider.dart';
-import 'package:flutter_app/shared/providers/auto_report_provider.dart';
 import 'package:flutter_app/shared/providers/report_provider.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/shared/models/report.dart';
@@ -31,7 +30,7 @@ import 'package:flutter_app/shared/widgets/user_profile_button.dart';
 //
 // Sections (vertical):
 //   1. Greeting header (name, streak, profile avatar)
-//   2. Hero card: this month's expense (animated count + violet→cyan glow)
+//   2. Hero card: this month's expense (animated count + violet-to-cyan glow)
 //   3. AI insight card (client-side rule-based v1)
 //   4. Quick action prompt chips
 //   5. Recent transactions (top 5)
@@ -62,6 +61,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       setState(() => _homeAiResponse = response);
       ref.invalidate(allTransactionsProvider);
       ref.invalidate(getReportsProvider((month: null, limit: 20)));
+      ref.invalidate(getCurrentReportProvider('weekly'));
+      ref.invalidate(getCurrentReportProvider('monthly'));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -86,13 +87,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     final thisMonthSummary = ref.watch(summaryProvider(thisMonthKey));
     final lastMonthSummary = ref.watch(summaryProvider(lastMonthKey));
     final recentTxs = ref.watch(allTransactionsProvider);
-    final reports = ref.watch(getReportsProvider((month: null, limit: 20)));
-    ref.watch(ensureAutoReportsProvider);
+    final currentReport = ref.watch(getCurrentReportProvider(_selectedReportPeriod));
 
     final name =
         (user?.userMetadata?['name'] as String?) ??
         user?.email?.split('@').first ??
-        '사용자';
+        'User';
 
     return Scaffold(
       extendBody: true,
@@ -107,6 +107,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             ref.invalidate(summaryProvider(thisMonthKey));
             ref.invalidate(summaryProvider(lastMonthKey));
             ref.invalidate(allTransactionsProvider);
+            ref.invalidate(getCurrentReportProvider('weekly'));
+            ref.invalidate(getCurrentReportProvider('monthly'));
           },
           child: ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -190,7 +192,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               const SizedBox(height: AppSpacing.xl),
 
               _AutoReportsSection(
-                reports: reports,
+                report: currentReport,
                 selectedPeriod: _selectedReportPeriod,
                 onPeriodChanged: (period) =>
                     setState(() => _selectedReportPeriod = period),
@@ -447,14 +449,14 @@ class _InlineTransactionResult extends StatelessWidget {
             child: Text(
               transaction.memo?.isNotEmpty == true
                   ? transaction.memo!
-                  : transaction.category ?? '미분류',
+                  : transaction.category ?? 'Unclassified',
               style: theme.textTheme.bodyMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
-            '${isExpense ? '-' : '+'}$amount원',
+            '${isExpense ? '-' : '+'}$amount',
             style: theme.textTheme.labelLarge?.copyWith(color: color),
           ),
         ],
@@ -502,7 +504,7 @@ class _HomeReadResultPanelState extends State<_HomeReadResultPanel> {
     final title = [
       if (month != null) month,
       if (category != null) category,
-      '조회 결과',
+      '검색 결과',
     ].join(' · ');
 
     return Container(
@@ -612,12 +614,12 @@ class _ReadMetric extends StatelessWidget {
 */
 
 class _AutoReportsSection extends StatelessWidget {
-  final AsyncValue<List<ReportSummary>> reports;
+  final AsyncValue<ReportDetail?> report;
   final String selectedPeriod;
   final ValueChanged<String> onPeriodChanged;
 
   const _AutoReportsSection({
-    required this.reports,
+    required this.report,
     required this.selectedPeriod,
     required this.onPeriodChanged,
   });
@@ -631,7 +633,7 @@ class _AutoReportsSection extends StatelessWidget {
         Row(
           children: [
             Text(
-              '정기 리포트',
+              'Scheduled Reports',
               style: theme.textTheme.titleSmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 letterSpacing: 0.5,
@@ -645,44 +647,34 @@ class _AutoReportsSection extends StatelessWidget {
           onChanged: onPeriodChanged,
         ),
         const SizedBox(height: AppSpacing.md),
-        reports.when(
+        report.when(
           loading: () => const SizedBox(
             height: 4,
             width: double.infinity,
             child: LinearProgressIndicator(),
           ),
           error: (_, __) => _ReportStatusCard(
-            title: '리포트를 불러오지 못했습니다',
-            subtitle: '잠시 후 다시 시도해 주세요.',
+            title: '리포트를 불러오지 못했습니다.',
+            subtitle: '잠시 후 다시 시도해주세요.',
             icon: Icons.error_outline_rounded,
             onTap: () => context.push('/monthly-report'),
           ),
-          data: (items) {
-            final weekly = _latestByType(items, 'weekly_summary');
-            final monthly = _latestByType(items, 'monthly_summary');
-            final isWeekly = selectedPeriod == 'weekly';
-            final report = isWeekly ? weekly : monthly;
-            if (report == null) {
+          data: (reportData) {
+            if (reportData == null) {
               return _ReportStatusCard(
-                title: isWeekly ? '주간 리포트' : '월간 리포트',
-                subtitle: isWeekly ? '이번 주 리포트 생성 대기 중' : '이번 달 리포트 생성 대기 중',
-                icon: isWeekly
+                title: selectedPeriod == 'weekly' ? '주간 리포트' : '월간 리포트',
+                subtitle: '아직 생성된 리포트가 없습니다.',
+                icon: selectedPeriod == 'weekly'
                     ? Icons.calendar_view_week_rounded
                     : Icons.calendar_month_rounded,
                 onTap: () => context.push('/monthly-report'),
               );
             }
-            return _InlineReportPreview(reportId: report.id);
+            return _ReportPreviewCard(report: reportData);
           },
         ),
       ],
     );
-  }
-
-  ReportSummary? _latestByType(List<ReportSummary> reports, String type) {
-    final matches = reports.where((r) => r.reportType == type).toList();
-    if (matches.isEmpty) return null;
-    return matches.first;
   }
 }
 
@@ -720,7 +712,7 @@ class _ReportPeriodTabs extends StatelessWidget {
         children: [
           Expanded(
             child: _ReportPeriodTab(
-              label: '주간',
+               label: '주간',
               icon: Icons.calendar_view_week_rounded,
               selected: selectedPeriod == 'weekly',
               onTap: () => onChanged('weekly'),
@@ -728,7 +720,7 @@ class _ReportPeriodTabs extends StatelessWidget {
           ),
           Expanded(
             child: _ReportPeriodTab(
-              label: '월간',
+               label: '월간',
               icon: Icons.calendar_month_rounded,
               selected: selectedPeriod == 'monthly',
               onTap: () => onChanged('monthly'),
@@ -795,31 +787,6 @@ class _ReportPeriodTab extends StatelessWidget {
   }
 }
 
-class _InlineReportPreview extends ConsumerWidget {
-  final int reportId;
-
-  const _InlineReportPreview({required this.reportId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detail = ref.watch(getReportDetailProvider(reportId));
-    return detail.when(
-      loading: () => const SizedBox(
-        height: 118,
-        width: double.infinity,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, __) => _ReportStatusCard(
-        title: '리포트를 불러오지 못했습니다',
-        subtitle: '상세 화면에서 다시 확인해 주세요.',
-        icon: Icons.error_outline_rounded,
-        onTap: () => context.push('/report/$reportId'),
-      ),
-      data: (report) => _ReportPreviewCard(report: report),
-    );
-  }
-}
-
 class _ReportPreviewCard extends StatelessWidget {
   final ReportDetail report;
 
@@ -840,18 +807,18 @@ class _ReportPreviewCard extends StatelessWidget {
         ? <Widget>[]
         : [
             _SummaryMetricCard(
-                label: '총 지출',
-                value: '${currency.format(summary.totalExpense.round())}?',
+                label: 'Total Spend',
+                value: '${currency.format(summary.totalExpense.round())}',
                 emphasized: true,
             ),
             _SummaryMetricCard(
-                label: summary.totalIncome > 0 ? '총 수입' : '순자산',
+                label: summary.totalIncome > 0 ? 'Total Income' : 'Net Assets',
                 value: summary.totalIncome > 0
-                    ? '${currency.format(summary.totalIncome.round())}?'
-                    : '${currency.format(summary.netAmount.round())}?',
+                    ? '${currency.format(summary.totalIncome.round())}'
+                    : '${currency.format(summary.netAmount.round())}',
             ),
             _SummaryMetricCard(
-                label: '전월 대비',
+                label: 'Vs Last Period',
                 value: summary.deltaPercent == null
                     ? '-'
                     : '${summary.deltaPercent! >= 0 ? '+' : ''}${summary.deltaPercent!.toStringAsFixed(1)}%',
@@ -918,10 +885,10 @@ class _ReportPreviewCard extends StatelessWidget {
                       ),
                       child: Text(
                         summary == null
-                            ? '리포트 미리보기'
+                            ? 'Report Preview'
                             : (report.reportType == 'weekly_summary'
-                                  ? '주간 리포트'
-                                  : '월간 리포트'),
+                                  ? 'Weekly Report'
+                                  : 'Monthly Report'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w800,
@@ -988,7 +955,7 @@ class _ReportPreviewCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'AI 요약  ${summary!.insight!}',
+                'AI Summary  ${summary!.insight!}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                   height: 1.35,
@@ -998,14 +965,14 @@ class _ReportPreviewCard extends StatelessWidget {
           ],
           if (breakdownItems.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            Text('상위 3개', style: theme.textTheme.labelLarge),
+            Text('Top 3', style: theme.textTheme.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             for (final item in breakdownItems)
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: _SummaryBreakdownRow(
                   label: item.label,
-                  amount: '${currency.format(item.amount.round())}?',
+                  amount: '${currency.format(item.amount.round())}원',
                   ratio: '${item.ratio.toStringAsFixed(0)}%',
                 ),
               ),
@@ -1189,9 +1156,9 @@ class _ReportStatusCard extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 // Greeting
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 class _Greeting extends StatelessWidget {
   final String name;
   const _Greeting({required this.name});
@@ -1201,12 +1168,12 @@ class _Greeting extends StatelessWidget {
     final theme = Theme.of(context);
     final hour = DateTime.now().hour;
     final greet = hour < 6
-        ? '늦은 밤'
+        ? 'Late Night'
         : hour < 12
-        ? '좋은 아침'
+        ? 'Good Morning'
         : hour < 18
-        ? '좋은 오후'
-        : '좋은 저녁';
+        ? 'Good Afternoon'
+        : 'Good Evening';
 
     return Row(
       children: [
@@ -1244,9 +1211,9 @@ class _Greeting extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 // Month Hero card
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 class _MonthHero extends StatelessWidget {
   final AsyncValue<List<SummaryRow>> thisMonth;
   final AsyncValue<List<SummaryRow>> lastMonth;
@@ -1261,7 +1228,7 @@ class _MonthHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final monthLabel = DateFormat('yyyy년 M월').format(DateTime.now());
+    final monthLabel = DateFormat('yyyy.MM').format(DateTime.now());
     final currency = NumberFormat('#,###', 'ko_KR');
 
     final thisExpense =
@@ -1287,7 +1254,7 @@ class _MonthHero extends StatelessWidget {
           Row(
             children: [
               Text(
-                '$monthLabel · 지출',
+                '$monthLabel · Expense',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.78),
                   letterSpacing: 0.8,
@@ -1369,9 +1336,9 @@ class _DeltaBadge extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 // AI Insight section (currently hidden; kept for quick rollback)
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 // ignore: unused_element
 class _InsightSection extends ConsumerWidget {
   final AsyncValue<List<SummaryRow>> thisMonth;
@@ -1391,7 +1358,7 @@ class _InsightSection extends ConsumerWidget {
           ? const []
           : [
               PromptChip(
-                label: '자세히',
+                label: 'Details',
                 icon: FontAwesomeIcons.chartPie,
                 onTap: () {
                   GoRouter.of(context).go('/stats');
@@ -1441,22 +1408,22 @@ class _InsightSection extends ConsumerWidget {
 
     if (topCat != null) {
       final currency = NumberFormat('#,###', 'ko_KR');
-      return '이번 달 "$topCat" 지출이 지난달보다 '
-          '${topDelta.toStringAsFixed(0)}% 늘었어요. '
-          '현재 ₩${currency.format(topNow.round())}입니다.';
+      return 'This month "$topCat" spending is '
+          '${topDelta.toStringAsFixed(0)}% higher than last month. '
+          'Current ₩${currency.format(topNow.round())}.';
     }
 
     final largest = now.entries.reduce((a, b) => a.value >= b.value ? a : b);
     final pct =
         largest.value / now.values.fold<num>(0, (sum, v) => sum + v) * 100;
-    return '이번 달 지출의 ${pct.toStringAsFixed(0)}%가 '
-        '"${largest.key}" 카테고리에 집중되어 있어요.';
+    return 'This month ${pct.toStringAsFixed(0)}% of spend is '
+        'concentrated in "${largest.key}".';
   }
 }
 
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 // Recent transactions list
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
 class _RecentList extends ConsumerWidget {
   final AsyncValue<List<Transaction>> txs;
 
@@ -1518,9 +1485,9 @@ class _EmptyRecent extends StatelessWidget {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('아직 기록된 거래가 없어요', style: theme.textTheme.titleMedium),
+          Text('No recent transactions yet', style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
-          Text('첫 지출을 기록해보세요', style: theme.textTheme.bodySmall),
+          Text('Record your first expense', style: theme.textTheme.bodySmall),
         ],
       ),
     );
@@ -1550,9 +1517,9 @@ class _ShimmerTile extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// FAB — add expense
-// ────────────────────────────────────────────────────────────
+// ????????????????????????????????????????????????????????????
+// FAB ??add expense
+// ????????????????????????????????????????????????????????????
 // ignore: unused_element
 class _AddExpenseFab extends StatelessWidget {
   final VoidCallback onTap;
@@ -1593,3 +1560,4 @@ class _AddExpenseFab extends StatelessWidget {
     );
   }
 }
+

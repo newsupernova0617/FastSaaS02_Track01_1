@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
+import 'package:flutter_app/core/logger/logger.dart';
 import 'package:flutter_app/core/storage/native_shared_prefs.dart';
 
 // ============================================================
@@ -54,7 +55,7 @@ class SupabaseAuthService {
         _instance._syncToNativePrefs(data.session);
       });
     } catch (e) {
-      print('Error initializing Supabase: $e');
+      Logger().error('Supabase init failed: $e', error: e);
       rethrow;
     }
   }
@@ -83,7 +84,7 @@ class SupabaseAuthService {
       );
       return response;
     } catch (e) {
-      print('Error signing in: $e');
+      Logger().error('Supabase sign-in failed: $e', error: e);
       rethrow;
     }
   }
@@ -100,7 +101,7 @@ class SupabaseAuthService {
       );
       return response;
     } catch (e) {
-      print('Error signing up: $e');
+      Logger().error('Supabase sign-up failed: $e', error: e);
       rethrow;
     }
   }
@@ -110,7 +111,7 @@ class SupabaseAuthService {
     try {
       await client.auth.signOut();
     } catch (e) {
-      print('Error signing out: $e');
+      Logger().error('Supabase sign-out failed: $e', error: e);
       rethrow;
     }
   }
@@ -121,7 +122,7 @@ class SupabaseAuthService {
       final response = await client.auth.refreshSession();
       return response;
     } catch (e) {
-      print('Error refreshing session: $e');
+      Logger().error('Supabase refresh session failed: $e', error: e);
       rethrow;
     }
   }
@@ -134,7 +135,7 @@ class SupabaseAuthService {
         redirectTo: 'com.fastsaas02.app://auth/callback',
       );
     } catch (e) {
-      print('Error resetting password: $e');
+      Logger().error('Supabase reset password failed: $e', error: e);
       rethrow;
     }
   }
@@ -146,7 +147,7 @@ class SupabaseAuthService {
         UserAttributes(password: newPassword),
       );
     } catch (e) {
-      print('Error updating password: $e');
+      Logger().error('Supabase update password failed: $e', error: e);
       rethrow;
     }
   }

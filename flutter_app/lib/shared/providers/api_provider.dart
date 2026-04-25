@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_app/core/api/api_client.dart';
 import 'package:flutter_app/core/api/api_interceptor.dart';
 import 'package:flutter_app/core/constants/app_constants.dart';
+import 'package:flutter_app/core/logger/logger.dart';
 import 'auth_provider.dart';
 
 // ============================================================
@@ -37,19 +38,15 @@ final authenticatedDioProvider = Provider<Dio>((ref) {
   final authInterceptor = AuthInterceptor(
     ref: ref,
     getToken: () async {
-      // Get the access token from the auth provider
       final token = ref.read(accessTokenProvider);
-      print('[AUTH] Token from provider: ${token != null ? 'EXISTS (${token.length} chars)' : 'NULL'}');
+      Logger().debug('[AUTH] token=${token != null ? 'yes' : 'no'}');
       return token;
     },
     refreshToken: () async {
-      // Refresh the session when access token expires
       final authService = ref.read(supabaseAuthProvider);
       await authService.refreshSession();
     },
     onRefreshFailed: () async {
-      // If token refresh fails, sign out the user
-      // This will trigger authStateProvider to update and GoRouter will redirect to /login
       final authService = ref.read(supabaseAuthProvider);
       await authService.signOut();
     },

@@ -75,6 +75,26 @@ export class AIReportService {
     };
   }
 
+  async generateSummary(
+    db: any,
+    userId: string,
+    reportPayload: ReportPayload
+  ): Promise<ReportSummaryData> {
+    const { reportType, params } = reportPayload;
+    const transactionData = await this.aggregateTransactionData(
+      db,
+      userId,
+      reportType,
+      params
+    );
+    const comparisonParams = this.getComparisonParams(reportType, params);
+    const comparisonData = comparisonParams
+      ? await this.aggregateTransactionData(db, userId, reportType, comparisonParams)
+      : null;
+
+    return this.buildSummary(reportType, params, transactionData, comparisonData);
+  }
+
   /**
    * Aggregates transaction data for report generation
    * @param db - Database instance

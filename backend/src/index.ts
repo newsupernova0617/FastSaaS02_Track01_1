@@ -11,7 +11,7 @@ import contactRequestsRouter from './routes/contact-requests';
 import adminContactRequestsRouter from './routes/admin-contact-requests';
 import { userNotesRoutes } from './routes/user-notes';
 import { userNotesService } from './services/user-notes';
-import { VectorizeService } from './services/vectorize';
+import { vectorizeService } from './services/vectorize';
 import { authMiddleware } from './middleware/auth';
 import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
@@ -76,7 +76,7 @@ app.route('/api/contact-requests', contactRequestsRouter);
 // User Notes 라우트 마운트
 // VectorizeService는 각 요청에서 env를 통해 초기화되어야 함
 // 테스트 환경에서는 빈 credentials으로 초기화되고, 프로덕션에서는 env에서 로드됨
-const vectorizeServiceForNotes = new VectorizeService('', '');
+const vectorizeServiceForNotes = vectorizeService('', '');
 const notesServiceForNotes = userNotesService(vectorizeServiceForNotes);
 app.route('/api/notes', userNotesRoutes(notesServiceForNotes));
 

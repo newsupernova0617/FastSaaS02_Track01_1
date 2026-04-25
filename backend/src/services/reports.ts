@@ -20,6 +20,18 @@ export interface ReportSummary {
   createdAt: string;
 }
 
+export interface ReportDetailRow {
+  id: number;
+  reportType: string;
+  title: string;
+  subtitle?: string | null;
+  reportData: string;
+  summaryData?: string | null;
+  params: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export class ReportService {
   constructor(private db: any) {}
 
@@ -77,6 +89,52 @@ export class ReportService {
       ));
 
     return result[0] || null;
+  }
+
+  async getLatestReportByType(
+    userId: string,
+    reportType: string
+  ): Promise<ReportDetailRow | null> {
+    const result = await this.db
+      .select({
+        id: reports.id,
+        reportType: reports.reportType,
+        title: reports.title,
+        subtitle: reports.subtitle,
+        reportData: reports.reportData,
+        summaryData: reports.summaryData,
+        params: reports.params,
+        createdAt: reports.createdAt,
+        updatedAt: reports.updatedAt,
+      })
+      .from(reports)
+      .where(and(
+        eq(reports.userId, userId),
+        eq(reports.reportType, reportType as any),
+      ))
+      .orderBy(desc(reports.createdAt))
+      .limit(1);
+
+    return result[0] || null;
+  }
+
+  async updateReportSummary(
+    userId: string,
+    reportId: number,
+    summaryData: Record<string, unknown>
+  ): Promise<boolean> {
+    const result = await this.db
+      .update(reports)
+      .set({
+        summaryData: JSON.stringify(summaryData),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(and(
+        eq(reports.id, reportId),
+        eq(reports.userId, userId)
+      ));
+
+    return result.rowsAffected > 0;
   }
 
   async deleteReport(userId: string, reportId: number): Promise<boolean> {

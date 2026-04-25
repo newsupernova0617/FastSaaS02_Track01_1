@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/core/logger/logger.dart';
 import 'package:flutter_app/shared/models/transaction.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'api_provider.dart';
@@ -42,7 +43,7 @@ final transactionsProvider = FutureProvider.family<List<Transaction>, DateTime?>
 
     return transactions;
   } catch (e) {
-    print('Error fetching transactions: $e');
+    Logger().error('Fetch transactions failed: $e', error: e);
     rethrow;
   }
 });
@@ -65,7 +66,7 @@ final allTransactionsProvider = FutureProvider<List<Transaction>>((ref) async {
 
     return transactions;
   } catch (e) {
-    print('Error fetching all transactions: $e');
+    Logger().error('Fetch all transactions failed: $e', error: e);
     rethrow;
   }
 });
@@ -94,7 +95,7 @@ final summaryProvider = FutureProvider.family<List<SummaryRow>, String>((ref, mo
 
     return summary;
   } catch (e) {
-    print('Error fetching summary: $e');
+    Logger().error('Fetch summary failed: $e', error: e);
     rethrow;
   }
 });
@@ -128,7 +129,7 @@ final addTransactionProvider = FutureProvider.family<int, Map<String, dynamic>>(
 
     return id;
   } catch (e) {
-    print('Error adding transaction: $e');
+    Logger().error('Add transaction failed: $e', error: e);
     rethrow;
   }
 });
@@ -160,7 +161,7 @@ final deleteTransactionProvider = FutureProvider.family<bool, String>((ref, id) 
 
     return success;
   } catch (e) {
-    print('Error deleting transaction: $e');
+    Logger().error('Delete transaction failed: $e', error: e);
     rethrow;
   }
 });

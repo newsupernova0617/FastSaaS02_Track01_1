@@ -53,6 +53,56 @@ const GenerateReportSchema = z.object({
   message: 'monthly requires month; weekly requires weekStart and weekEnd',
 });
 
+const CurrentReportSchema = z.object({
+  period: z.enum(['weekly', 'monthly']),
+});
+
+function buildCurrentReportPayload(period: 'weekly' | 'monthly') {
+  const now = new Date();
+  if (period === 'weekly') {
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    return {
+      reportType: 'weekly_summary' as const,
+      params: {
+        weekStart: weekStart.toISOString().split('T')[0],
+        weekEnd: weekEnd.toISOString().split('T')[0],
+      },
+    };
+  }
+
+  return {
+    reportType: 'monthly_summary' as const,
+    params: {
+      month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+    },
+  };
+}
+
+function formatReportDetail(report: {
+  id: number;
+  reportType: string;
+  title: string;
+  subtitle?: string | null;
+  reportData: string;
+  summaryData?: string | null;
+  params: string;
+  createdAt: string;
+}) {
+  return {
+    id: report.id,
+    reportType: report.reportType,
+    title: report.title,
+    subtitle: report.subtitle,
+    reportData: JSON.parse(report.reportData),
+    summary: report.summaryData ? JSON.parse(report.summaryData) : null,
+    params: JSON.parse(report.params),
+    createdAt: report.createdAt,
+  };
+}
+
 // POST /api/reports - 리포트 저장
 // reportWriteRateLimit 미들웨어가 먼저 실행 → 속도 제한 통과 후 핸들러 진입
 router.post('/', reportWriteRateLimit, async (c) => {
@@ -161,6 +211,71 @@ router.post('/generate', reportWriteRateLimit, async (c) => {
       return c.json({ success: false, error: 'Invalid report generation data', details: error.flatten() }, 400);
     }
     return c.json({ success: false, error: 'Failed to generate report' }, 500);
+  }
+});
+
+// GET /api/reports/current - 현재 기간 리포트 조회, 없으면 생성 후 반환
+router.get('/current', async (c) => {
+  try {
+    const userId = c.get('userId');
+    const query = CurrentReportSchema.parse({
+      period: c.req.query('period'),
+    });
+
+    const currentPayload = buildCurrentReportPayload(query.period);
+    const db = getDb(c.env);
+    const reportService = new ReportService(db);
+
+    let report = await reportService.getLatestReportByType(userId, currentPayload.reportType);
+
+    if (!report) {
+      const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+      const generated = await aiReportService.generateReport(db, userId, currentPayload);
+      const savedReport = await db.insert(reports).values({
+        userId,
+        reportType: generated.reportType,
+        title: generated.title,
+        subtitle: generated.subtitle,
+        reportData: JSON.stringify(generated.sections),
+        summaryData: JSON.stringify(generated.summary),
+        params: JSON.stringify(currentPayload.params),
+      }).returning().get();
+
+      report = {
+        id: savedReport.id,
+        reportType: savedReport.reportType,
+        title: savedReport.title,
+        subtitle: savedReport.subtitle ?? undefined,
+        reportData: savedReport.reportData,
+        summaryData: savedReport.summaryData,
+        params: savedReport.params,
+        createdAt: savedReport.createdAt ?? new Date().toISOString(),
+        updatedAt: savedReport.updatedAt ?? savedReport.createdAt ?? new Date().toISOString(),
+      };
+    } else if (!report.summaryData) {
+      const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+      const summary = await aiReportService.generateSummary(db, userId, currentPayload);
+      await reportService.updateReportSummary(userId, report.id, summary as unknown as Record<string, unknown>);
+      report = {
+        ...report,
+        summaryData: JSON.stringify(summary),
+      };
+    }
+
+    if (!report) {
+      throw new Error('Current report not available');
+    }
+
+    return c.json({
+      success: true,
+      report: formatReportDetail(report),
+    });
+  } catch (error) {
+    console.error('[Reports API] Current error:', error);
+    if (error instanceof ZodError) {
+      return c.json({ success: false, error: 'Invalid current report query', details: error.flatten() }, 400);
+    }
+    return c.json({ success: false, error: 'Failed to fetch current report' }, 500);
   }
 });
 

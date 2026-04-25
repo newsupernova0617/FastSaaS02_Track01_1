@@ -156,5 +156,16 @@ export class VectorizeService {
   }
 }
 
-export const vectorizeService = (accountId: string, apiToken: string) =>
-  new VectorizeService(accountId, apiToken);
+let cachedVectorizeKey: string | undefined;
+let cachedVectorizeService: VectorizeService | undefined;
+
+export const vectorizeService = (accountId: string, apiToken: string) => {
+  const key = `${accountId}\0${apiToken}`;
+  if (cachedVectorizeService && cachedVectorizeKey === key) {
+    return cachedVectorizeService;
+  }
+
+  cachedVectorizeKey = key;
+  cachedVectorizeService = new VectorizeService(accountId, apiToken);
+  return cachedVectorizeService;
+};

@@ -9,12 +9,13 @@ const categoryLabels = {
   'saving-tips': '절약 실전',
   'app-guides': '앱 사용 가이드',
 } as const;
+const categoryOrder = ['money-basics', 'life-stages', 'saving-tips', 'app-guides'] as const;
 
 const posts = (await getCollection('blog'))
   .filter((post) => !post.data.draft)
   .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
 
-const featuredPosts = posts.filter((post) => post.data.featured);
+const featuredPosts = posts.filter((post) => post.data.featured).slice(0, 3);
 const origin = Astro.site?.toString() ?? 'https://fastsaas.pages.dev';
 const blogUrl = new URL('/blog/', origin).toString();
 const itemList = posts.map((post, index) => ({
@@ -24,6 +25,18 @@ const itemList = posts.map((post, index) => ({
   url: new URL(`/blog/${post.data.slug}/`, origin).toString(),
   name: post.data.title,
 }));
+const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number], number>>(
+  (acc, category) => {
+    acc[category] = posts.filter((post) => post.data.category === category).length;
+    return acc;
+  },
+  {
+    'money-basics': 0,
+    'life-stages': 0,
+    'saving-tips': 0,
+    'app-guides': 0,
+  },
+);
 ---
 
 <BaseLayout
@@ -56,10 +69,35 @@ const itemList = posts.map((post, index) => ({
           가계부 작성법, 예산 관리, 절약 습관, 앱 선택 기준까지 실제로 도움이 되는 내용만 정리합니다.
         </p>
       </div>
+
+      <div class="mt-8 flex flex-wrap gap-2" aria-label="블로그 카테고리 필터">
+        <button
+          type="button"
+          data-blog-filter-btn
+          data-blog-filter="all"
+          aria-pressed="true"
+          class="inline-flex items-center gap-2 rounded-full border border-primary bg-primary px-4 py-2 text-sm font-semibold text-primary-content shadow-sm transition hover:-translate-y-0.5"
+        >
+          전체
+          <span class="rounded-full bg-white/15 px-2 py-0.5 text-xs">{posts.length}</span>
+        </button>
+        {categoryOrder.map((category) => (
+          <button
+            type="button"
+            data-blog-filter-btn
+            data-blog-filter={category}
+            aria-pressed="false"
+            class="inline-flex items-center gap-2 rounded-full border border-base-300 bg-white/80 px-4 py-2 text-sm font-semibold text-base-content/65 transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
+          >
+            {categoryLabels[category]}
+            <span class="rounded-full bg-base-200 px-2 py-0.5 text-xs">{categoryCounts[category]}</span>
+          </button>
+        ))}
+      </div>
     </section>
 
     {featuredPosts.length > 0 && (
-      <section class="mx-auto max-w-6xl px-6 pb-8">
+      <section class="mx-auto max-w-6xl px-6 pb-8" data-blog-filter-group>
         <div class="mb-5 flex items-center justify-between">
           <h2 class="text-2xl font-extrabold text-base-content">추천 글</h2>
           <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -70,6 +108,8 @@ const itemList = posts.map((post, index) => ({
           {featuredPosts.map((post) => (
             <a
               href={`/blog/${post.data.slug}/`}
+              data-blog-card
+              data-blog-category={post.data.category}
               class="group rounded-[28px] border border-base-300 bg-white p-7 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl"
             >
               <div class="flex items-center gap-3 text-xs font-semibold text-base-content/50">
@@ -95,15 +135,20 @@ const itemList = posts.map((post, index) => ({
       </section>
     )}
 
-    <section class="mx-auto max-w-6xl px-6 pb-24 pt-8">
+    <section class="mx-auto max-w-6xl px-6 pb-24 pt-8" data-blog-filter-group>
       <div class="mb-5 flex items-center justify-between">
         <h2 class="text-2xl font-extrabold text-base-content">전체 글</h2>
         <span class="text-sm text-base-content/50">{posts.length} posts</span>
       </div>
+      <p hidden data-blog-empty class="rounded-2xl border border-dashed border-base-300 bg-white/80 px-5 py-8 text-center text-sm text-base-content/60">
+        선택한 카테고리에 해당하는 글이 없습니다.
+      </p>
       <div class="grid gap-4">
         {posts.map((post) => (
           <a
             href={`/blog/${post.data.slug}/`}
+            data-blog-card
+            data-blog-category={post.data.category}
             class="group rounded-[24px] border border-base-300 bg-white/90 p-6 transition duration-200 hover:border-primary/20 hover:bg-white hover:shadow-lg"
           >
             <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-base-content/50">
@@ -124,3 +169,51 @@ const itemList = posts.map((post, index) => ({
   </main>
   <Footer />
 </BaseLayout>
+
+<script>
+  const filterButtons = Array.from(document.querySelectorAll('[data-blog-filter-btn]'));
+  const cardGroups = Array.from(document.querySelectorAll('[data-blog-filter-group]'));
+  const cards = Array.from(document.querySelectorAll('[data-blog-card]'));
+  const emptyState = document.querySelector('[data-blog-empty]');
+  const activeClasses = ['border-primary', 'bg-primary', 'text-primary-content', 'shadow-sm'];
+  const inactiveClasses = ['border-base-300', 'bg-white/80', 'text-base-content/65'];
+
+  const setButtonState = (button, active) => {
+    button.setAttribute('aria-pressed', String(active));
+    activeClasses.forEach((className) => button.classList.toggle(className, active));
+    inactiveClasses.forEach((className) => button.classList.toggle(className, !active));
+  };
+
+  const applyFilter = (selectedCategory) => {
+    let visibleCards = 0;
+
+    cards.forEach((card) => {
+      const matches = selectedCategory === 'all' || card.dataset.blogCategory === selectedCategory;
+      card.hidden = !matches;
+      if (matches) visibleCards += 1;
+    });
+
+    cardGroups.forEach((group) => {
+      const groupCards = Array.from(group.querySelectorAll('[data-blog-card]'));
+      const hasVisibleCard = groupCards.some((card) => !card.hidden);
+      group.hidden = !hasVisibleCard;
+    });
+
+    if (emptyState) {
+      emptyState.hidden = visibleCards > 0;
+    }
+
+    filterButtons.forEach((button) => {
+      setButtonState(button, button.dataset.blogFilter === selectedCategory);
+    });
+  };
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const category = button.dataset.blogFilter || 'all';
+      applyFilter(category);
+    });
+  });
+
+  applyFilter('all');
+</script>

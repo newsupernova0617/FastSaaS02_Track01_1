@@ -29,7 +29,7 @@ class Logger {
   late bool _maskSensitiveData;
 
   Logger._internal() {
-    _minLogLevel = LogLevel.debug;
+    _minLogLevel = LogLevel.warn;
     _maskSensitiveData = true;
   }
 
@@ -39,7 +39,7 @@ class Logger {
 
   /// Initialize logger with configuration
   static void init({
-    LogLevel minLogLevel = LogLevel.debug,
+    LogLevel minLogLevel = LogLevel.warn,
     bool maskSensitiveData = true,
   }) {
     _instance._minLogLevel = minLogLevel;

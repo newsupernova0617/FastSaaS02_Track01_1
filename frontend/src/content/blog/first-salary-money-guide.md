@@ -31,3 +31,5 @@ readingTime: 6
 ## 추천 루틴
 
 월급일에 먼저 저축과 고정지출을 분리하고, 남은 금액 안에서 생활비를 운영하는 방식이 가장 안정적입니다.
+
+이 루틴을 실제로 붙이려면 [가계부 쓰는 법 완벽 가이드](/blog/how-to-start-household-book/)와 [생활비 예산 세우는 법](/blog/how-to-budget-living-expenses/)을 함께 보면 훨씬 쉽습니다.

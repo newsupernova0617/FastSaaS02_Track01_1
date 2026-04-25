@@ -172,24 +172,6 @@ async function callWorkersAI(
   }
 }
 
-/*
-Legacy debug logging kept for rollback/reference only.
-
-console.log('[Workers AI Call] Starting request to Cloudflare Workers AI');
-console.log('[Workers AI Call] Model:', config.modelName);
-console.log('[Workers AI Call] Messages count:', messages.length);
-console.log('[Workers AI Call] Raw response:', response);
-console.log('[Workers AI Call] Choices count:', response.choices.length);
-console.log('[Workers AI Call] Extracted text:', text);
-console.error('[Workers AI Error] Full response:', response);
-console.error('[Workers AI Error] Stringified response:', jsonStr);
-console.error('[Workers AI Error]', {
-  model: config.modelName,
-  error: error instanceof Error ? error.message : String(error),
-  fullError: error,
-});
-*/
-
 /**
  * Build LLMConfig from environment variables.
  * If AI_PROVIDER is 'workers-ai', uses Cloudflare Workers AI.

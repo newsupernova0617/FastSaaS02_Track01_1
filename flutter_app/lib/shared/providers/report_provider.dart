@@ -34,6 +34,12 @@ final getReportDetailProvider = FutureProvider.family<ReportDetail, int>((
   return apiClient.getReportDetail(reportId);
 });
 
+final getCurrentReportProvider =
+    FutureProvider.family<ReportDetail?, String>((ref, period) async {
+      final apiClient = ref.watch(apiClientProvider);
+      return apiClient.getCurrentReport(period: period);
+    });
+
 // Save a new report
 final saveReportProvider = FutureProvider.family<int, Report>((
   ref,
@@ -68,6 +74,8 @@ final generateScheduledReportProvider =
       if (params.month != null) {
         ref.invalidate(getReportsProvider((month: params.month, limit: 50)));
       }
+      ref.invalidate(getCurrentReportProvider('weekly'));
+      ref.invalidate(getCurrentReportProvider('monthly'));
       return id;
     });
 

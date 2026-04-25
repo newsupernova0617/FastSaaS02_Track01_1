@@ -104,6 +104,8 @@ readingTime: 8
 
 이 문제는 결국 기록 방식을 너무 어렵게 잡았기 때문에 생기는 경우가 많습니다.
 
+이 부분을 더 깊게 보고 싶다면 [가계부 3일 만에 포기하는 이유와 해결법](/blog/why-people-quit-household-book/)을 같이 읽어보면 좋습니다.
+
 ## 예산과 같이 봐야 효과가 커집니다
 
 가계부를 쓰기만 하고 예산을 안 세우면 "이번 달에 많이 썼다" 정도만 알게 됩니다. 하지만 예산과 함께 보면 "어느 항목이 기준을 넘었는지"가 바로 보입니다.
@@ -145,3 +147,4 @@ readingTime: 8
 - [생활비 예산 세우는 법](/blog/how-to-budget-living-expenses/)
 - [엑셀 가계부 vs 앱 가계부 비교](/blog/excel-vs-app-household-book/)
 - [사회초년생 첫 월급 관리 A to Z](/blog/first-salary-money-guide/)
+- [가계부 3일 만에 포기하는 이유와 해결법](/blog/why-people-quit-household-book/)

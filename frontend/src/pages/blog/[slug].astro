@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogPostCta from '../../components/BlogPostCta.astro';
 import Footer from '../../components/Footer.astro';
 
 const categoryLabels = {
@@ -94,6 +95,10 @@ const ogImage = post.data.ogImage ?? '/og-default.svg';
         <div class="prose prose-lg max-w-none prose-headings:font-black prose-headings:text-base-content prose-p:text-base-content/80 prose-li:text-base-content/80 prose-strong:text-base-content">
           <Content />
         </div>
+      </div>
+
+      <div class="mt-10">
+        <BlogPostCta />
       </div>
     </article>
 
