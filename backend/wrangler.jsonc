@@ -6,7 +6,7 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"vars": {
 		"AI_PROVIDER": "workers-ai",
-		"ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173"
+		"ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173,http://localhost:4321,https://fastsaas02-track01-1.pages.dev,https://landing-page-7hu.pages.dev"
 	},
 	"observability": {
 		"logs": {

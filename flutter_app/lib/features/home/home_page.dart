@@ -839,26 +839,18 @@ class _ReportPreviewCard extends StatelessWidget {
     final metrics = summary == null
         ? <Widget>[]
         : [
-            SizedBox(
-              width: 112,
-              child: _SummaryMetricCard(
+            _SummaryMetricCard(
                 label: '총 지출',
                 value: '${currency.format(summary.totalExpense.round())}?',
                 emphasized: true,
-              ),
             ),
-            SizedBox(
-              width: 112,
-              child: _SummaryMetricCard(
+            _SummaryMetricCard(
                 label: summary.totalIncome > 0 ? '총 수입' : '순자산',
                 value: summary.totalIncome > 0
                     ? '${currency.format(summary.totalIncome.round())}?'
                     : '${currency.format(summary.netAmount.round())}?',
-              ),
             ),
-            SizedBox(
-              width: 112,
-              child: _SummaryMetricCard(
+            _SummaryMetricCard(
                 label: '전월 대비',
                 value: summary.deltaPercent == null
                     ? '-'
@@ -868,7 +860,6 @@ class _ReportPreviewCard extends StatelessWidget {
                     : summary.deltaPercent! >= 0
                     ? AppColors.expense
                     : AppColors.income,
-              ),
             ),
           ];
     final breakdownItems = summary?.breakdown.take(3).toList() ?? const [];
@@ -974,10 +965,14 @@ class _ReportPreviewCard extends StatelessWidget {
           ),
           if (metrics.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: metrics,
+            Row(
+              children: [
+                for (var i = 0; i < metrics.length; i++) ...[
+                  Expanded(child: metrics[i]),
+                  if (i != metrics.length - 1)
+                    const SizedBox(width: AppSpacing.sm),
+                ],
+              ],
             ),
           ],
           if (summary?.insight != null) ...[

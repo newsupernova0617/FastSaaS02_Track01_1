@@ -25,7 +25,15 @@ app.get('/', (c) => c.text('Hello! FastSaaS Backend is running!'));
 // localhost:5173는 개발 환경, localhost:3000은 Flutter 웹 개발 환경
 // capacitor://는 모바일 앱, pages.dev는 프로덕션
 // ALLOWED_ORIGINS env var (comma-separated) overrides the defaults when set
-const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:4321', 'http://localhost:3000', 'capacitor://localhost', 'https://fastsaas02-track01-1.pages.dev', 'https://fastsaas2.fastsaas2.workers.dev'];
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:4321',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'https://fastsaas02-track01-1.pages.dev',
+  'https://landing-page-7hu.pages.dev',
+  'https://fastsaas2.fastsaas2.workers.dev',
+];
 let cachedOriginsRaw: string | undefined;
 let cachedAllowedOrigins = DEFAULT_ALLOWED_ORIGINS;
 
