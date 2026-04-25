@@ -22,7 +22,8 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const tocItems = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const relatedPosts = (await getCollection('blog'))
   .filter(
     (item) =>
@@ -92,6 +93,28 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
       </header>
 
       <div class="mt-10 rounded-[32px] border border-base-300 bg-white px-6 py-10 shadow-sm sm:px-10">
+        {tocItems.length >= 3 && (
+          <nav
+            aria-label="Table of contents"
+            class="mb-10 rounded-[24px] border border-base-300 bg-base-100/80 p-5 sm:p-6"
+          >
+            <div class="text-sm font-extrabold uppercase tracking-[0.18em] text-base-content/45">
+              On This Page
+            </div>
+            <ol class="toc-list mt-4 space-y-2">
+              {tocItems.map((heading) => (
+                <li class:list={[heading.depth === 3 && 'toc-subitem']}>
+                  <a
+                    href={`#${heading.slug}`}
+                    class="block rounded-xl px-3 py-2 text-sm font-semibold leading-6 text-base-content/72 transition hover:bg-white hover:text-primary"
+                  >
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
         <div class="blog-prose prose prose-lg max-w-none prose-headings:font-black prose-headings:text-base-content prose-p:text-base-content/80 prose-li:text-base-content/80 prose-strong:text-base-content">
           <Content />
         </div>
@@ -134,9 +157,20 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
 </BaseLayout>
 
 <style>
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-subitem {
+    padding-left: 0.9rem;
+  }
+
   .blog-prose :global(h2) {
     margin-top: 2.75rem;
     margin-bottom: 1rem;
+    scroll-margin-top: 7rem;
     font-size: 1.875rem;
     font-weight: 900;
     line-height: 1.2;
@@ -147,6 +181,7 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
   .blog-prose :global(h3) {
     margin-top: 2rem;
     margin-bottom: 0.75rem;
+    scroll-margin-top: 7rem;
     font-size: 1.375rem;
     font-weight: 800;
     line-height: 1.3;

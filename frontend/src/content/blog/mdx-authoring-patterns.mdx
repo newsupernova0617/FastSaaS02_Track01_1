@@ -1,8 +1,8 @@
 ---
 title: "MDX 작성 패턴 가이드"
 slug: "mdx-authoring-patterns"
-description: "블로그에서 MDX 컴포넌트를 어떻게 쓰는지 정리한 내부용 가이드입니다."
-excerpt: "콜아웃, 요약 카드, 체크리스트를 어떻게 섞어 쓰는지 보여주는 샘플입니다."
+description: "블로그에서 MDX 컴포넌트를 어떤 상황에 쓰면 좋은지 정리한 내부 작성 가이드입니다."
+excerpt: "요약 카드, 콜아웃, 체크리스트, FAQ를 어떤 글에 붙이면 좋은지 보여주는 샘플입니다."
 category: "app-guides"
 tags: ["MDX", "콘텐츠작성", "블로그운영"]
 publishDate: "2026-04-25"
@@ -18,53 +18,90 @@ import Callout from '../../components/blog/Callout.astro';
 import QuickSummary from '../../components/blog/QuickSummary.astro';
 import SummaryItem from '../../components/blog/SummaryItem.astro';
 import Checklist from '../../components/blog/Checklist.astro';
+import Faq from '../../components/blog/Faq.astro';
+import ProsCons from '../../components/blog/ProsCons.astro';
+import FitGuide from '../../components/blog/FitGuide.astro';
 
-<QuickSummary title="이 글에서 바로 보는 것">
+<QuickSummary title="이 글에서 바로 보는 기준">
   <SummaryItem label="언제 쓰나">
     글 도입부에서 핵심만 먼저 보여주고 싶을 때 씁니다.
   </SummaryItem>
   <SummaryItem label="주의점">
-    요약 카드가 너무 자주 나오면 글이 끊겨 보이니 1개 정도만 쓰는 편이 낫습니다.
+    블록이 너무 많아지면 오히려 글 흐름이 끊기므로 1~2개씩 목적에 맞게 쓰는 편이 좋습니다.
   </SummaryItem>
 </QuickSummary>
 
 ## 콜아웃 박스
 
-본문 흐름 안에서 강조할 내용이 있으면 아래처럼 넣으면 됩니다.
+본문 중간에 강조할 내용이 있으면 아래처럼 넣습니다.
 
 <Callout title="TIP" tone="tip">
-  생활비 글에서는 “식비와 배달비는 따로 보지 말고 식비 안에서 같이 보라” 같은 문장을
-  콜아웃으로 빼면 읽는 사람이 핵심을 더 빨리 잡습니다.
+  생활비 글에서는 식비와 배달비를 따로 보지 말고, 먼저 식비 안에서 함께 보는 식으로 정리해두면 독자가 판단하기 훨씬 쉽습니다.
 </Callout>
 
 ## 체크리스트
 
-긴 설명보다 바로 실행할 수 있는 항목은 체크리스트로 빼는 편이 좋습니다.
+실행 항목을 빠르게 보여주고 싶을 때는 체크리스트가 맞습니다.
 
 <Checklist
-  title="예산 글에 자주 쓰는 체크리스트"
+  title="예산 글에서 자주 쓰는 체크리스트"
   items={[
     '고정지출 총액을 먼저 적는다',
-    '식비와 배달비를 한 항목으로 묶는다',
-    '예비비를 따로 남긴다',
+    '식비와 배달비를 같은 항목 안에서 먼저 본다',
+    '소비 패턴을 한 번에 바꾸려 하지 않는다',
     '주 1회 예산 대비 실제 지출을 다시 본다',
   ]}
 />
 
-## 경고성 안내
+## 장단점 블록
 
-<Callout title="주의" tone="warning">
-  앱 비교 글에서 특정 서비스를 단정적으로 추천하거나 비난하는 문장은 피하는 편이
-  안전합니다. 비교 기준과 상황별 적합성을 먼저 쓰는 쪽이 신뢰를 만듭니다.
-</Callout>
+<ProsCons
+  prosTitle="이런 글에 잘 맞습니다"
+  consTitle="쓸 때 주의할 점"
+  pros={[
+    '비교형 글에서 판단 기준을 빠르게 보여줄 수 있습니다.',
+    '긴 문단보다 스캔 속도가 빨라집니다.',
+  ]}
+  cons={[
+    '항목이 너무 많으면 오히려 읽기 부담이 생깁니다.',
+    '근거 없는 장단점 나열은 글 신뢰도를 떨어뜨립니다.',
+  ]}
+/>
 
-## 일반 문단과 섞는 기준
+## 대상 독자 블록
 
-MDX 컴포넌트는 글을 화려하게 만드는 용도가 아니라, 정보 구조를 빨리 읽히게 만드는
-용도입니다. 그래서 보통은 아래 순서가 가장 무난합니다.
+<FitGuide
+  fit={[
+    '초보자용 허브 글을 쓰는 경우',
+    '비교 글에서 누구에게 맞는지 빠르게 보여주고 싶은 경우',
+  ]}
+  notFit={[
+    '아주 짧은 공지성 글',
+    '단순 링크 모음처럼 별도 설명이 필요 없는 글',
+  ]}
+/>
+
+## FAQ 블록
+
+<Faq
+  items={[
+    {
+      question: '모든 글을 MDX로 써야 하나요?',
+      answer: '아닙니다. 일반 본문과 리스트 중심 글은 MD만으로 충분하고, 요약 카드나 FAQ 같은 재사용 블록이 필요할 때만 MDX를 쓰면 됩니다.',
+    },
+    {
+      question: 'FAQ는 보통 어디에 두는 게 좋나요?',
+      answer: '보통 글 마지막에 두는 편이 자연스럽습니다. 본문을 다 읽은 뒤 남을 만한 질문을 정리하는 역할이기 때문입니다.',
+    },
+  ]}
+/>
+
+## 기본 원칙
+
+MDX 컴포넌트는 글을 화려하게 만드는 도구가 아니라, 정보를 더 빠르게 읽히게 만드는 도구입니다. 그래서 보통은 아래 순서가 가장 무난합니다.
 
 1. 도입부 2~3문단
 2. 핵심 요약 1개
 3. 본문 섹션 3~5개
-4. 체크리스트 또는 콜아웃 1~2개
-5. 마무리와 관련 글 링크
+4. 체크리스트나 콜아웃 1~2개
+5. FAQ 또는 관련 글 링크
