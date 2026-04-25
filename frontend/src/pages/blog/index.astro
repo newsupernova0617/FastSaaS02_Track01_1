@@ -110,6 +110,9 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
               href={`/blog/${post.data.slug}/`}
               data-blog-card
               data-blog-category={post.data.category}
+              data-track-event="blog_card_click"
+              data-track-source="blog_index_featured"
+              data-track-slug={post.data.slug}
               class="group rounded-[28px] border border-base-300 bg-white p-7 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl"
             >
               <div class="flex items-center gap-3 text-xs font-semibold text-base-content/50">
@@ -149,6 +152,9 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
             href={`/blog/${post.data.slug}/`}
             data-blog-card
             data-blog-category={post.data.category}
+            data-track-event="blog_card_click"
+            data-track-source="blog_index_list"
+            data-track-slug={post.data.slug}
             class="group rounded-[24px] border border-base-300 bg-white/90 p-6 transition duration-200 hover:border-primary/20 hover:bg-white hover:shadow-lg"
           >
             <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-base-content/50">

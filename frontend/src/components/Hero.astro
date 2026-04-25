@@ -35,6 +35,8 @@ import ChatDemo from './ChatDemo.astro';
         <div class="mt-9 flex flex-wrap items-center gap-3">
           <a
             href="#waitlist"
+            data-track-event="home_waitlist_click"
+            data-track-source="hero"
             class="btn btn-primary btn-lg rounded-full font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30"
           >
             출시 알림 받기
@@ -42,12 +44,16 @@ import ChatDemo from './ChatDemo.astro';
           </a>
           <a
             href="#features"
+            data-track-event="home_features_click"
+            data-track-source="hero"
             class="btn btn-ghost btn-lg rounded-full font-semibold"
           >
             기능 자세히 보기
           </a>
           <a
             href="/blog"
+            data-track-event="home_blog_click"
+            data-track-source="hero"
             class="btn btn-outline btn-lg rounded-full font-semibold border-base-300 text-base-content/80 hover:border-primary hover:bg-primary/5 hover:text-primary"
           >
             블로그 보기

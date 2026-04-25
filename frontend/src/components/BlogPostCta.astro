@@ -33,6 +33,10 @@ const {
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
       <a
         href={primaryHref}
+        data-track-event="blog_cta_click"
+        data-track-source="blog_post"
+        data-track-cta="primary"
+        data-track-label={primaryLabel}
         class="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-content shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:shadow-primary/30"
       >
         {primaryLabel}
@@ -43,6 +47,10 @@ const {
       </a>
       <a
         href={secondaryHref}
+        data-track-event="blog_cta_click"
+        data-track-source="blog_post"
+        data-track-cta="secondary"
+        data-track-label={secondaryLabel}
         class="inline-flex items-center justify-center gap-2 rounded-full border border-base-300 bg-white px-5 py-3 text-sm font-semibold text-base-content transition hover:-translate-y-0.5 hover:border-primary/20 hover:text-primary hover:shadow-lg"
       >
         {secondaryLabel}

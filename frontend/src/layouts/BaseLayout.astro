@@ -93,5 +93,50 @@ const structuredDataList = structuredData
   </head>
   <body class="bg-base-100 text-base-content antialiased">
     <slot />
+    <script is:inline>
+      (() => {
+        const win = window;
+
+        const send = (name, properties = {}) => {
+          const payload = {
+            event: name,
+            path: location.pathname,
+            href: location.href,
+            ...properties,
+          };
+
+          if (Array.isArray(win.dataLayer)) {
+            win.dataLayer.push(payload);
+          }
+
+          if (typeof win.plausible === 'function') {
+            win.plausible(name, { props: properties });
+          }
+
+          win.dispatchEvent(new CustomEvent('fastsaas:analytics', { detail: payload }));
+        };
+
+        win.fastsaasTrackEvent = send;
+
+        document.addEventListener('click', (event) => {
+          const target = event.target instanceof Element ? event.target.closest('[data-track-event]') : null;
+          if (!target) return;
+
+          const name = target.getAttribute('data-track-event');
+          if (!name) return;
+
+          const properties = {};
+          for (const attr of Array.from(target.attributes)) {
+            if (!attr.name.startsWith('data-track-') || attr.name === 'data-track-event') continue;
+            const key = attr.name
+              .replace(/^data-track-/, '')
+              .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+            properties[key] = attr.value;
+          }
+
+          send(name, properties);
+        });
+      })();
+    </script>
   </body>
 </html>

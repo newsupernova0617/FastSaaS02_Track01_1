@@ -10,6 +10,12 @@ const API_BASE = (import.meta.env.PUBLIC_API_BASE_URL ?? 'http://localhost:8787'
 export default function WaitlistForm() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const trackEvent = (name: string, properties: Record<string, string>) => {
+    if (typeof window === 'undefined') return;
+    (window as Window & {
+      fastsaasTrackEvent?: (eventName: string, eventProperties?: Record<string, string>) => void;
+    }).fastsaasTrackEvent?.(name, properties);
+  };
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -32,14 +38,30 @@ export default function WaitlistForm() {
       const data = (await res.json()) as { success?: boolean; alreadyRegistered?: boolean };
       if (data.alreadyRegistered) {
         setStatus('already');
+        trackEvent('waitlist_submit', {
+          status: 'already',
+          source: 'waitlist_form',
+        });
       } else if (data.success) {
         setStatus('success');
         setEmail('');
+        trackEvent('waitlist_submit', {
+          status: 'success',
+          source: 'waitlist_form',
+        });
       } else {
         setStatus('error');
+        trackEvent('waitlist_submit', {
+          status: 'error',
+          source: 'waitlist_form',
+        });
       }
     } catch {
       setStatus('error');
+      trackEvent('waitlist_submit', {
+        status: 'error',
+        source: 'waitlist_form',
+      });
     }
   }
 
