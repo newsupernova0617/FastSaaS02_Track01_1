@@ -12,21 +12,24 @@ const { title = '체크리스트', items } = Astro.props;
 const normalizedItems = items.map((item) => (typeof item === 'string' ? item : item.text));
 ---
 
-<section class="my-8 rounded-[28px] border border-slate-200 bg-white px-5 py-6 shadow-sm sm:px-7">
-  <div class="mb-4 flex items-center gap-3">
-    <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-content">
-      ✓
+<section class="my-9 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.55)]">
+  <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-950 px-5 py-4 text-white sm:px-6">
+    <div>
+      <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/55">Action List</p>
+      <h3 class="mt-1 text-xl font-black leading-tight">{title}</h3>
+    </div>
+    <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/75">
+      {normalizedItems.length} items
     </span>
-    <h3 class="text-xl font-black tracking-tight text-slate-900">{title}</h3>
   </div>
-  <ul class="space-y-3">
-    {normalizedItems.map((item) => (
-      <li class="flex gap-3 rounded-[18px] bg-slate-50 px-4 py-3 text-[1rem] leading-7 text-slate-700">
-        <span class="mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-emerald-100 text-[0.75rem] font-black text-emerald-700">
-          ✓
+  <ol class="divide-y divide-slate-200">
+    {normalizedItems.map((item, index) => (
+      <li class="grid grid-cols-[2.35rem_minmax(0,1fr)] gap-3 px-5 py-4 text-[1rem] leading-7 text-slate-700 sm:px-6">
+        <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
+          {index + 1}
         </span>
         <span>{item}</span>
       </li>
     ))}
-  </ul>
+  </ol>
 </section>

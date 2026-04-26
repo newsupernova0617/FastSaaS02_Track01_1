@@ -8,31 +8,45 @@ const { title, tone = 'info' } = Astro.props;
 
 const toneStyles = {
   info: {
-    wrap: 'border-blue-200 bg-blue-50/80',
-    badge: 'bg-blue-600 text-white',
+    wrap: 'border-blue-200 bg-blue-50/75',
+    rail: 'bg-blue-600',
+    badge: 'text-blue-700',
+    mark: 'i',
   },
   tip: {
-    wrap: 'border-emerald-200 bg-emerald-50/80',
-    badge: 'bg-emerald-600 text-white',
+    wrap: 'border-emerald-200 bg-emerald-50/75',
+    rail: 'bg-emerald-600',
+    badge: 'text-emerald-700',
+    mark: '+',
   },
   warning: {
-    wrap: 'border-amber-200 bg-amber-50/90',
-    badge: 'bg-amber-500 text-white',
+    wrap: 'border-amber-200 bg-amber-50/85',
+    rail: 'bg-amber-500',
+    badge: 'text-amber-800',
+    mark: '!',
   },
 } as const;
 
 const styles = toneStyles[tone];
 ---
 
-<aside class={`my-8 rounded-[24px] border px-5 py-5 sm:px-6 ${styles.wrap}`}>
-  {title && (
-    <div class="mb-3">
-      <span class={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold tracking-[0.18em] uppercase ${styles.badge}`}>
-        {title}
-      </span>
+<aside class={`my-8 overflow-hidden rounded-[20px] border shadow-[0_16px_36px_-32px_rgba(15,23,42,0.55)] ${styles.wrap}`}>
+  <div class="grid grid-cols-[5px_minmax(0,1fr)]">
+    <div class={styles.rail}></div>
+    <div class="px-5 py-5 sm:px-6">
+      <div class="mb-3 flex items-center gap-2">
+        <span class={`inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-black ${styles.badge}`}>
+          {styles.mark}
+        </span>
+        {title && (
+          <span class={`text-xs font-black uppercase tracking-[0.16em] ${styles.badge}`}>
+            {title}
+          </span>
+        )}
+      </div>
+      <div class="text-[1rem] leading-8 text-slate-700">
+        <slot />
+      </div>
     </div>
-  )}
-  <div class="text-[1rem] leading-8 text-slate-700">
-    <slot />
   </div>
 </aside>
