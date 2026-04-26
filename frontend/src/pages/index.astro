@@ -22,6 +22,28 @@ const latestPosts = (await getCollection('blog'))
     readingTime: post.data.readingTime,
     tags: post.data.tags,
   }));
+
+const featuredPost = (await getCollection('blog'))
+  .filter((post) => !post.data.draft && post.data.featured)
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime())[0];
+
+const blogCategories = [
+  {
+    slug: 'money-basics',
+    label: '돈 관리 기초',
+    description: '가계부 시작, 예산, 항목 분류 같은 기본기',
+  },
+  {
+    slug: 'life-stages',
+    label: '상황별 가이드',
+    description: '사회초년생, 자취생, 첫 월급 관리 같은 실전 주제',
+  },
+  {
+    slug: 'app-guides',
+    label: '앱 비교 가이드',
+    description: '가계부 앱 비교, 개인정보, 자동 연동 체크포인트',
+  },
+];
 ---
 
 <BaseLayout>
@@ -29,7 +51,18 @@ const latestPosts = (await getCollection('blog'))
     <Hero />
     <Features />
     <Screenshots />
-    {latestPosts.length > 0 && <HomeBlogPreview posts={latestPosts} />}
+    {latestPosts.length > 0 && (
+      <HomeBlogPreview posts={latestPosts} featuredPost={featuredPost ? {
+        slug: featuredPost.data.slug,
+        title: featuredPost.data.title,
+        description: featuredPost.data.description,
+        excerpt: featuredPost.data.excerpt,
+        category: featuredPost.data.category,
+        publishDate: featuredPost.data.publishDate,
+        readingTime: featuredPost.data.readingTime,
+        tags: featuredPost.data.tags,
+      } : undefined} categories={blogCategories} />
+    )}
     <DownloadCTA />
   </main>
   <Footer />

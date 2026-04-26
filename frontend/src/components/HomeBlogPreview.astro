@@ -12,9 +12,15 @@ interface PostPreview {
 
 interface Props {
   posts: PostPreview[];
+  featuredPost?: PostPreview;
+  categories?: {
+    slug: string;
+    label: string;
+    description: string;
+  }[];
 }
 
-const { posts } = Astro.props;
+const { posts, featuredPost, categories = [] } = Astro.props;
 
 const categoryLabels = {
   'money-basics': '돈 관리 기초',
@@ -52,6 +58,55 @@ const categoryLabels = {
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </a>
     </div>
+
+    {categories.length > 0 && (
+      <div class="mt-8 grid gap-3 lg:grid-cols-3">
+        {categories.map((category) => (
+          <a
+            href={`/blog?category=${category.slug}`}
+            data-track-event="home_blog_category_click"
+            data-track-source="home_preview"
+            data-track-category={category.slug}
+            class="rounded-[22px] border border-base-300 bg-white/85 px-5 py-4 transition hover:-translate-y-0.5 hover:border-primary/20 hover:bg-white hover:shadow-lg"
+          >
+            <div class="text-sm font-black text-base-content">{category.label}</div>
+            <p class="mt-2 text-sm leading-6 text-base-content/65">{category.description}</p>
+          </a>
+        ))}
+      </div>
+    )}
+
+    {featuredPost && (
+      <a
+        href={`/blog/${featuredPost.slug}/`}
+        data-track-event="home_blog_featured_click"
+        data-track-source="home_preview"
+        data-track-slug={featuredPost.slug}
+        class="mt-8 block overflow-hidden rounded-[32px] border border-primary/10 bg-[linear-gradient(135deg,_rgba(37,99,235,0.08),_rgba(255,255,255,0.98))] p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:p-8"
+      >
+        <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-base-content/50">
+          <span class="rounded-full bg-primary px-3 py-1 text-primary-content">추천 글</span>
+          <span class="rounded-full bg-white/80 px-3 py-1 text-primary">
+            {categoryLabels[featuredPost.category]}
+          </span>
+          <span>{featuredPost.publishDate.toLocaleDateString('ko-KR')}</span>
+          <span>{featuredPost.readingTime ?? 5}분 읽기</span>
+        </div>
+        <h3 class="mt-4 max-w-3xl text-3xl font-black leading-tight text-base-content sm:text-4xl">
+          {featuredPost.title}
+        </h3>
+        <p class="mt-4 max-w-3xl text-base leading-8 text-base-content/72">
+          {featuredPost.excerpt || featuredPost.description}
+        </p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {featuredPost.tags.slice(0, 4).map((tag) => (
+            <span class="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-base-content/70">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </a>
+    )}
 
     <div class="mt-14 grid gap-5 lg:grid-cols-3">
       {posts.map((post, index) => (

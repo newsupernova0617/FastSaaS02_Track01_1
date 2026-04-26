@@ -37,6 +37,9 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
     'app-guides': 0,
   },
 );
+const initialCategory = categoryOrder.includes(Astro.url.searchParams.get('category') as (typeof categoryOrder)[number])
+  ? (Astro.url.searchParams.get('category') as (typeof categoryOrder)[number])
+  : 'all';
 ---
 
 <BaseLayout
@@ -58,7 +61,10 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
     },
   ]}
 >
-  <main class="bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_38%),linear-gradient(to_bottom,_#ffffff,_#f7f7f8)]">
+  <main
+    data-initial-category={initialCategory}
+    class="bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_38%),linear-gradient(to_bottom,_#ffffff,_#f7f7f8)]"
+  >
     <section class="mx-auto max-w-6xl px-6 pb-10 pt-20">
       <div class="max-w-3xl reveal">
         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary/70">Blog</p>
@@ -177,6 +183,8 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
 </BaseLayout>
 
 <script>
+  const initialCategory =
+    document.querySelector('main[data-initial-category]')?.getAttribute('data-initial-category') || 'all';
   const filterButtons = Array.from(document.querySelectorAll('[data-blog-filter-btn]'));
   const cardGroups = Array.from(document.querySelectorAll('[data-blog-filter-group]'));
   const cards = Array.from(document.querySelectorAll('[data-blog-card]'));
@@ -221,5 +229,5 @@ const categoryCounts = categoryOrder.reduce<Record<(typeof categoryOrder)[number
     });
   });
 
-  applyFilter('all');
+  applyFilter(initialCategory);
 </script>
