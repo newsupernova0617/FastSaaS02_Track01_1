@@ -12,14 +12,14 @@ const {
 } = Astro.props;
 ---
 
-<section class="not-prose my-9 rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-34px_rgba(15,23,42,0.55)] sm:p-6">
+<section class="not-prose my-9 rounded-[18px] border border-slate-200/90 bg-white p-5 sm:p-6">
   <div class="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
     <div>
       <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-primary/75">Fit Guide</p>
       <h3 class="mt-2 text-xl font-black tracking-tight text-slate-950">{title}</h3>
       <ul class="mt-5 space-y-3">
         {fit.map((item) => (
-          <li class="flex gap-3 rounded-[14px] bg-slate-50 px-4 py-3 text-[1rem] leading-7 text-slate-700 ring-1 ring-slate-200">
+          <li class="flex gap-3 rounded-[14px] bg-slate-50/85 px-4 py-3 text-[1rem] leading-7 text-slate-700 ring-1 ring-slate-200/90">
             <span class="mt-1 inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-primary text-[0.7rem] font-black text-primary-content">
               +
             </span>
@@ -30,7 +30,7 @@ const {
     </div>
 
     {notFit.length > 0 && (
-      <div class="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4">
+      <div class="rounded-[16px] border border-slate-200/90 bg-slate-50/85 px-4 py-4">
         <div class="text-[0.75rem] font-black uppercase tracking-[0.16em] text-slate-500">
           다른 방식이 나을 수 있는 경우
         </div>

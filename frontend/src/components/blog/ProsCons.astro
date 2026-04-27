@@ -24,12 +24,12 @@ const sections: Item[] = [
 ];
 ---
 
-<section class="not-prose my-9 grid overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.55)] md:grid-cols-2">
+<section class="not-prose my-9 grid overflow-hidden rounded-[18px] border border-slate-200/90 bg-white md:grid-cols-2">
   {sections.map((section, index) => (
     <div
       class:list={[
         'px-5 py-5 sm:px-6',
-        index === 0 ? 'bg-emerald-50/70' : 'bg-amber-50/80 md:border-l md:border-slate-200',
+        index === 0 ? 'bg-emerald-50/45' : 'bg-amber-50/55 md:border-l md:border-slate-200/90',
       ]}
     >
       <div class="flex items-center gap-3">
@@ -37,8 +37,8 @@ const sections: Item[] = [
           class:list={[
             'inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-black ring-1',
             index === 0
-              ? 'bg-white text-emerald-700 ring-emerald-200'
-              : 'bg-white text-amber-700 ring-amber-200',
+              ? 'bg-white text-emerald-700 ring-emerald-100'
+              : 'bg-white text-amber-700 ring-amber-100',
           ]}
         >
           {index === 0 ? '+' : '!'}
