@@ -12,7 +12,7 @@ const { title = '체크리스트', items } = Astro.props;
 const normalizedItems = items.map((item) => (typeof item === 'string' ? item : item.text));
 ---
 
-<section class="my-9 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.55)]">
+<section class="not-prose my-9 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.55)]">
   <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-950 px-5 py-4 text-white sm:px-6">
     <div>
       <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/55">Action List</p>

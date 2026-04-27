@@ -15,6 +15,7 @@
     "@astrojs/cloudflare": "^13.1.10",
     "@astrojs/mdx": "^5.0.4",
     "@astrojs/react": "^5.0.3",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
