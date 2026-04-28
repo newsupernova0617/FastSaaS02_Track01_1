@@ -1,4 +1,6 @@
 ---
+import { ScanSearch } from 'lucide-react';
+
 interface Props {
   title?: string;
 }
@@ -9,7 +11,9 @@ const { title = '핵심 요약' } = Astro.props;
 <section class="not-prose mdx-summary my-9 overflow-hidden rounded-[18px] border border-slate-200/90 bg-white">
   <div class="border-b border-slate-200/90 px-5 py-4 sm:px-6">
     <div class="flex items-center gap-3">
-      <span class="h-2 w-2 rounded-full bg-primary/90"></span>
+      <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <ScanSearch size={16} strokeWidth={2.2} />
+      </span>
       <p class="text-[0.78rem] font-black uppercase tracking-[0.16em] text-slate-500">
         Summary
       </p>

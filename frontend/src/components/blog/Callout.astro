@@ -1,4 +1,6 @@
 ---
+import { Info, Lightbulb, TriangleAlert } from 'lucide-react';
+
 interface Props {
   title?: string;
   tone?: 'info' | 'tip' | 'warning';
@@ -11,23 +13,24 @@ const toneStyles = {
     wrap: 'border-blue-200 bg-blue-50/75',
     rail: 'bg-blue-600',
     badge: 'text-blue-700',
-    mark: 'i',
+    icon: Info,
   },
   tip: {
     wrap: 'border-emerald-200 bg-emerald-50/75',
     rail: 'bg-emerald-600',
     badge: 'text-emerald-700',
-    mark: '+',
+    icon: Lightbulb,
   },
   warning: {
     wrap: 'border-amber-200 bg-amber-50/85',
     rail: 'bg-amber-500',
     badge: 'text-amber-800',
-    mark: '!',
+    icon: TriangleAlert,
   },
 } as const;
 
 const styles = toneStyles[tone];
+const Icon = styles.icon;
 ---
 
 <aside class={`not-prose my-8 overflow-hidden rounded-[18px] border ${styles.wrap}`}>
@@ -36,7 +39,7 @@ const styles = toneStyles[tone];
     <div class="px-5 py-5 sm:px-6">
       <div class="mb-3 flex items-center gap-2">
         <span class={`inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-black ${styles.badge}`}>
-          {styles.mark}
+          <Icon size={14} strokeWidth={2.3} />
         </span>
         {title && (
           <span class={`text-xs font-black uppercase tracking-[0.16em] ${styles.badge}`}>

@@ -1,4 +1,6 @@
 ---
+import { BarChart3, CalendarDays, PencilLine, Sparkles } from 'lucide-react';
+
 interface Step {
   title: string;
   description: string;
@@ -15,6 +17,8 @@ const {
   eyebrow = 'App flow',
   steps,
 } = Astro.props;
+
+const flowIcons = [PencilLine, Sparkles, CalendarDays, BarChart3] as const;
 ---
 
 <section class="not-prose my-9 rounded-[18px] border border-slate-200/90 bg-white p-5 sm:p-6">
@@ -25,9 +29,12 @@ const {
 
   <ol class="grid gap-3 md:grid-cols-2">
     {steps.map((step, index) => (
-      <li class="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-[16px] border border-slate-200/90 bg-slate-50/75 px-4 py-4">
-        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-black text-white">
-          {index + 1}
+      <li class="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 rounded-[16px] border border-slate-200/90 bg-slate-50/75 px-4 py-4">
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-white">
+          {(() => {
+            const Icon = flowIcons[index] ?? BarChart3;
+            return <Icon size={18} strokeWidth={2.2} />;
+          })()}
         </span>
         <div>
           <h4 class="text-[1rem] font-black leading-tight text-slate-950">{step.title}</h4>
