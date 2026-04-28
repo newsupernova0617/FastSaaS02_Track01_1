@@ -807,18 +807,18 @@ class _ReportPreviewCard extends StatelessWidget {
         ? <Widget>[]
         : [
             _SummaryMetricCard(
-                label: 'Total Spend',
+                label: '총 지출',
                 value: '${currency.format(summary.totalExpense.round())}',
                 emphasized: true,
             ),
             _SummaryMetricCard(
-                label: summary.totalIncome > 0 ? 'Total Income' : 'Net Assets',
+                label: summary.totalIncome > 0 ? '총 수입' : '순자산',
                 value: summary.totalIncome > 0
                     ? '${currency.format(summary.totalIncome.round())}'
                     : '${currency.format(summary.netAmount.round())}',
             ),
             _SummaryMetricCard(
-                label: 'Vs Last Period',
+                label: '지난 기간 대비',
                 value: summary.deltaPercent == null
                     ? '-'
                     : '${summary.deltaPercent! >= 0 ? '+' : ''}${summary.deltaPercent!.toStringAsFixed(1)}%',
@@ -885,10 +885,10 @@ class _ReportPreviewCard extends StatelessWidget {
                       ),
                       child: Text(
                         summary == null
-                            ? 'Report Preview'
+                            ? '리포트 미리보기'
                             : (report.reportType == 'weekly_summary'
-                                  ? 'Weekly Report'
-                                  : 'Monthly Report'),
+                                  ? '주간 리포트'
+                                  : '월간 리포트'),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w800,
@@ -955,7 +955,7 @@ class _ReportPreviewCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'AI Summary  ${summary!.insight!}',
+                'AI 요약  ${summary!.insight!}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                   height: 1.35,
@@ -965,7 +965,7 @@ class _ReportPreviewCard extends StatelessWidget {
           ],
           if (breakdownItems.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            Text('Top 3', style: theme.textTheme.labelLarge),
+            Text('상위 3개', style: theme.textTheme.labelLarge),
             const SizedBox(height: AppSpacing.sm),
             for (final item in breakdownItems)
               Padding(
@@ -979,7 +979,7 @@ class _ReportPreviewCard extends StatelessWidget {
           ],
           if (summary == null) ...[
             const SizedBox(height: AppSpacing.md),
-            Text('No preview data yet.', style: theme.textTheme.bodyMedium),
+            Text('아직 미리보기 데이터가 없습니다.', style: theme.textTheme.bodyMedium),
           ],
           const SizedBox(height: AppSpacing.xs),
           SizedBox(

@@ -18,8 +18,11 @@ import Callout from '../../components/blog/Callout.astro';
 import QuickSummary from '../../components/blog/QuickSummary.astro';
 import SummaryItem from '../../components/blog/SummaryItem.astro';
 import Checklist from '../../components/blog/Checklist.astro';
+import ProductFlow from '../../components/blog/ProductFlow.astro';
 
-자취 생활에서 가장 먼저 부딪히는 문제는 "얼마를 써야 덜 불안한가"입니다. 생활비가 많지 않은 상황에서는 절약을 잘하는 것보다, **어디에 먼저 돈이 나가는지 정확히 보는 것**이 더 중요합니다.
+자취를 시작하면 생각보다 돈이 조용히 빠져나갑니다. 월세와 관리비는 이미 정해져 있고, 남은 돈으로 식비와 교통비를 버티면 될 것 같지만 월말에는 편의점, 배달, 생필품, 택시비가 한꺼번에 눈에 들어옵니다.
+
+그래서 자취 생활비 관리는 "아껴야지"라는 결심보다, **어디에서 자주 새는지 매주 확인하는 구조**가 먼저입니다. 특히 30만원처럼 빠듯한 예산에서는 한 번 큰 지출보다 작은 지출이 반복되는 쪽이 더 위험합니다.
 
 <QuickSummary title="자취생 예산의 핵심">
   <SummaryItem label="먼저 볼 항목">
@@ -111,6 +114,28 @@ import Checklist from '../../components/blog/Checklist.astro';
 
 기록을 쉽게 유지하고 싶다면 [가계부 쓰는 법 완벽 가이드](/blog/how-to-start-household-book/)를 같이 보면 좋습니다.
 
+<ProductFlow
+  title="우리 앱으로 자취 생활비를 볼 때의 흐름"
+  steps={[
+    {
+      title: '홈에서 오늘 지출을 바로 남기기',
+      description: '홈의 지출 기록에서 금액, 날짜, 지출/수입, 카테고리, 메모만 넣고 저장합니다.',
+    },
+    {
+      title: '식비와 생활용품을 기본 카테고리로 묶기',
+      description: '처음부터 세세하게 나누기보다 식비, 교통, 쇼핑, 월세, 기타처럼 큰 항목으로 시작합니다.',
+    },
+    {
+      title: '달력에서 새는 날짜 확인하기',
+      description: '달력에서 날짜별 지출/수입 표시와 선택 날짜 거래를 확인해 특정 요일에 지출이 몰리는지 봅니다.',
+    },
+    {
+      title: '통계에서 한 달 비중 다시 보기',
+      description: '통계 탭에서 총 지출과 카테고리 비중을 보고 다음 주 식비 기준을 조정합니다.',
+    },
+  ]}
+/>
+
 ## 자취생에게 맞는 현실적인 원칙
 
 <Checklist
@@ -133,6 +158,8 @@ import Checklist from '../../components/blog/Checklist.astro';
 - 식비나 생활용품을 자주 확인하고 싶다
 - 예산 대비 사용량을 중간중간 보고 싶다
 - 기록 습관이 아직 덜 잡혀 있다
+
+우리 앱에서는 자취생이 자주 쓰는 `식비`, `교통`, `쇼핑`, `월세`, `기타` 같은 큰 카테고리부터 시작할 수 있습니다. 중요한 건 항목을 예쁘게 만드는 것이 아니라, 배달과 편의점 지출이 어느 항목에서 반복되는지 빨리 보는 것입니다.
 
 이런 경우에는 [엑셀 가계부 vs 앱 가계부 비교](/blog/excel-vs-app-household-book/)와 [가계부 앱 추천 TOP 5 솔직 비교](/blog/best-household-book-apps/)를 같이 보면 선택이 쉬워집니다.
 

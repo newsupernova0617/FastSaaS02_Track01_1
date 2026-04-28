@@ -99,11 +99,11 @@ export function generateReportMessage(report: Report): { content: string; metada
   // Generate readable message content
   const content = `📊 ${report.title}${report.subtitle ? ' ' + report.subtitle : ''}
 
-I've analyzed your financial data and generated the following insights:
+금융 데이터를 분석해 리포트를 생성했습니다.
 
 ${report.sections.map((section, i) => `${i + 1}. ${section.title}${section.subtitle ? ' - ' + section.subtitle : ''}`).join('\n')}
 
-View the detailed analysis below.`;
+아래에서 상세 분석을 확인할 수 있습니다.`;
 
   // Store full report data in metadata for rendering
   const metadata = {

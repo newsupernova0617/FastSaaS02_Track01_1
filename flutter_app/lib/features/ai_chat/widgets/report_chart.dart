@@ -149,7 +149,7 @@ class ReportChart extends StatelessWidget {
           spacing: AppSpacing.md,
           runSpacing: 6,
           children: List.generate(values.length, (i) {
-            final label = i < labels.length ? labels[i] : 'Item $i';
+            final label = i < labels.length ? labels[i] : '항목 ${i + 1}';
             final pct = total > 0 ? (values[i] / total) * 100 : 0;
             final color = _chartPalette[i % _chartPalette.length];
             return Row(
@@ -358,8 +358,8 @@ class ReportChart extends StatelessWidget {
   }
 
   String _formatNumber(int num) {
-    if (num >= 1000000) return '${(num / 1000000).toStringAsFixed(0)}M';
-    if (num >= 1000) return '${(num / 1000).toStringAsFixed(0)}K';
+    if (num >= 10000) return '${(num / 10000).toStringAsFixed(0)}만';
+    if (num >= 1000) return '${(num / 1000).toStringAsFixed(0)}천';
     return num.toString();
   }
 }

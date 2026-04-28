@@ -119,7 +119,7 @@ class ReportCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        title ?? 'Metric',
+                        title ?? '지표',
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.65,

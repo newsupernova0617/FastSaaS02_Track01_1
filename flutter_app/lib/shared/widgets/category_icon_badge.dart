@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:flutter_app/core/constants/category_icons.dart';
 
@@ -24,6 +23,7 @@ class CategoryIconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? (circular ? size / 2 : 12);
+    final emoji = CategoryIcons.emojiOf(category);
 
     return Container(
       width: size,
@@ -34,7 +34,13 @@ class CategoryIconBadge extends StatelessWidget {
         borderRadius: circular ? null : BorderRadius.circular(radius),
       ),
       alignment: Alignment.center,
-      child: FaIcon(CategoryIcons.of(category), size: iconSize, color: color),
+      child: Text(
+        emoji,
+        style: TextStyle(
+          fontSize: iconSize,
+          height: 1,
+        ),
+      ),
     );
   }
 }

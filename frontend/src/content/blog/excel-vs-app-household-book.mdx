@@ -20,6 +20,7 @@ import SummaryItem from '../../components/blog/SummaryItem.astro';
 import ProsCons from '../../components/blog/ProsCons.astro';
 import FitGuide from '../../components/blog/FitGuide.astro';
 import Faq from '../../components/blog/Faq.astro';
+import ProductFlow from '../../components/blog/ProductFlow.astro';
 
 엑셀과 앱은 둘 다 가계부를 쓰는 도구지만, 사용하는 감각은 꽤 다릅니다. 무엇이 더 좋으냐보다 **어떤 생활 패턴에서 더 오래 유지되느냐**가 핵심입니다.
 
@@ -39,7 +40,7 @@ import Faq from '../../components/blog/Faq.astro';
 | 입력 속도 | 직접 열고 정리해야 함 | 일반적으로 더 빠름 |
 | 모바일 사용성 | 제한적 | 강함 |
 | 커스터마이징 | 매우 자유로움 | 서비스 범위 안에서 제한적 |
-| 차트와 요약 | 직접 만들어야 하는 경우가 많음 | 기본 제공되는 경우가 많음 |
+| 차트와 요약 | 직접 만들어야 하는 경우가 많음 | 통계, 달력, 리포트로 확인하는 경우가 많음 |
 | 지속성 | 정리 습관이 강한 사람에게 유리 | 초보자에게 더 유리한 경우가 많음 |
 
 ## 엑셀 가계부의 장점
@@ -74,16 +75,40 @@ import Faq from '../../components/blog/Faq.astro';
 - 입력 속도가 빠르고, 이동 중에도 바로 기록하기 좋습니다.
 - 카테고리, 차트, 월별 요약을 쉽게 다시 볼 수 있습니다.
 - 기록 습관이 아직 자리 잡지 않은 사람에게 시작 장벽이 낮습니다.
+- 질문형 조회나 리포트가 있는 앱은 엑셀에서 직접 계산하던 작업을 줄여줍니다.
 
 ## 앱 가계부의 한계
 
 - 서비스마다 카테고리 구조나 철학이 다릅니다.
 - 엑셀만큼 세밀한 커스터마이징은 어려울 수 있습니다.
-- 자동 연동, 리포트, 보안 수준에서 앱마다 차이가 큽니다.
+- 입력 방식, 리포트 품질, 보안 수준에서 앱마다 차이가 큽니다.
 
 <Callout title="주의" tone="warning">
-  앱은 다 비슷해 보여도 실제 차이는 입력 경험, 자동 분류 정확도, 보안 정책에서 크게 납니다. 설치 전에 비교가 필요합니다.
+  앱은 다 비슷해 보여도 실제 차이는 입력 경험, 질문형 조회 결과, 보안 정책에서 크게 납니다. 설치 전에 비교가 필요합니다.
 </Callout>
+
+<ProductFlow
+  title="우리 앱이 엑셀 작업을 줄이는 지점"
+  eyebrow="Excel to app"
+  steps={[
+    {
+      title: '표를 열기 전 기록',
+      description: '지출이 생겼을 때 홈 AI 입력, AI 채팅, 수동 기록, Android 알림 빠른 입력으로 먼저 남길 수 있습니다.',
+    },
+    {
+      title: '계산 대신 질문',
+      description: 'AI 채팅에서 소비 흐름을 물어보고, 세션 기반 대화로 이어서 조건을 좁혀볼 수 있습니다.',
+    },
+    {
+      title: '요약값 확인',
+      description: 'AI 검색 결과에서 총액, 건수, 하루 평균, breakdown, insight, 거래 목록을 한 화면에서 확인합니다.',
+    },
+    {
+      title: '월말 정리',
+      description: '주간/월간 리포트와 저장 리포트, 통계와 달력 화면으로 엑셀에서 따로 만들던 확인 루틴을 대체합니다.',
+    },
+  ]}
+/>
 
 ## 어떤 사람에게 엑셀이 맞을까
 
@@ -106,7 +131,7 @@ import Faq from '../../components/blog/Faq.astro';
   title="앱이 맞는 사람"
   fit={[
     '기록을 자주 빼먹어서 입력 장벽이 낮아야 하는 사람',
-    '차트와 월별 흐름을 자주 다시 보고 싶은 사람',
+    '통계, 달력, 주간/월간 리포트를 자주 다시 보고 싶은 사람',
     '모바일 중심으로 생활비를 관리하는 사람',
   ]}
   notFit={[
@@ -143,7 +168,7 @@ import Faq from '../../components/blog/Faq.astro';
     },
     {
       question: '앱은 커스터마이징이 부족하지 않나요?',
-      answer: '엑셀보다는 제한적이지만, 대신 입력 속도와 차트 확인, 반복 사용성에서 얻는 장점이 큽니다.',
+      answer: '엑셀보다는 제한적이지만, 대신 입력 속도와 통계, 달력, 리포트 확인에서 얻는 장점이 큽니다.',
     },
   ]}
 />

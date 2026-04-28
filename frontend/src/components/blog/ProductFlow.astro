@@ -1,0 +1,39 @@
+---
+interface Step {
+  title: string;
+  description: string;
+}
+
+interface Props {
+  title?: string;
+  eyebrow?: string;
+  steps: Step[];
+}
+
+const {
+  title = '우리 앱에서는 이렇게 이어집니다',
+  eyebrow = 'App flow',
+  steps,
+} = Astro.props;
+---
+
+<section class="not-prose my-9 rounded-[18px] border border-slate-200/90 bg-white p-5 sm:p-6">
+  <div class="mb-5">
+    <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-primary/75">{eyebrow}</p>
+    <h3 class="mt-2 text-xl font-black tracking-tight text-slate-950">{title}</h3>
+  </div>
+
+  <ol class="grid gap-3 md:grid-cols-2">
+    {steps.map((step, index) => (
+      <li class="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 rounded-[16px] border border-slate-200/90 bg-slate-50/75 px-4 py-4">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-xs font-black text-white">
+          {index + 1}
+        </span>
+        <div>
+          <h4 class="text-[1rem] font-black leading-tight text-slate-950">{step.title}</h4>
+          <p class="mt-2 text-[0.95rem] leading-7 text-slate-600">{step.description}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>

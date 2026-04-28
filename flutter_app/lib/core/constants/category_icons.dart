@@ -9,6 +9,32 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class CategoryIcons {
   CategoryIcons._();
 
+  static String emojiOf(String? category) {
+    switch (category) {
+      case '식비':
+        return '🍱';
+      case '교통':
+        return '🚌';
+      case '쇼핑':
+        return '🛍️';
+      case '의료':
+        return '🩺';
+      case '문화여가':
+        return '🎬';
+      case '월세':
+        return '🏠';
+      case '월급':
+        return '💼';
+      case '부업':
+        return '🧑‍💻';
+      case '용돈':
+        return '💸';
+      case '기타':
+      default:
+        return '📌';
+    }
+  }
+
   static IconData of(String? category) {
     switch (category) {
       // Expense

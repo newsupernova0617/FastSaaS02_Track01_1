@@ -502,7 +502,7 @@ class _CategoryGrid extends StatelessWidget {
         for (final c in categories)
           _CatChip(
             label: c,
-            icon: CategoryIcons.of(c),
+            emoji: CategoryIcons.emojiOf(c),
             selected: selected == c,
             onTap: () => onSelect(c),
             theme: theme,
@@ -514,14 +514,14 @@ class _CategoryGrid extends StatelessWidget {
 
 class _CatChip extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String emoji;
   final bool selected;
   final VoidCallback onTap;
   final ThemeData theme;
 
   const _CatChip({
     required this.label,
-    required this.icon,
+    required this.emoji,
     required this.selected,
     required this.onTap,
     required this.theme,
@@ -553,12 +553,12 @@ class _CatChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: selected
-                  ? Colors.white
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            Text(
+              emoji,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1,
+              ),
             ),
             const SizedBox(width: 6),
             Text(

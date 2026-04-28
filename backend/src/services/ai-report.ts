@@ -150,7 +150,7 @@ export class AIReportService {
         ? String(params.month)
         : params?.weekStart && params?.weekEnd
           ? `${params.weekStart} - ${params.weekEnd}`
-          : 'all time',
+          : '전체 기간',
       weekStart: params?.weekStart ? String(params.weekStart) : undefined,
       weekEnd: params?.weekEnd ? String(params.weekEnd) : undefined,
       month: params?.month ? String(params.month) : undefined,
@@ -304,12 +304,12 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
     params?: Record<string, unknown>,
   ): string {
     if (reportType === 'weekly_summary' && params?.weekStart && params?.weekEnd) {
-      return `${params.weekStart} - ${params.weekEnd}`;
+      return `${params.weekStart} ~ ${params.weekEnd} 기준`;
     }
     if (reportType === 'monthly_summary' && params?.month) {
-      return String(params.month);
+      return `${params.month} 기준`;
     }
-    return 'all time';
+    return '전체 기간';
   }
 
   private getComparisonParams(
@@ -347,12 +347,12 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
    */
   private getReportTitle(reportType: string, params?: Record<string, unknown>): string {
     const titles = {
-      'weekly_summary': `Weekly Summary`,
-      'monthly_summary': `Monthly Summary`,
-      'category_detail': `Category Analysis`,
-      'spending_pattern': `Spending Pattern Analysis`,
-      'anomaly': `Anomaly Detection`,
-      'suggestion': `Smart Recommendations`,
+      'weekly_summary': `주간 요약`,
+      'monthly_summary': `월간 요약`,
+      'category_detail': `카테고리 분석`,
+      'spending_pattern': `지출 패턴 분석`,
+      'anomaly': `이상 지출 탐지`,
+      'suggestion': `맞춤 제안`,
     };
     return titles[reportType as keyof typeof titles] || reportType;
   }
@@ -362,10 +362,10 @@ Generate at least 3 sections. Start with JSON directly, no preamble.
    */
   private getReportSubtitle(reportType: string, params?: Record<string, unknown>): string | undefined {
     if (params?.month) {
-      return `for ${params.month}`;
+      return `${params.month} 기준`;
     }
     if (params?.weekStart && params?.weekEnd) {
-      return `for ${params.weekStart} to ${params.weekEnd}`;
+      return `${params.weekStart} ~ ${params.weekEnd} 기준`;
     }
     return undefined;
   }

@@ -18,8 +18,11 @@ import Callout from '../../components/blog/Callout.astro';
 import QuickSummary from '../../components/blog/QuickSummary.astro';
 import SummaryItem from '../../components/blog/SummaryItem.astro';
 import Checklist from '../../components/blog/Checklist.astro';
+import ProductFlow from '../../components/blog/ProductFlow.astro';
 
-첫 월급은 단순히 돈이 들어오는 사건이 아니라, 이후 몇 년의 소비 습관을 만드는 시작점입니다. 초반 루틴이 만들어지면 이후 돈 관리가 쉬워지고, 반대로 처음부터 감으로 쓰기 시작하면 카드값과 생활비가 뒤엉키기 쉽습니다.
+첫 월급을 받으면 생각보다 마음이 바빠집니다. 부모님 선물도 사고 싶고, 친구와 밥도 먹고 싶고, 그동안 미뤘던 물건도 눈에 들어옵니다. 문제는 첫 달에 기준 없이 쓰기 시작하면, 다음 달부터 카드값과 생활비가 월급보다 먼저 자리를 차지한다는 점입니다.
+
+첫 월급 관리는 돈을 많이 아끼는 일이 아니라 **월급이 들어온 날부터 어디로 나갈지 자리를 정하는 일**입니다. 이 기준이 생기면 이후 소비 습관이 훨씬 덜 흔들립니다.
 
 <QuickSummary title="첫 월급에서 먼저 할 것">
   <SummaryItem label="우선순위">
@@ -85,6 +88,28 @@ import Checklist from '../../components/blog/Checklist.astro';
 
 복잡한 가계부보다, 이 다섯 가지만 먼저 잡아도 돈 흐름이 훨씬 안정됩니다.
 
+<ProductFlow
+  title="우리 앱으로 첫 월급을 관리하는 흐름"
+  steps={[
+    {
+      title: '월급일에 수입으로 먼저 기록하기',
+      description: '기록 화면에서 수입을 선택하고 월급 카테고리로 금액과 날짜를 남깁니다.',
+    },
+    {
+      title: '첫 달 지출은 큰 항목만 나누기',
+      description: '식비, 교통, 쇼핑, 월세, 기타 정도로 단순하게 기록해 돈이 어디로 가는지 먼저 봅니다.',
+    },
+    {
+      title: '통계에서 순자산 변화 확인하기',
+      description: '총 수입, 총 지출, 순자산 변화를 함께 보면 저축을 먼저 뗐는지 바로 확인할 수 있습니다.',
+    },
+    {
+      title: '월말에 리포트로 복기하기',
+      description: '한 달이 끝나면 리포트와 카테고리 비중을 보며 다음 달 생활비 기준을 조정합니다.',
+    },
+  ]}
+/>
+
 ## 카드 사용은 특히 조심해야 합니다
 
 사회초년생은 카드 한도와 실제 생활비를 혼동하기 쉽습니다. 카드가 된다고 해서 쓸 수 있는 돈이 아닙니다.
@@ -100,6 +125,8 @@ import Checklist from '../../components/blog/Checklist.astro';
 ## 가계부와 예산을 같이 붙여야 하는 이유
 
 첫 월급 관리는 감각보다 구조가 중요합니다. 그래서 기록과 예산을 같이 봐야 합니다.
+
+우리 앱을 쓴다면 첫 달에는 완벽한 분류보다 "월급이 들어왔고, 어디로 빠졌는지"를 남기는 데 집중하는 편이 좋습니다. 이후 통계에서 카테고리 비중을 보고 식비나 쇼핑처럼 빨리 늘어나는 항목만 다음 달 예산으로 조정하면 됩니다.
 
 - [가계부 쓰는 법 완벽 가이드](/blog/how-to-start-household-book/)
 - [생활비 예산 세우는 법](/blog/how-to-budget-living-expenses/)
