@@ -385,22 +385,25 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
   .blog-prose :global(> ul li),
   .blog-prose :global(> ol li) {
     position: relative;
-    min-height: 2.4rem;
+    min-height: 2.5rem;
     padding-left: 3rem;
   }
 
   .blog-prose :global(> ul li)::before {
     content: '';
     position: absolute;
-    top: 0.7rem;
-    left: 0.55rem;
-    width: 0.65rem;
-    height: 0.65rem;
+    top: 0.15rem;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
     border-radius: 999px;
-    background: linear-gradient(180deg, rgb(37 99 235 / 0.95), rgb(59 130 246 / 0.72));
-    box-shadow:
-      0 0 0 6px rgb(37 99 235 / 0.08),
-      0 1px 2px rgb(15 23 42 / 0.08);
+    background:
+      radial-gradient(circle at center, rgb(37 99 235) 0 0.32rem, transparent 0.34rem),
+      rgb(37 99 235 / 0.08);
+    box-shadow: inset 0 0 0 1px rgb(37 99 235 / 0.12);
   }
 
   .blog-prose :global(> ol) {
