@@ -83,13 +83,13 @@ export default function WaitlistForm() {
         }}
         placeholder={waitlistCopy.placeholder}
         disabled={status === 'loading' || isDone}
-        className="input input-bordered flex-1 bg-white/95 text-base-content"
+        className="app-input flex-1 bg-white/95 text-base-content"
         aria-label="이메일 주소"
       />
       <button
         type="submit"
         disabled={status === 'loading' || isDone}
-        className="btn btn-secondary"
+        className="app-btn app-btn-secondary px-5 py-3"
       >
         {status === 'loading' ? '전송 중...' : waitlistCopy.cta}
       </button>

@@ -27,7 +27,7 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
             </label>
             <input
               id="apiBase"
-              class="input input-bordered w-full"
+              class="app-input w-full"
               value={apiBase}
               autocomplete="off"
             />
@@ -39,7 +39,7 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
             <input
               id="adminPassword"
               type="password"
-              class="input input-bordered w-full"
+              class="app-input w-full"
               placeholder="관리자 비밀번호"
             />
           </div>
@@ -47,7 +47,7 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
             <label for="statusFilter" class="mb-2 block text-sm font-semibold text-base-content/80">
               상태 필터
             </label>
-            <select id="statusFilter" class="select select-bordered w-full">
+            <select id="statusFilter" class="app-select w-full">
               <option value="">전체</option>
               <option value="new">new</option>
               <option value="in_progress">in_progress</option>
@@ -58,7 +58,7 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
             <label for="typeFilter" class="mb-2 block text-sm font-semibold text-base-content/80">
               유형 필터
             </label>
-            <select id="typeFilter" class="select select-bordered w-full">
+            <select id="typeFilter" class="app-select w-full">
               <option value="">전체</option>
               <option value="bug">bug</option>
               <option value="feature">feature</option>
@@ -67,7 +67,7 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
               <option value="other">other</option>
             </select>
           </div>
-          <button id="loadBtn" class="btn btn-primary w-full">문의 불러오기</button>
+          <button id="loadBtn" class="app-btn app-btn-primary app-btn-block">문의 불러오기</button>
           <p id="statusMessage" class="text-sm text-base-content/60"></p>
         </div>
       </aside>
@@ -151,8 +151,8 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div class="mb-2 flex flex-wrap gap-2">
-                  <span class="badge badge-outline">${item.type}</span>
-                  <span class="badge badge-primary badge-outline">${item.status}</span>
+                  <span class="app-badge">${item.type}</span>
+                  <span class="app-badge app-badge-primary">${item.status}</span>
                 </div>
                 <h2 class="text-lg font-bold text-base-content">${escapeHtml(item.title)}</h2>
                 <p class="mt-1 text-sm text-base-content/60">
@@ -173,13 +173,13 @@ const apiBase = 'https://backend.fastsaas2.workers.dev/admin-api';
               </div>
             </div>
             <div class="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)_120px]">
-              <select class="select select-bordered request-status" data-id="${item.id}">
+              <select class="app-select request-status" data-id="${item.id}">
                 <option value="new" ${item.status === 'new' ? 'selected' : ''}>new</option>
                 <option value="in_progress" ${item.status === 'in_progress' ? 'selected' : ''}>in_progress</option>
                 <option value="resolved" ${item.status === 'resolved' ? 'selected' : ''}>resolved</option>
               </select>
-              <textarea class="textarea textarea-bordered request-note" data-id="${item.id}" placeholder="관리자 메모">${escapeHtml(item.adminNote ?? '')}</textarea>
-              <button class="btn btn-outline save-request" data-id="${item.id}">저장</button>
+              <textarea class="app-textarea request-note" data-id="${item.id}" placeholder="관리자 메모">${escapeHtml(item.adminNote ?? '')}</textarea>
+              <button class="app-btn app-btn-subtle save-request" data-id="${item.id}">저장</button>
             </div>
           </div>
         `;
