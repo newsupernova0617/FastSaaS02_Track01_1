@@ -16,10 +16,20 @@ import ChatDemo from './ChatDemo.astro';
     <div class="grid items-center gap-16 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
       <!-- 좌측: 헤드라인 + CTA -->
       <div class="reveal">
-        <span class="inline-flex items-center gap-2 rounded-full border border-base-300 bg-base-100 px-3.5 py-1.5 text-xs font-semibold text-base-content/70">
-          <span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
-          정식 출시 준비 중 · {site.brand}
-        </span>
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full border border-base-300 bg-base-100 px-3.5 py-1.5 text-xs font-semibold text-base-content/70">
+            <span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+            정식 출시 준비 중 · {site.brand}
+          </span>
+          <a
+            href="/blog"
+            data-track-event="home_blog_top_click"
+            data-track-source="hero_top"
+            class="inline-flex items-center gap-2 rounded-full border border-base-300 bg-white/92 px-3.5 py-1.5 text-xs font-semibold text-base-content/72 transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary"
+          >
+            블로그 바로가기
+          </a>
+        </div>
 
         <h1 class="mt-6 text-[2.5rem] font-black leading-[1.1] tracking-tight text-base-content sm:text-5xl lg:text-[4rem]">
           말로 하는<br />
@@ -46,7 +56,7 @@ import ChatDemo from './ChatDemo.astro';
             href="#features"
             data-track-event="home_features_click"
             data-track-source="hero"
-            class="app-btn app-btn-ghost px-7 py-4 text-base"
+            class="app-btn border border-slate-200 bg-slate-50/92 px-7 py-4 text-base font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-white hover:text-slate-950"
           >
             기능 자세히 보기
           </a>
