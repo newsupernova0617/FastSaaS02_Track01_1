@@ -146,7 +146,7 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
               </ol>
             </nav>
           )}
-          <div class="blog-prose prose prose-slate prose-lg max-w-none prose-headings:font-black prose-headings:tracking-normal prose-headings:text-base-content prose-p:text-base-content/80 prose-p:leading-8 prose-li:text-base-content/78 prose-li:leading-8 prose-strong:text-base-content prose-a:text-primary prose-a:font-bold prose-a:decoration-slate-300 prose-a:underline-offset-4 hover:prose-a:text-accent hover:prose-a:decoration-primary prose-code:rounded-md prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.95em] prose-code:font-semibold prose-code:text-slate-800 prose-pre:rounded-[20px] prose-pre:bg-slate-950 prose-blockquote:rounded-r-[18px] prose-blockquote:border-l-4 prose-blockquote:border-primary/25 prose-blockquote:bg-blue-50/55 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:font-medium prose-blockquote:text-slate-700 prose-hr:border-base-300 prose-img:rounded-[20px] prose-img:border prose-img:border-base-300 prose-th:text-base-content prose-th:font-extrabold prose-td:text-base-content/76 prose-td:align-top prose-headings:scroll-mt-28">
+          <div class="blog-prose prose prose-slate max-w-none prose-headings:font-black prose-headings:tracking-normal prose-headings:text-base-content prose-p:text-base-content/80 prose-p:leading-8 prose-li:text-base-content/78 prose-li:leading-8 prose-strong:text-base-content prose-a:text-primary prose-a:font-bold prose-a:decoration-slate-300 prose-a:underline-offset-4 hover:prose-a:text-accent hover:prose-a:decoration-primary prose-code:rounded-md prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.95em] prose-code:font-semibold prose-code:text-slate-800 prose-pre:rounded-[20px] prose-pre:bg-slate-950 prose-blockquote:rounded-r-[18px] prose-blockquote:border-l-4 prose-blockquote:border-primary/25 prose-blockquote:bg-blue-50/55 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:font-medium prose-blockquote:text-slate-700 prose-hr:border-base-300 prose-img:rounded-[20px] prose-img:border prose-img:border-base-300 prose-th:text-base-content prose-th:font-extrabold prose-td:text-base-content/76 prose-td:align-top prose-headings:scroll-mt-28 sm:prose-lg">
             <Content />
           </div>
         </div>
@@ -301,35 +301,95 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
 
   .blog-prose :global(> p:first-of-type) {
     margin-top: 0;
-    font-size: 1.12rem;
-    line-height: 1.9;
+    max-width: 42rem;
+    font-size: 1.16rem;
+    line-height: 1.92;
     color: rgb(30 41 59);
   }
 
-  .blog-prose :global(h2) {
-    margin-top: 3rem;
-    margin-bottom: 0.9rem;
+  .blog-prose :global(> p) {
+    max-width: 42rem;
+    margin-top: 1.1rem;
+    margin-bottom: 1.1rem;
   }
 
-  .blog-prose :global(h3) {
-    margin-top: 2rem;
-    margin-bottom: 0.65rem;
+  .blog-prose :global(> h2) {
+    max-width: 36rem;
+    margin-top: 4.25rem;
+    margin-bottom: 1rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid rgb(226 232 240 / 0.9);
+    font-size: 1.85rem;
+    line-height: 1.22;
   }
 
-  .blog-prose :global(h2 + p),
-  .blog-prose :global(h3 + p) {
-    margin-top: 0.6rem;
+  .blog-prose :global(> h3) {
+    max-width: 38rem;
+    margin-top: 2.4rem;
+    margin-bottom: 0.7rem;
+    font-size: 1.35rem;
+    line-height: 1.35;
   }
 
-  .blog-prose :global(blockquote p:first-child) {
+  .blog-prose :global(> h2 + p),
+  .blog-prose :global(> h3 + p) {
+    margin-top: 0.4rem;
+  }
+
+  .blog-prose :global(> ul),
+  .blog-prose :global(> ol),
+  .blog-prose :global(> blockquote) {
+    max-width: 42rem;
+  }
+
+  .blog-prose :global(> ul),
+  .blog-prose :global(> ol) {
+    margin-top: 1.2rem;
+    margin-bottom: 1.35rem;
+    padding-left: 1.3rem;
+  }
+
+  .blog-prose :global(> ul li),
+  .blog-prose :global(> ol li) {
+    padding-left: 0.2rem;
+  }
+
+  .blog-prose :global(> ul li + li),
+  .blog-prose :global(> ol li + li) {
+    margin-top: 0.45rem;
+  }
+
+  .blog-prose :global(> blockquote) {
+    margin-top: 1.8rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .blog-prose :global(> blockquote p:first-child) {
     margin-top: 0;
   }
 
-  .blog-prose :global(blockquote p:last-child) {
+  .blog-prose :global(> blockquote p:last-child) {
     margin-bottom: 0;
   }
 
-  .blog-prose :global(pre code) {
+  .blog-prose :global(> p a),
+  .blog-prose :global(> li a) {
+    text-decoration-thickness: 1.5px;
+  }
+
+  .blog-prose :global(> p strong),
+  .blog-prose :global(> li strong) {
+    font-weight: 800;
+  }
+
+  .blog-prose :global(> pre),
+  .blog-prose :global(> table),
+  .blog-prose :global(> figure) {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .blog-prose :global(> pre code) {
     display: block;
     background: transparent !important;
     padding: 0;
@@ -339,45 +399,46 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
     white-space: pre;
   }
 
-  .blog-prose :global(table) {
+  .blog-prose :global(> table) {
     display: block;
     width: 100%;
     overflow-x: auto;
-    margin: 2rem 0;
     border-collapse: collapse;
     border-radius: 1rem;
     border: 1px solid rgb(229 231 235);
   }
 
-  .blog-prose :global(thead) {
+  .blog-prose :global(> table thead) {
     background: rgb(248 250 252 / 0.9);
   }
 
-  .blog-prose :global(th),
-  .blog-prose :global(td) {
+  .blog-prose :global(> table th),
+  .blog-prose :global(> table td) {
     min-width: 9rem;
     border-bottom: 1px solid rgb(229 231 235);
-    padding: 0.85rem 1rem;
+    padding: 0.95rem 1rem;
     text-align: left;
     vertical-align: top;
     line-height: 1.7;
   }
 
-  .blog-prose :global(tr:last-child td) {
+  .blog-prose :global(> table tr:last-child td) {
     border-bottom: 0;
   }
 
-  .blog-prose :global(figure) {
-    margin: 2rem 0;
-  }
-
-  .blog-prose :global(figcaption) {
+  .blog-prose :global(> figure figcaption) {
     margin-top: 0.85rem;
     text-align: center;
     font-size: 0.84rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     color: rgb(100 116 139);
+  }
+
+  .blog-prose :global(> hr) {
+    max-width: 42rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
   }
 
   @media (max-width: 640px) {
@@ -399,6 +460,15 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
     .blog-prose :global(> p:first-of-type) {
       font-size: 1.06rem;
       line-height: 1.85;
+    }
+
+    .blog-prose :global(> h2) {
+      margin-top: 3.4rem;
+      font-size: 1.62rem;
+    }
+
+    .blog-prose :global(> h3) {
+      font-size: 1.24rem;
     }
   }
 </style>
