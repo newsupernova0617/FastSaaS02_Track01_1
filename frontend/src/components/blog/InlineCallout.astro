@@ -1,0 +1,48 @@
+---
+import { AlertTriangle, Lightbulb, ScanSearch } from 'lucide-react';
+
+interface Props {
+  label?: string;
+  tone?: 'note' | 'tip' | 'warning';
+}
+
+const { label = '핵심', tone = 'note' } = Astro.props;
+
+const toneMap = {
+  note: {
+    wrapper: 'border-primary/16 bg-primary/[0.045]',
+    label: 'text-primary',
+    iconWrap: 'bg-primary/10 text-primary',
+    Icon: ScanSearch,
+  },
+  tip: {
+    wrapper: 'border-emerald-200 bg-emerald-50/70',
+    label: 'text-emerald-700',
+    iconWrap: 'bg-emerald-100 text-emerald-700',
+    Icon: Lightbulb,
+  },
+  warning: {
+    wrapper: 'border-amber-200 bg-amber-50/75',
+    label: 'text-amber-700',
+    iconWrap: 'bg-amber-100 text-amber-700',
+    Icon: AlertTriangle,
+  },
+} as const;
+
+const styles = toneMap[tone];
+const Icon = styles.Icon;
+---
+
+<aside class={`not-prose my-6 rounded-[16px] border px-4 py-3 sm:px-5 ${styles.wrapper}`}>
+  <div class="flex items-start gap-3">
+    <span class={`mt-0.5 inline-flex h-7 w-7 flex-none items-center justify-center rounded-full ${styles.iconWrap}`}>
+      <Icon size={15} strokeWidth={2.2} />
+    </span>
+    <div class="min-w-0">
+      <div class={`text-[0.68rem] font-black uppercase tracking-[0.18em] ${styles.label}`}>{label}</div>
+      <div class="mt-1 text-[0.96rem] leading-7 text-slate-700">
+        <slot />
+      </div>
+    </div>
+  </div>
+</aside>
