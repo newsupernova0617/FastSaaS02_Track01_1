@@ -209,7 +209,7 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
       <section class="mx-auto max-w-5xl px-6 pb-24">
         <div class="mb-6 flex items-end justify-between gap-4">
           <div>
-            <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-primary/70">📚 Keep Reading</p>
+            <p class="text-[0.72rem] font-black uppercase tracking-[0.18em] text-primary/70">Keep Reading</p>
             <h2 class="mt-2 text-2xl font-extrabold text-base-content">다음으로 읽기 좋은 글</h2>
           </div>
           <a href="/blog/" class="text-sm font-semibold text-primary hover:underline">블로그 전체 보기</a>
@@ -378,12 +378,29 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
   .blog-prose :global(> ol) {
     margin-top: 1.2rem;
     margin-bottom: 1.35rem;
-    padding-left: 1.3rem;
+    padding-left: 0;
+    list-style: none;
   }
 
   .blog-prose :global(> ul li),
   .blog-prose :global(> ol li) {
-    padding-left: 0.2rem;
+    position: relative;
+    min-height: 2.4rem;
+    padding-left: 3rem;
+  }
+
+  .blog-prose :global(> ul li)::before {
+    content: '';
+    position: absolute;
+    top: 0.7rem;
+    left: 0.55rem;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgb(37 99 235 / 0.95), rgb(59 130 246 / 0.72));
+    box-shadow:
+      0 0 0 6px rgb(37 99 235 / 0.08),
+      0 1px 2px rgb(15 23 42 / 0.08);
   }
 
   .blog-prose :global(> ol) {
@@ -422,9 +439,19 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
     font-weight: 800;
   }
 
+  .blog-prose :global(> ul li > p:first-child),
+  .blog-prose :global(> ol li > p:first-child) {
+    margin-top: 0;
+  }
+
+  .blog-prose :global(> ul li > p:last-child),
+  .blog-prose :global(> ol li > p:last-child) {
+    margin-bottom: 0;
+  }
+
   .blog-prose :global(> ul li + li),
   .blog-prose :global(> ol li + li) {
-    margin-top: 0.45rem;
+    margin-top: 0.7rem;
   }
 
   .blog-prose :global(> blockquote) {
