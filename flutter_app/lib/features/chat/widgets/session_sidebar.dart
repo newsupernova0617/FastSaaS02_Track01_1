@@ -82,9 +82,9 @@ class SessionSidebar extends ConsumerWidget {
               height: 48,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(AppRadii.pill),
-                  boxShadow: AppGlow.small(),
+                  boxShadow: AppGlow.small(color: theme.colorScheme.primary),
                 ),
                 child: ElevatedButton.icon(
                   onPressed: onNewSession,
@@ -189,12 +189,12 @@ class _SessionTile extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.primary.withValues(alpha: 0.12)
+                ? theme.colorScheme.primary.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadii.md),
             border: isActive
                 ? Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.35),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.35),
                     width: 0.5,
                   )
                 : null,
@@ -207,7 +207,7 @@ class _SessionTile extends StatelessWidget {
                   height: 24,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: theme.colorScheme.primary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

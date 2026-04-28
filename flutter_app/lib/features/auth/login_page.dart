@@ -294,7 +294,7 @@ class _LandingBackground extends StatelessWidget {
           right: -100,
           child: _BlurCircle(
             size: 240,
-            color: AppColors.secondary.withValues(alpha: 0.08),
+            color: AppColors.primarySoft.withValues(alpha: 0.08),
           ),
         ),
       ],

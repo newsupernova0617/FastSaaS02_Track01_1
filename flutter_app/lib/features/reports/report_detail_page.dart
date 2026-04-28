@@ -359,9 +359,11 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
                         height: 52,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(AppRadii.lg),
-                            boxShadow: AppGlow.small(),
+                            boxShadow: AppGlow.small(
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                           child: ElevatedButton(
                             onPressed: () => context.go('/stats'),
@@ -431,9 +433,11 @@ class _ReportDetailPageState extends ConsumerState<ReportDetailPage> {
                         height: 56,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: theme.colorScheme.primary,
                             borderRadius: BorderRadius.circular(AppRadii.lg),
-                            boxShadow: AppGlow.medium(),
+                            boxShadow: AppGlow.medium(
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _isSaving

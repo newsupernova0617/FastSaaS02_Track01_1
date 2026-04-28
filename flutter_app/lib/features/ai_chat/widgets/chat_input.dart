@@ -104,7 +104,7 @@ class _ChatInputState extends State<ChatInput> {
                 borderRadius: BorderRadius.circular(AppRadii.pill),
                 border: Border.all(
                   color: _focused
-                      ? AppColors.primary.withValues(alpha: 0.55)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.55)
                       : theme.colorScheme.outline,
                   width: _focused ? 1.2 : 0.8,
                 ),
@@ -136,7 +136,7 @@ class _ChatInputState extends State<ChatInput> {
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _handleSend(),
                       style: theme.textTheme.bodyLarge?.copyWith(height: 1.35),
-                      cursorColor: AppColors.primary,
+                      cursorColor: theme.colorScheme.primary,
                       decoration: InputDecoration(
                         isCollapsed: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -183,8 +183,11 @@ class _SendButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     if (isLoading) {
-      return const SizedBox(
+      return SizedBox(
         width: 40,
         height: 40,
         child: Center(
@@ -193,7 +196,7 @@ class _SendButton extends StatelessWidget {
             height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(primary),
             ),
           ),
         ),
@@ -213,20 +216,16 @@ class _SendButton extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: canSend
-                ? AppColors.primary
-                : Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.08),
-            boxShadow: canSend ? AppGlow.small() : null,
+                ? primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+            boxShadow: canSend ? AppGlow.small(color: primary) : null,
           ),
           child: Icon(
             Icons.arrow_upward_rounded,
             size: 20,
             color: canSend
                 ? Colors.white
-                : Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.35),
+                : theme.colorScheme.onSurface.withValues(alpha: 0.35),
           ),
         ),
       ),

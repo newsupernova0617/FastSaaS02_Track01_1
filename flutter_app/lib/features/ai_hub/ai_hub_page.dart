@@ -35,9 +35,13 @@ class _AiHubPageState extends ConsumerState<AiHubPage> {
                     Container(
                           padding: const EdgeInsets.all(AppSpacing.xl),
                           decoration: BoxDecoration(
-                            gradient: AppGradients.brand,
+                            gradient: AppGradients.brandFor(
+                              Theme.of(context).colorScheme.primary,
+                            ),
                             borderRadius: BorderRadius.circular(AppRadii.xl),
-                            boxShadow: AppGlow.hero(),
+                            boxShadow: AppGlow.hero(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,10 +155,10 @@ class _FeatureTile extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.10),
+                color: theme.colorScheme.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
-              child: Icon(icon, color: AppColors.primary),
+              child: Icon(icon, color: theme.colorScheme.primary),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -173,7 +177,7 @@ class _FeatureTile extends StatelessWidget {
               style: theme.textTheme.labelLarge?.copyWith(
                 color: onTap == null
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-                    : AppColors.primary,
+                    : theme.colorScheme.primary,
               ),
             ),
           ],

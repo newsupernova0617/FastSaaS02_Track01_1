@@ -18,15 +18,13 @@ class AIInsightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
+        color: primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppRadii.card),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.18),
-          width: 0.8,
-        ),
+        border: Border.all(color: primary.withValues(alpha: 0.18), width: 0.8),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -38,17 +36,17 @@ class AIInsightCard extends StatelessWidget {
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.10),
+                  color: primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
-                child: Icon(leadingIcon, size: 17, color: AppColors.primary),
+                child: Icon(leadingIcon, size: 17, color: primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 title,
                 style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
+                  color: primary,
                 ),
               ),
             ],

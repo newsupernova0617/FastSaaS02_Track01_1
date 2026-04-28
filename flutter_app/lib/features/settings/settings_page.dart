@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
-import 'package:flutter_app/shared/providers/ai_feature_provider.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
 import 'package:flutter_app/shared/providers/theme_provider.dart';
 import 'package:flutter_app/shared/widgets/glass_card.dart';
@@ -17,7 +16,7 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
-    final aiFeatureEnabled = ref.watch(aiFeatureUiProvider);
+    final primaryPreset = ref.watch(primaryColorPresetProvider);
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
@@ -30,14 +29,18 @@ class SettingsPage extends ConsumerWidget {
           _sectionTitle(theme, '디스플레이'),
           const SizedBox(height: AppSpacing.sm),
           _buildThemeCard(ref, themeMode, theme),
-          const SizedBox(height: AppSpacing.lg),
-          _sectionTitle(theme, 'AI 기능'),
           const SizedBox(height: AppSpacing.sm),
-          _buildAiFeatureCard(ref, aiFeatureEnabled, theme),
-          const SizedBox(height: AppSpacing.lg),
-          _sectionTitle(theme, '복구'),
-          const SizedBox(height: AppSpacing.sm),
-          _buildRollbackInfoCard(theme),
+          _buildPrimaryColorCard(ref, primaryPreset, theme),
+          // 실험적 AI UI 설정은 당분간 사용자 화면에서 숨깁니다.
+          // const SizedBox(height: AppSpacing.lg),
+          // _sectionTitle(theme, 'AI 기능'),
+          // const SizedBox(height: AppSpacing.sm),
+          // _buildAiFeatureCard(ref, aiFeatureEnabled, theme),
+          // 복구 안내는 내부용으로만 남기고 설정 화면에서는 숨깁니다.
+          // const SizedBox(height: AppSpacing.lg),
+          // _sectionTitle(theme, '복구'),
+          // const SizedBox(height: AppSpacing.sm),
+          // _buildRollbackInfoCard(theme),
           const SizedBox(height: AppSpacing.lg),
           _sectionTitle(theme, '정보'),
           const SizedBox(height: AppSpacing.sm),
@@ -137,48 +140,48 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAiFeatureCard(WidgetRef ref, bool enabled, ThemeData theme) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: SwitchListTile(
-        value: enabled,
-        onChanged: (value) =>
-            ref.read(aiFeatureUiProvider.notifier).setEnabled(value),
-        secondary: Icon(
-          Icons.auto_awesome_rounded,
-          color: enabled ? AppColors.primary : theme.iconTheme.color,
-        ),
-        title: const Text('실험적 AI 기능 UI 사용'),
-        subtitle: const Text('화면 중앙 AI 버튼과 확장 UI를 함께 사용합니다.'),
-      ),
-    );
-  }
+  // Widget _buildAiFeatureCard(WidgetRef ref, bool enabled, ThemeData theme) {
+  //   return GlassCard(
+  //     padding: const EdgeInsets.all(AppSpacing.sm),
+  //     child: SwitchListTile(
+  //       value: enabled,
+  //       onChanged: (value) =>
+  //           ref.read(aiFeatureUiProvider.notifier).setEnabled(value),
+  //       secondary: Icon(
+  //         Icons.auto_awesome_rounded,
+  //         color: enabled ? theme.colorScheme.primary : theme.iconTheme.color,
+  //       ),
+  //       title: const Text('실험적 AI 기능 UI 사용'),
+  //       subtitle: const Text('화면 중앙 AI 버튼과 확장 UI를 함께 사용합니다.'),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildRollbackInfoCard(ThemeData theme) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.restore_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('이전 UI 복구', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  r'개발 환경에서는 flutter_app\tool\restore_legacy_ui.ps1 실행으로 legacy_ui 기준 복구가 가능합니다.',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildRollbackInfoCard(ThemeData theme) {
+  //   return GlassCard(
+  //     padding: const EdgeInsets.all(AppSpacing.lg),
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Icon(Icons.restore_rounded, color: theme.colorScheme.primary),
+  //         const SizedBox(width: AppSpacing.md),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text('이전 UI 복구', style: theme.textTheme.titleMedium),
+  //               const SizedBox(height: 4),
+  //               Text(
+  //                 r'개발 환경에서는 flutter_app\tool\restore_legacy_ui.ps1 실행으로 legacy_ui 기준 복구가 가능합니다.',
+  //                 style: theme.textTheme.bodySmall,
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildThemeCard(WidgetRef ref, ThemeMode current, ThemeData theme) {
     final items = <({ThemeMode mode, String label, IconData icon})>[
@@ -203,12 +206,14 @@ class SettingsPage extends ConsumerWidget {
               ),
               decoration: BoxDecoration(
                 color: selected
-                    ? AppColors.primary.withValues(alpha: 0.08)
+                    ? theme.colorScheme.primary.withValues(alpha: 0.08)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppRadii.md),
                 border: selected
                     ? Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.18),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.18,
+                        ),
                         width: 0.8,
                       )
                     : null,
@@ -246,6 +251,45 @@ class SettingsPage extends ConsumerWidget {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPrimaryColorCard(
+    WidgetRef ref,
+    PrimaryColorPreset current,
+    ThemeData theme,
+  ) {
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.palette_outlined, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text('포인트 색상', style: theme.textTheme.titleMedium),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              for (final preset in PrimaryColorPreset.values)
+                _PrimaryColorSwatch(
+                  preset: preset,
+                  selected: current == preset,
+                  onTap: () => ref
+                      .read(primaryColorPresetProvider.notifier)
+                      .setPreset(preset),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -362,6 +406,69 @@ class SettingsPage extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.md),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryColorSwatch extends StatelessWidget {
+  final PrimaryColorPreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PrimaryColorSwatch({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = preset.palette.primary;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.pill),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? primary.withValues(alpha: 0.10)
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.45,
+                ),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(
+            color: selected
+                ? primary.withValues(alpha: 0.55)
+                : theme.colorScheme.outline.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              preset.label,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: selected ? primary : theme.colorScheme.onSurface,
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Icon(Icons.check_rounded, size: 16, color: primary),
+            ],
+          ],
         ),
       ),
     );

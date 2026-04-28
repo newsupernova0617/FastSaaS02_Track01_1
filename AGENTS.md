@@ -31,3 +31,6 @@ Recent history mixes concise Korean summaries, merge commits, and typed messages
 ## Security & Configuration Tips
 
 Do not commit secrets. Use `backend/.dev.vars` for Worker secrets, `frontend/.env` for frontend values, and `flutter_app/.env` for mobile config. Keep generated directories such as `node_modules`, `dist`, `.astro`, `.dart_tool`, and `build` out of reviews unless intentionally updating lockfiles.
+
+## 2026-04-28-flutter-commented-features.md
+주석화한 부분 2026-04-28-flutter-commented-features.md 에다가 추가

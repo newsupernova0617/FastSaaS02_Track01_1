@@ -1,7 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/shared/providers/transaction_provider.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
@@ -23,7 +22,9 @@ import '../reports/report_list_item.dart';
 //   getReportsProvider          — 저장된 리포트 목록
 // ============================================================
 class StatsPage extends ConsumerStatefulWidget {
-  const StatsPage({super.key});
+  final String? initialMonth;
+
+  const StatsPage({super.key, this.initialMonth});
 
   @override
   ConsumerState<StatsPage> createState() => _StatsPageState();
@@ -38,27 +39,29 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+    final monthStr = widget.initialMonth;
+    if (monthStr == null) return;
 
-    // AI 액션 버튼에서 넘긴 month 쿼리 파라미터 반영
-    Future.microtask(() {
-      if (!mounted) return;
-      final monthStr = GoRouterState.of(context).uri.queryParameters['month'];
-      if (monthStr != null) {
-        try {
-          final parts = monthStr.split('-');
-          if (parts.length == 2) {
-            setState(() {
-              _selectedDate = DateTime(
-                int.parse(parts[0]),
-                int.parse(parts[1]),
-              );
-            });
-          }
-        } catch (_) {
-          // ignore invalid format
-        }
+    try {
+      final parts = monthStr.split('-');
+      if (parts.length != 2) return;
+
+      final parsedDate = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+
+      if (parsedDate.year == _selectedDate.year &&
+          parsedDate.month == _selectedDate.month) {
+        return;
       }
-    });
+
+      setState(() {
+        _selectedDate = parsedDate;
+      });
+    } catch (_) {
+      // ignore invalid format
+    }
   }
 
   String _formatMonthYear(DateTime date) =>
@@ -316,7 +319,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
             end: Alignment.centerRight,
             colors: [
               AppColors.primary.withValues(alpha: 0.10),
-              AppColors.secondary.withValues(alpha: 0.06),
+              AppColors.primarySoft.withValues(alpha: 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(AppRadii.pill),
@@ -422,105 +425,161 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     required ValueChanged<int?> onTouch,
     required num total,
   }) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: GlassCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: SizedBox(
-          height: 240,
-          child: Row(
-            children: [
-              // 파이차트는 정사각형 영역에서 가장 잘 렌더. AspectRatio 1로
-              // 강제하여 Row의 비어있는 수직 공간을 활용하고, radius도 좁은
-              // 너비에서 잘리지 않도록 줄였음.
-              Flexible(
-                flex: 5,
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: PieChart(
-                      PieChartData(
-                        sections: _buildPieChartData(
-                          data,
-                          colors,
-                          touched,
-                          total,
-                        ),
-                        centerSpaceRadius: 38,
-                        sectionsSpace: 3,
-                        startDegreeOffset: -90,
-                        pieTouchData: PieTouchData(
-                          touchCallback: (event, response) {
-                            if (!event.isInterestedForInteractions ||
-                                response == null ||
-                                response.touchedSection == null) {
-                              onTouch(null);
-                              return;
-                            }
-                            onTouch(
-                              response.touchedSection!.touchedSectionIndex,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isStacked = constraints.maxWidth < 560;
+            final chartSize = isStacked
+                ? (constraints.maxWidth - AppSpacing.lg)
+                      .clamp(168.0, 224.0)
+                      .toDouble()
+                : (constraints.maxWidth * 0.42).clamp(224.0, 264.0).toDouble();
+            final legend = _buildPieLegend(
+              context: context,
+              data: data,
+              colors: colors,
+              touched: touched,
+              fullWidth: isStacked,
+            );
+            final chart = SizedBox.square(
+              dimension: chartSize,
+              child: PieChart(
+                PieChartData(
+                  sections: _buildPieChartData(
+                    data,
+                    colors,
+                    touched,
+                    total,
+                    chartSize,
+                  ),
+                  centerSpaceRadius: chartSize * 0.16,
+                  sectionsSpace: 3,
+                  startDegreeOffset: -90,
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      if (!event.isInterestedForInteractions ||
+                          response == null ||
+                          response.touchedSection == null) {
+                        onTouch(null);
+                        return;
+                      }
+                      onTouch(response.touchedSection!.touchedSectionIndex);
+                    },
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: data.take(6).toList().asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final item = entry.value;
-                    final color =
-                        colors[item.category] ??
-                        theme.colorScheme.onSurface.withValues(alpha: 0.3);
-                    final isActive = touched == i;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Flexible(
-                            child: Text(
-                              item.category,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: isActive
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: isActive
-                                    ? theme.colorScheme.onSurface
-                                    : theme.colorScheme.onSurface.withValues(
-                                        alpha: 0.75,
-                                      ),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ),
+            );
+
+            if (isStacked) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: chart),
+                  const SizedBox(height: AppSpacing.lg),
+                  legend,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(child: Center(child: chart)),
+                const SizedBox(width: AppSpacing.xl),
+                Expanded(flex: 2, child: legend),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildPieLegend({
+    required BuildContext context,
+    required List<SummaryRow> data,
+    required Map<String, Color> colors,
+    required int? touched,
+    required bool fullWidth,
+  }) {
+    final theme = Theme.of(context);
+    final visibleItems = data.take(6).toList();
+
+    Widget buildItem(MapEntry<int, SummaryRow> entry) {
+      final i = entry.key;
+      final item = entry.value;
+      final color =
+          colors[item.category] ??
+          theme.colorScheme.onSurface.withValues(alpha: 0.3);
+      final isActive = touched == i;
+
+      return Container(
+        width: fullWidth ? double.infinity : null,
+        constraints: const BoxConstraints(minWidth: 112),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isActive
+              ? color.withValues(alpha: 0.12)
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.35,
+                ),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: Border.all(
+            color: isActive
+                ? color.withValues(alpha: 0.45)
+                : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                item.category,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final entries = visibleItems.asMap().entries.toList();
+    if (fullWidth) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final entry in entries) ...[
+            buildItem(entry),
+            if (entry.key != entries.length - 1)
+              const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      );
+    }
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: entries.map(buildItem).toList(),
     );
   }
 
@@ -529,20 +588,25 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     Map<String, Color> categoryColors,
     int? touched,
     num total,
+    double chartSize,
   ) {
     return data.asMap().entries.map((entry) {
       final i = entry.key;
       final item = entry.value;
       final isTouched = touched == i;
-      final percentage = (item.total / total * 100).toStringAsFixed(1);
+      final ratio = item.total / total;
+      final percentage = (ratio * 100).toStringAsFixed(1);
       final color = categoryColors[item.category] ?? Colors.grey;
+      final baseRadius = chartSize * 0.27;
+      final touchedRadius = chartSize * 0.31;
+      final showLabel = ratio >= (data.length > 5 ? 0.10 : 0.08);
 
       return PieChartSectionData(
         value: item.total.toDouble(),
-        title: '$percentage%',
-        radius: isTouched ? 68 : 56,
+        title: showLabel || isTouched ? '$percentage%' : '',
+        radius: isTouched ? touchedRadius : baseRadius,
         titleStyle: TextStyle(
-          fontSize: isTouched ? 14 : 12,
+          fontSize: isTouched ? 13 : 11,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),

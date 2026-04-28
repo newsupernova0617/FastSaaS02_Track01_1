@@ -327,9 +327,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               height: 28,
               margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
               decoration: BoxDecoration(
-                gradient: AppGradients.brand,
+                gradient: AppGradients.brandFor(
+                  Theme.of(context).colorScheme.primary,
+                ),
                 shape: BoxShape.circle,
-                boxShadow: AppGlow.small(),
+                boxShadow: AppGlow.small(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               child: const Icon(
                 Icons.auto_awesome,
@@ -508,7 +512,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.brand,
+                  gradient: AppGradients.brandFor(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: const Icon(

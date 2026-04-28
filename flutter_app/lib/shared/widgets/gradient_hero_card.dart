@@ -21,13 +21,16 @@ class GradientHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: AppGradients.heroCard(),
+        gradient: AppGradients.brandFor(theme.colorScheme.primary),
         borderRadius: BorderRadius.circular(AppRadii.xl),
-        boxShadow: showGlow ? AppGlow.medium() : null,
+        boxShadow: showGlow
+            ? AppGlow.medium(color: theme.colorScheme.primary)
+            : null,
       ),
       child: Material(
         color: Colors.transparent,

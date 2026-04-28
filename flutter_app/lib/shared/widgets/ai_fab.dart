@@ -11,6 +11,8 @@ class AiFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Semantics(
       button: true,
       label: 'AI 도우미 열기',
@@ -24,8 +26,8 @@ class AiFab extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: AppGradients.brand,
-            boxShadow: AppGlow.medium(),
+            gradient: AppGradients.brandFor(primary),
+            boxShadow: AppGlow.medium(color: primary),
           ),
           child: const Icon(
             Icons.auto_awesome_rounded,

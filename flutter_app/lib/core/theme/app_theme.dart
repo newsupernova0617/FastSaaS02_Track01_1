@@ -12,7 +12,7 @@ class AppColors {
   static const Color primary = Color(0xFF2563EB);
   static const Color secondary = Color(0xFFFF5A4D);
   static const Color primarySoft = Color(0xFF60A5FA);
-  static const Color secondarySoft = Color(0xFFFF8A80);
+  static const Color secondarySoft = Color(0xFF93C5FD);
 
   static const Color brand = primary;
   static const Color brandDark = Color(0xFF1D4ED8);
@@ -40,6 +40,24 @@ class AppColors {
   static const Color darkOnSurfaceMuted = Color(0xFFB6BDC8);
 }
 
+class AppBrandPalette {
+  final Color primary;
+  final Color brandDark;
+  final Color primarySoft;
+
+  const AppBrandPalette({
+    required this.primary,
+    required this.brandDark,
+    required this.primarySoft,
+  });
+
+  static const blue = AppBrandPalette(
+    primary: AppColors.primary,
+    brandDark: AppColors.brandDark,
+    primarySoft: AppColors.primarySoft,
+  );
+}
+
 class AppGradients {
   AppGradients._();
 
@@ -49,11 +67,35 @@ class AppGradients {
     colors: [AppColors.primary, AppColors.brandDark],
   );
 
+  static LinearGradient brandFor(Color primary) {
+    final dark = HSLColor.fromColor(primary)
+        .withLightness(
+          (HSLColor.fromColor(primary).lightness - 0.10).clamp(0.18, 0.62),
+        )
+        .toColor();
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [primary, dark],
+    );
+  }
+
   static const LinearGradient brandSoft = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFEFF6FF), Color(0xFFFFF1F0)],
+    colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
   );
+
+  static LinearGradient brandSoftFor(Color primary) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color.lerp(Colors.white, primary, 0.08)!,
+        Color.lerp(Colors.white, primary, 0.16)!,
+      ],
+    );
+  }
 
   static LinearGradient heroCard({bool dark = false}) => LinearGradient(
     begin: Alignment.topLeft,
@@ -69,7 +111,7 @@ class AppGradients {
   );
 
   static const RadialGradient cyanBlob = RadialGradient(
-    colors: [Color(0x22FF5A4D), Color(0x00FF5A4D)],
+    colors: [Color(0x222563EB), Color(0x002563EB)],
     radius: 0.8,
   );
 }
@@ -218,6 +260,17 @@ class AppTheme {
     onSurfaceMuted: AppColors.lightOnSurfaceMuted,
   );
 
+  static ThemeData lightThemeFor(AppBrandPalette brand) => _buildTheme(
+    brightness: Brightness.light,
+    background: AppColors.lightBackground,
+    surface: AppColors.lightSurface,
+    surfaceVariant: AppColors.lightSurfaceVariant,
+    border: AppColors.lightBorder,
+    onSurface: AppColors.lightOnSurface,
+    onSurfaceMuted: AppColors.lightOnSurfaceMuted,
+    brand: brand,
+  );
+
   static ThemeData darkTheme = _buildTheme(
     brightness: Brightness.dark,
     background: AppColors.darkBackground,
@@ -228,6 +281,17 @@ class AppTheme {
     onSurfaceMuted: AppColors.darkOnSurfaceMuted,
   );
 
+  static ThemeData darkThemeFor(AppBrandPalette brand) => _buildTheme(
+    brightness: Brightness.dark,
+    background: AppColors.darkBackground,
+    surface: AppColors.darkSurface,
+    surfaceVariant: AppColors.darkSurfaceVariant,
+    border: AppColors.darkBorder,
+    onSurface: AppColors.darkOnSurface,
+    onSurfaceMuted: AppColors.darkOnSurfaceMuted,
+    brand: brand,
+  );
+
   static ThemeData _buildTheme({
     required Brightness brightness,
     required Color background,
@@ -236,6 +300,7 @@ class AppTheme {
     required Color border,
     required Color onSurface,
     required Color onSurfaceMuted,
+    AppBrandPalette brand = AppBrandPalette.blue,
   }) {
     final isDark = brightness == Brightness.dark;
     final textTheme = _textTheme(onSurface, onSurfaceMuted);
@@ -243,12 +308,12 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      primaryColor: AppColors.primary,
+      primaryColor: brand.primary,
       scaffoldBackgroundColor: background,
       fontFamily: GoogleFonts.notoSansKr().fontFamily,
       colorScheme: ColorScheme(
         brightness: brightness,
-        primary: AppColors.primary,
+        primary: brand.primary,
         onPrimary: Colors.white,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
@@ -292,7 +357,7 @@ class AppTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadii._mdSide,
           borderSide: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.65),
+            color: brand.primary.withValues(alpha: 0.65),
             width: 1.2,
           ),
         ),
@@ -307,10 +372,10 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: brand.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          shadowColor: AppColors.primary.withValues(alpha: 0.20),
+          shadowColor: brand.primary.withValues(alpha: 0.20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.pill),
           ),
@@ -336,23 +401,23 @@ class AppTheme {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        style: TextButton.styleFrom(foregroundColor: brand.primary),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.10),
+        indicatorColor: brand.primary.withValues(alpha: 0.10),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
             fontSize: 11,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            color: selected ? AppColors.primary : onSurfaceMuted,
+            color: selected ? brand.primary : onSurfaceMuted,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? AppColors.primary : onSurfaceMuted,
+            color: selected ? brand.primary : onSurfaceMuted,
           );
         }),
       ),
@@ -374,8 +439,8 @@ class AppTheme {
       ),
       iconTheme: IconThemeData(color: onSurfaceMuted),
       textTheme: textTheme,
-      splashColor: AppColors.primary.withValues(alpha: 0.08),
-      highlightColor: AppColors.primary.withValues(alpha: 0.04),
+      splashColor: brand.primary.withValues(alpha: 0.08),
+      highlightColor: brand.primary.withValues(alpha: 0.04),
     );
   }
 }

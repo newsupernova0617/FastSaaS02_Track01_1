@@ -20,11 +20,12 @@ class App extends StatelessWidget {
         builder: (context, ref, child) {
           final goRouter = ref.watch(goRouterProvider);
           final themeMode = ref.watch(themeModeProvider);
+          final primaryPreset = ref.watch(primaryColorPresetProvider);
 
           return MaterialApp.router(
             title: '머니메이트',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            theme: AppTheme.lightThemeFor(primaryPreset.palette),
+            darkTheme: AppTheme.darkThemeFor(primaryPreset.palette),
             themeMode: themeMode,
             routerConfig: goRouter,
             builder: (context, child) {

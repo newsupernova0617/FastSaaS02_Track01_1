@@ -44,7 +44,7 @@ class ReportCard extends StatelessWidget {
           icon: Icons.lightbulb_rounded,
           title: title,
           message: message,
-          accent: AppColors.primary,
+          accent: Theme.of(context).colorScheme.primary,
         );
       default:
         return const SizedBox.shrink();
@@ -97,16 +97,16 @@ class ReportCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadii.md),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.18),
+                color: theme.colorScheme.primary.withValues(alpha: 0.18),
                 width: 0.8,
               ),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.auto_graph_rounded,
-              color: AppColors.primary,
+              color: theme.colorScheme.primary,
               size: 20,
             ),
           ),

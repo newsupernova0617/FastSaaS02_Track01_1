@@ -81,14 +81,14 @@ class ReportListItem extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.10),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.18),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
                     width: 0.8,
                   ),
                 ),
-                child: Icon(icon, size: 20, color: AppColors.primary),
+                child: Icon(icon, size: 20, color: theme.colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.md),
 
@@ -173,17 +173,17 @@ class _TypeChip extends StatelessWidget {
         vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
+        color: theme.colorScheme.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadii.pill),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.35),
+          color: theme.colorScheme.primary.withValues(alpha: 0.35),
           width: 0.5,
         ),
       ),
       child: Text(
         label,
         style: theme.textTheme.labelSmall?.copyWith(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           fontWeight: FontWeight.w600,
         ),
       ),

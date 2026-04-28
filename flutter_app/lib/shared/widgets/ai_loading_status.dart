@@ -42,6 +42,7 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     final step = _steps[_stepIndex];
     final prompt = widget.prompt?.trim();
     final title = prompt == null || prompt.isEmpty
@@ -55,15 +56,12 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
       child: DecoratedBox(
         key: ValueKey('${widget.dense}-${_stepIndex}-$prompt'),
         decoration: BoxDecoration(
-          gradient: AppGradients.brandSoft,
+          gradient: AppGradients.brandSoftFor(primary),
           borderRadius: BorderRadius.circular(
             widget.dense ? AppRadii.lg : AppRadii.card,
           ),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            width: 1,
-          ),
-          boxShadow: AppGlow.small(color: AppColors.primarySoft),
+          border: Border.all(color: primary.withValues(alpha: 0.12), width: 1),
+          boxShadow: AppGlow.small(color: primary),
         ),
         child: Padding(
           padding: EdgeInsets.all(widget.dense ? AppSpacing.md : AppSpacing.lg),
@@ -77,9 +75,9 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
                         width: widget.dense ? 34 : 40,
                         height: widget.dense ? 34 : 40,
                         decoration: BoxDecoration(
-                          gradient: AppGradients.brand,
+                          gradient: AppGradients.brandFor(primary),
                           borderRadius: BorderRadius.circular(AppRadii.md),
-                          boxShadow: AppGlow.small(),
+                          boxShadow: AppGlow.small(color: primary),
                         ),
                         child: const Icon(
                           Icons.auto_awesome_rounded,
@@ -127,9 +125,7 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
                 child: LinearProgressIndicator(
                   minHeight: widget.dense ? 6 : 7,
                   backgroundColor: Colors.white.withValues(alpha: 0.65),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(primary),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -147,12 +143,12 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
                     ),
                     decoration: BoxDecoration(
                       color: active
-                          ? AppColors.primary.withValues(alpha: 0.12)
+                          ? primary.withValues(alpha: 0.12)
                           : Colors.white.withValues(alpha: 0.72),
                       borderRadius: BorderRadius.circular(AppRadii.pill),
                       border: Border.all(
                         color: active
-                            ? AppColors.primary.withValues(alpha: 0.24)
+                            ? primary.withValues(alpha: 0.24)
                             : theme.colorScheme.outline.withValues(alpha: 0.35),
                       ),
                     ),
@@ -160,7 +156,7 @@ class _AiLoadingStatusState extends State<AiLoadingStatus> {
                       _steps[index].label,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: active
-                            ? AppColors.primary
+                            ? primary
                             : theme.colorScheme.onSurface.withValues(
                                 alpha: 0.55,
                               ),

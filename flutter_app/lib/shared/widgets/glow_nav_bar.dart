@@ -121,7 +121,7 @@ class _NavSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = selected
-        ? AppColors.primary
+        ? theme.colorScheme.primary
         : theme.colorScheme.onSurface.withValues(alpha: 0.48);
 
     return Expanded(
@@ -149,7 +149,7 @@ class _NavSlot extends StatelessWidget {
                   height: 3,
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppColors.primary
+                        ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(2),
                   ),

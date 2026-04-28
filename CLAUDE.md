@@ -181,3 +181,6 @@ npm run deploy
 - **Report Caching**: Reports generated fresh each time; could cache by `(userId, month, type)`.
 - **Session Limits**: Consider archiving old sessions to avoid unbounded list growth.
 - **Undo**: Currently only supports single-step undo (one `previousState` stored).
+
+## 2026-04-28-flutter-commented-features.md
+주석화한 부분 2026-04-28-flutter-commented-features.md 에다가 추가

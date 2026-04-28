@@ -14,12 +14,12 @@ import 'package:flutter_app/core/theme/app_theme.dart';
 // 다회 카테고리 컬러 — 브랜드 계열 + 보완색. 다크 배경에서 가독 우선.
 const List<Color> _chartPalette = [
   AppColors.primary,
-  AppColors.secondary,
+  AppColors.primarySoft,
   AppColors.income,
   AppColors.warning,
   AppColors.expense,
-  AppColors.primarySoft,
-  AppColors.secondarySoft, // cyan-soft
+  AppColors.brandDark,
+  AppColors.secondarySoft,
   Color(0xFF93C5FD),
 ];
 

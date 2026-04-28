@@ -36,13 +36,19 @@ class PromptChip extends StatelessWidget {
               },
         child: Ink(
           decoration: BoxDecoration(
-            color: isBrand ? AppColors.primary : theme.colorScheme.surface,
+            color: isBrand
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(AppRadii.pill),
             border: Border.all(
-              color: isBrand ? AppColors.primary : theme.colorScheme.outline,
+              color: isBrand
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
               width: 0.8,
             ),
-            boxShadow: isBrand ? AppGlow.small() : null,
+            boxShadow: isBrand
+                ? AppGlow.small(color: theme.colorScheme.primary)
+                : null,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(

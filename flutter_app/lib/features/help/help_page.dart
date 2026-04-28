@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
@@ -22,9 +21,19 @@ class HelpPage extends StatelessWidget {
           body: '"점심 12000원"처럼 자연어로 입력하면 AI가 거래 정보를 정리합니다.',
         ),
         (
+          icon: Icons.notifications_active_rounded,
+          title: 'Android 알림에서 바로 입력하기',
+          body: '알림 권한을 허용하면 상단 알림에서 "점심 8000원"처럼 입력해 앱을 열지 않고도 보낼 수 있습니다.',
+        ),
+        (
           icon: Icons.bar_chart_rounded,
           title: '통계와 리포트 보기',
           body: '월별 지출, 카테고리 비중, AI 리포트를 통해 소비 패턴을 확인하세요.',
+        ),
+        (
+          icon: Icons.manage_search_rounded,
+          title: '지난 지출 검색하기',
+          body: 'AI 채팅에서 "지난달 식비"처럼 물으면 관련 거래와 요약을 함께 확인할 수 있습니다.',
         ),
       ];
 
@@ -36,7 +45,13 @@ class HelpPage extends StatelessWidget {
     ),
     (
       question: '카테고리를 잘못 선택했어요.',
-      answer: '거래 상세나 수정 화면에서 카테고리를 다시 선택하면 됩니다. 통계와 리포트는 수정된 값을 기준으로 반영됩니다.',
+      answer:
+          '현재는 잘못 기록한 거래를 삭제한 뒤 다시 기록하는 흐름이 가장 안전합니다. 삭제 후 다시 저장하면 통계와 리포트가 새 기록을 기준으로 갱신됩니다.',
+    ),
+    (
+      question: 'Android 알림 빠른 입력은 어떻게 쓰나요?',
+      answer:
+          'Android에서 알림 권한을 허용하면 상단 알림에 빠른 입력 창이 표시됩니다. 여기에 "점심 8000원", "교통비 1250원"처럼 입력하면 AI 채팅으로 전송되고 처리 결과가 알림으로 돌아옵니다.',
     ),
     (
       question: '리포트는 언제 생성되나요?',
@@ -130,43 +145,44 @@ class HelpPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const SectionHeader(title: '추가 안내', leadingIcon: Icons.link_rounded),
-          const SizedBox(height: AppSpacing.md),
-          GlassCard(
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                _LinkTile(
-                  icon: Icons.privacy_tip_outlined,
-                  title: '개인정보 처리방침',
-                  subtitle: '설정 화면에서도 같은 항목을 열 수 있습니다.',
-                  onTap: () => ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('준비 중입니다.'))),
-                ),
-                Divider(
-                  height: 1,
-                  color: theme.colorScheme.outline.withValues(alpha: 0.35),
-                ),
-                _LinkTile(
-                  icon: Icons.mail_outline_rounded,
-                  title: '문의하기로 이동',
-                  subtitle: '버그 신고, 기능 제안, 계정 문의는 별도 문의 페이지에서 접수합니다.',
-                  onTap: () => context.push('/contact'),
-                ),
-                Divider(
-                  height: 1,
-                  color: theme.colorScheme.outline.withValues(alpha: 0.35),
-                ),
-                _LinkTile(
-                  icon: Icons.settings_suggest_rounded,
-                  title: '설정으로 돌아가기',
-                  subtitle: '테마, AI 기능, 계정 관련 옵션을 다시 확인합니다.',
-                  onTap: () => context.pop(),
-                ),
-              ],
-            ),
-          ),
+          // 추가 안내 섹션은 출시 전까지 숨깁니다.
+          // const SectionHeader(title: '추가 안내', leadingIcon: Icons.link_rounded),
+          // const SizedBox(height: AppSpacing.md),
+          // GlassCard(
+          //   padding: EdgeInsets.zero,
+          //   child: Column(
+          //     children: [
+          //       _LinkTile(
+          //         icon: Icons.privacy_tip_outlined,
+          //         title: '개인정보 처리방침',
+          //         subtitle: '설정 화면에서도 같은 항목을 열 수 있습니다.',
+          //         onTap: () => ScaffoldMessenger.of(
+          //           context,
+          //         ).showSnackBar(const SnackBar(content: Text('준비 중입니다.'))),
+          //       ),
+          //       Divider(
+          //         height: 1,
+          //         color: theme.colorScheme.outline.withValues(alpha: 0.35),
+          //       ),
+          //       _LinkTile(
+          //         icon: Icons.mail_outline_rounded,
+          //         title: '문의하기로 이동',
+          //         subtitle: '버그 신고, 기능 제안, 계정 문의는 별도 문의 페이지에서 접수합니다.',
+          //         onTap: () => context.push('/contact'),
+          //       ),
+          //       Divider(
+          //         height: 1,
+          //         color: theme.colorScheme.outline.withValues(alpha: 0.35),
+          //       ),
+          //       _LinkTile(
+          //         icon: Icons.settings_suggest_rounded,
+          //         title: '설정으로 돌아가기',
+          //         subtitle: '테마, AI 기능, 계정 관련 옵션을 다시 확인합니다.',
+          //         onTap: () => context.pop(),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );
@@ -316,6 +332,7 @@ class _FaqTile extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _LinkTile extends StatelessWidget {
   final IconData icon;
   final String title;

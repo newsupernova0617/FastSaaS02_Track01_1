@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -87,7 +87,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     final thisMonthSummary = ref.watch(summaryProvider(thisMonthKey));
     final lastMonthSummary = ref.watch(summaryProvider(lastMonthKey));
     final recentTxs = ref.watch(allTransactionsProvider);
-    final currentReport = ref.watch(getCurrentReportProvider(_selectedReportPeriod));
+    final currentReport = ref.watch(
+      getCurrentReportProvider(_selectedReportPeriod),
+    );
 
     final name =
         (user?.userMetadata?['name'] as String?) ??
@@ -360,7 +362,7 @@ class _HomeAiResponseCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.brand,
+                  gradient: AppGradients.brandFor(theme.colorScheme.primary),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: const Icon(
@@ -712,7 +714,7 @@ class _ReportPeriodTabs extends StatelessWidget {
         children: [
           Expanded(
             child: _ReportPeriodTab(
-               label: '주간',
+              label: '주간',
               icon: Icons.calendar_view_week_rounded,
               selected: selectedPeriod == 'weekly',
               onTap: () => onChanged('weekly'),
@@ -720,7 +722,7 @@ class _ReportPeriodTabs extends StatelessWidget {
           ),
           Expanded(
             child: _ReportPeriodTab(
-               label: '월간',
+              label: '월간',
               icon: Icons.calendar_month_rounded,
               selected: selectedPeriod == 'monthly',
               onTap: () => onChanged('monthly'),
@@ -760,9 +762,13 @@ class _ReportPeriodTab extends StatelessWidget {
         curve: AppMotion.emphasized,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          gradient: selected ? AppGradients.brand : null,
+          gradient: selected
+              ? AppGradients.brandFor(theme.colorScheme.primary)
+              : null,
           borderRadius: BorderRadius.circular(AppRadii.pill),
-          boxShadow: selected ? AppGlow.small() : null,
+          boxShadow: selected
+              ? AppGlow.small(color: theme.colorScheme.primary)
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -807,26 +813,26 @@ class _ReportPreviewCard extends StatelessWidget {
         ? <Widget>[]
         : [
             _SummaryMetricCard(
-                label: '총 지출',
-                value: '${currency.format(summary.totalExpense.round())}',
-                emphasized: true,
+              label: '총 지출',
+              value: '${currency.format(summary.totalExpense.round())}',
+              emphasized: true,
             ),
             _SummaryMetricCard(
-                label: summary.totalIncome > 0 ? '총 수입' : '순자산',
-                value: summary.totalIncome > 0
-                    ? '${currency.format(summary.totalIncome.round())}'
-                    : '${currency.format(summary.netAmount.round())}',
+              label: summary.totalIncome > 0 ? '총 수입' : '순자산',
+              value: summary.totalIncome > 0
+                  ? '${currency.format(summary.totalIncome.round())}'
+                  : '${currency.format(summary.netAmount.round())}',
             ),
             _SummaryMetricCard(
-                label: '지난 기간 대비',
-                value: summary.deltaPercent == null
-                    ? '-'
-                    : '${summary.deltaPercent! >= 0 ? '+' : ''}${summary.deltaPercent!.toStringAsFixed(1)}%',
-                accentColor: summary.deltaPercent == null
-                    ? null
-                    : summary.deltaPercent! >= 0
-                    ? AppColors.expense
-                    : AppColors.income,
+              label: '지난 기간 대비',
+              value: summary.deltaPercent == null
+                  ? '-'
+                  : '${summary.deltaPercent! >= 0 ? '+' : ''}${summary.deltaPercent!.toStringAsFixed(1)}%',
+              accentColor: summary.deltaPercent == null
+                  ? null
+                  : summary.deltaPercent! >= 0
+                  ? AppColors.expense
+                  : AppColors.income,
             ),
           ];
     final breakdownItems = summary?.breakdown.take(3).toList() ?? const [];
@@ -858,7 +864,7 @@ class _ReportPreviewCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.brand,
+                  gradient: AppGradients.brandFor(theme.colorScheme.primary),
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: const Icon(
@@ -1136,7 +1142,7 @@ class _ReportStatusCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(icon, color: AppColors.primary),
+                  Icon(icon, color: theme.colorScheme.primary),
                   const Spacer(),
                   Text(title, style: theme.textTheme.titleMedium),
                   const SizedBox(height: 2),
@@ -1189,9 +1195,12 @@ class _Greeting extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               ShaderMask(
-                shaderCallback: (bounds) => AppGradients.brand.createShader(
-                  Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                ),
+                shaderCallback: (bounds) =>
+                    AppGradients.brandFor(
+                      theme.colorScheme.primary,
+                    ).createShader(
+                      Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                    ),
                 blendMode: BlendMode.srcIn,
                 child: Text(
                   name,
@@ -1485,7 +1494,10 @@ class _EmptyRecent extends StatelessWidget {
             color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('No recent transactions yet', style: theme.textTheme.titleMedium),
+          Text(
+            'No recent transactions yet',
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
           Text('Record your first expense', style: theme.textTheme.bodySmall),
         ],
@@ -1512,7 +1524,7 @@ class _ShimmerTile extends StatelessWidget {
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
           duration: 1200.ms,
-          color: AppColors.primary.withValues(alpha: 0.08),
+          color: theme.colorScheme.primary.withValues(alpha: 0.08),
         );
   }
 }
@@ -1527,6 +1539,8 @@ class _AddExpenseFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 72),
       child: GestureDetector(
@@ -1537,9 +1551,9 @@ class _AddExpenseFab extends StatelessWidget {
             vertical: AppSpacing.md + 2,
           ),
           decoration: BoxDecoration(
-            gradient: AppGradients.brand,
+            gradient: AppGradients.brandFor(theme.colorScheme.primary),
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            boxShadow: AppGlow.medium(),
+            boxShadow: AppGlow.medium(color: theme.colorScheme.primary),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1560,4 +1574,3 @@ class _AddExpenseFab extends StatelessWidget {
     );
   }
 }
-

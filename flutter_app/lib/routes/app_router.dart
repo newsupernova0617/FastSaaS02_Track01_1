@@ -229,8 +229,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/stats',
             name: 'stats',
-            pageBuilder: (context, state) =>
-                _fadeScale(key: state.pageKey, child: const StatsPage()),
+            pageBuilder: (context, state) => _fadeScale(
+              key: state.pageKey,
+              child: StatsPage(
+                initialMonth: state.uri.queryParameters['month'],
+              ),
+            ),
           ),
           GoRoute(
             path: '/settings',

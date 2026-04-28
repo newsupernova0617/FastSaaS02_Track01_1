@@ -23,7 +23,10 @@ class UserProfileButton extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final name = currentUser.userMetadata?['name'] as String? ?? currentUser.email ?? 'User';
+    final name =
+        currentUser.userMetadata?['name'] as String? ??
+        currentUser.email ??
+        'User';
     final avatarUrl = currentUser.userMetadata?['avatar_url'] as String?;
 
     return Padding(
@@ -46,32 +49,37 @@ class UserProfileButton extends ConsumerWidget {
             isScrollControlled: true,
           );
         },
-        child: Container(
-          width: 40,
-          height: 40,
-          padding: const EdgeInsets.all(2),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: AppGradients.brand,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-            padding: const EdgeInsets.all(1),
-            child: ClipOval(
-              child: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? Image.network(
-                      avatarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildAvatarFallback(name, context);
-                      },
-                    )
-                  : _buildAvatarFallback(name, context),
-            ),
-          ),
+        child: Builder(
+          builder: (context) {
+            final theme = Theme.of(context);
+            return Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppGradients.brandFor(theme.colorScheme.primary),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.colorScheme.surface,
+                ),
+                padding: const EdgeInsets.all(1),
+                child: ClipOval(
+                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                      ? Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildAvatarFallback(name, context);
+                          },
+                        )
+                      : _buildAvatarFallback(name, context),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
