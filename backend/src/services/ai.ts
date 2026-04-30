@@ -2,11 +2,10 @@ import type { TransactionAction } from '../types/ai';
 import type { Transaction } from '../db/schema';
 import { validateAIResponse } from './validation';
 import { callLLM, type LLMConfig } from './llm';
+import { buildCategoryPromptList, CATEGORY_PROMPT_GUIDE } from './categories';
 
 function getSystemPrompt(userCategories: string[]): string {
-  const categoryList = userCategories.length > 0
-    ? userCategories.join(', ')
-    : 'food, transport, work, shopping, entertainment, utilities, medicine, other';
+  const categoryList = buildCategoryPromptList(userCategories).join(', ');
 
   return `You are a budget transaction assistant. Users write in natural language (Korean),
 and you extract/modify financial transactions or request financial analysis.
@@ -24,7 +23,7 @@ Payload schemas for each type:
    - transactionType MUST be exactly "income" or "expense" (English, lowercase)
    - Infer from context: spent/bought/paid → "expense", earned/received/salary → "income"
    - amount: positive integer (Korean Won, no commas)
-   - category: one of ${categoryList} (use EXACT category name from user's existing categories)
+   - category: one of ${categoryList} (use EXACT Korean app category name; use custom categories only when the user explicitly names one)
    - memo: short description (optional, omit if not provided)
    - date: YYYY-MM-DD, use today if not specified
 
@@ -86,9 +85,12 @@ Rules:
 - If date is not specified, use today's date (YYYY-MM-DD format)
 - For UPDATE/DELETE, match transaction details to user's recent transactions if ID is ambiguous
 - Be strict about amounts—don't guess or round
+- Prefer the canonical Korean app categories listed above even if older transaction history contains English labels like food/transport/work
 - For DELETE operations: If you're not 100% certain which transaction to delete, use a LOW confidence score (0.1-0.3)
 - For DELETE operations: If deleting multiple transactions, verify the action is clear from context (e.g., "4월 7일 모든 거래 삭제")
 - For PLAIN_TEXT: If the message could be financial-related OR casual, prefer financial action with lower confidence (0.5-0.7)
+
+${CATEGORY_PROMPT_GUIDE}
 
 Confidence Score Guidelines:
 - 0.95+: Very certain about the interpretation and action (CREATE/DELETE/READ with all clear data)
@@ -138,28 +140,15 @@ ${recentTxsFormatted || '(none)'}
 User's categories: ${userCategories.join(', ') || '(none)'}`;
 
     try {
-      // Get dynamic system prompt with user's actual categories
       const systemPrompt = getSystemPrompt(userCategories);
 
-      // First, determine the action type
-      const actionDeterminationResponse = await callLLM(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: baseContextMessage },
-        ],
-        this.config,
-        this.ai
-      );
-
-      const jsonMatch = actionDeterminationResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('No JSON found in response');
-      const actionResult = JSON.parse(jsonMatch[0]);
-      const actionType = actionResult.type;
-
-      // Get context for the determined action type
       let contextData = null;
       try {
-        contextData = await contextService.getContextForAction(db, userId, actionType, userText);
+        if (typeof contextService.getContextForParse === 'function') {
+          contextData = await contextService.getContextForParse(db, userId, userText);
+        } else {
+          contextData = await contextService.getContextForAction(db, userId, 'read', userText);
+        }
       } catch (error) {
         console.error('Failed to fetch context:', error);
         // Continue without context on error (graceful fallback)
@@ -183,7 +172,7 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
         content: baseContextMessage,
       });
 
-      // Make LLM call with context-enhanced messages
+      // Make one LLM call with context-enhanced messages.
       const responseText = await callLLM(
         messages,
         this.config,

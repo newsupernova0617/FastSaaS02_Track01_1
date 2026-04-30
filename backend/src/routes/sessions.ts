@@ -28,7 +28,7 @@ import { createRateLimiter } from '../middleware/rateLimit';
 import { chatMessages, transactions, reports, type TransactionSnapshot } from '../db/schema';
 import { eq, desc, isNull, and, inArray, sql } from 'drizzle-orm';
 import { createAIService } from '../services/ai';
-import { getLLMConfig, callLLM } from '../services/llm';
+import { getLLMConfig } from '../services/llm';
 import { contextService as getContextService } from '../services/context';
 import { loadUserAiContext } from '../services/ai-context';
 import { vectorizeService as getVectorizeService } from '../services/vectorize';
@@ -55,6 +55,7 @@ import {
   deleteSession,
   generateSessionTitle,
 } from '../services/sessions';
+import type { TransactionAction } from '../types/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -78,7 +79,7 @@ function generateClarificationQuestion(
 ): string {
   const questions: Record<string, string> = {
     amount: '얼마를 썼나요?',
-    category: '어떤 카테고리인가요? (음식, 교통, 쇼핑, 엔터테인먼트, 유틸리티, 의료, 일, 기타)',
+    category: '어떤 카테고리인가요? (식비, 교통, 쇼핑, 의료, 문화여가, 월세, 월급, 부업, 용돈, 기타)',
     transactionType: '지출인가요, 수입인가요?',
     date: '어느 날짜인가요?',
   };
@@ -423,6 +424,7 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
 
     // Check for active clarification and merge response if exists
     const activeClarification = await clarificationService.getClarification(db, userId, sessionId);
+    let action: TransactionAction | null = null;
 
     if (activeClarification) {
       // User is replying to a clarification question
@@ -481,45 +483,43 @@ router.post('/:sessionId/messages', sessionMessageRateLimit, async (c) => {
 
       // All fields provided, clear clarification and continue with normal processing
       await clarificationService.deleteClarification(db, userId, sessionId);
+
+      if (mergedData.transactionType && mergedData.amount && mergedData.category) {
+        action = {
+          type: 'create',
+          payload: {
+            transactionType: mergedData.transactionType,
+            amount: mergedData.amount,
+            category: mergedData.category,
+            memo: mergedData.memo,
+            date: mergedData.date || new Date().toISOString().slice(0, 10),
+          },
+          confidence: 0.95,
+        };
+      }
     }
 
     // Parse user input with AI and context enrichment
-    const action = await aiService.parseUserInput(
-      content,
-      recentTransactions,
-      userCategories,
-      userId,
-      contextService,
-      db
-    );
+    if (!action) {
+      action = await aiService.parseUserInput(
+        content,
+        recentTransactions,
+        userCategories,
+        userId,
+        contextService,
+        db
+      );
+    }
 
     // Check if AI detected a plain text query (non-financial)
     if (action.type === 'plain_text') {
-      // Call LLM for natural conversation
-      const systemPrompt = `You are a helpful assistant for a personal finance app.
-The user is asking a non-financial question. Please respond naturally and helpfully.
-After answering, you can gently mention that you're available to help with expense management if needed.`;
-
-      const llmMessages = [
-        { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content },
-      ];
-
-      let aiResponse: string;
-
-      try {
-        // Use the LLM directly for plain text conversation
-        aiResponse = await callLLM(llmMessages, getLLMConfig(c.env), c.env.AI);
-      } catch (error) {
-        console.error('Error calling LLM for plain text:', error);
-        aiResponse = `I appreciate the question! I'm primarily designed to help with expense management.
+      const aiResponse = `I appreciate the question! I'm primarily designed to help with expense management.
 Feel free to ask me about:
 • Adding expenses (e.g., "지출 5000원 커피로 추가")
 • Viewing spending (e.g., "지난달 식비")
 • Generating reports (e.g., "이번달 분석해줘")
 
 How can I help with your finances?`;
-      }
 
       const aiMessage = await db.insert(chatMessages).values({
         userId,

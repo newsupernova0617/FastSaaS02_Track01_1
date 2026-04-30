@@ -42,7 +42,7 @@ describe('AIService Integration with ContextService', () => {
   describe('Context Injection in Messages', () => {
     it('should include context in LLM messages when context is available', async () => {
       // Mock context retrieval
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [],
         transactions: [],
         notes: [],
@@ -64,10 +64,9 @@ describe('AIService Integration with ContextService', () => {
       expect(callLLMSpy).toHaveBeenCalled();
 
       // Verify that context was retrieved
-      expect(contextService.getContextForAction).toHaveBeenCalledWith(
+      expect(contextService.getContextForParse).toHaveBeenCalledWith(
         mockDb,
         'user-123',
-        'create',
         '저녁 12000원 썼어'
       );
     });
@@ -75,7 +74,7 @@ describe('AIService Integration with ContextService', () => {
     it('should format context as system message before user message', async () => {
       const contextFormatted = 'Consider this context:\n\n## Recent Transactions:\n- lunch';
 
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [],
         transactions: [],
         notes: [],
@@ -117,7 +116,7 @@ describe('AIService Integration with ContextService', () => {
     });
 
     it('should include context for CREATE action with minimal context items', async () => {
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [{ type: 'knowledge', content: 'Budget tip', source: 'general', metadata: {} }],
         transactions: [{ type: 'transaction', content: 'lunch - ₩5000', source: '2024-03-14', metadata: {} }],
         notes: [{ type: 'note', content: 'Daily budget', source: 'note-1', metadata: {} }],
@@ -136,16 +135,15 @@ describe('AIService Integration with ContextService', () => {
       );
 
       expect(result.type).toBe('create');
-      expect(contextService.getContextForAction).toHaveBeenCalledWith(
+      expect(contextService.getContextForParse).toHaveBeenCalledWith(
         mockDb,
         'user-123',
-        'create',
         '아침 8000원'
       );
     });
 
     it('should include rich context for READ action', async () => {
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [
           { type: 'knowledge', content: 'Monthly analysis', source: 'general', metadata: {} },
           { type: 'knowledge', content: 'Spending trends', source: 'general', metadata: {} },
@@ -170,16 +168,15 @@ describe('AIService Integration with ContextService', () => {
       );
 
       expect(result.type).toBe('read');
-      expect(contextService.getContextForAction).toHaveBeenCalledWith(
+      expect(contextService.getContextForParse).toHaveBeenCalledWith(
         mockDb,
         'user-123',
-        'read',
         '지난달 식비 내역'
       );
     });
 
     it('should include rich context for REPORT action', async () => {
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [
           { type: 'knowledge', content: 'Budget allocation', source: 'general', metadata: {} },
           { type: 'knowledge', content: 'Expense categories', source: 'general', metadata: {} },
@@ -208,16 +205,15 @@ describe('AIService Integration with ContextService', () => {
       );
 
       expect(result.type).toBe('report');
-      expect(contextService.getContextForAction).toHaveBeenCalledWith(
+      expect(contextService.getContextForParse).toHaveBeenCalledWith(
         mockDb,
         'user-123',
-        'report',
         '3월 분석해줘'
       );
     });
 
     it('should include moderate context for CLARIFY action', async () => {
-      vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [{ type: 'knowledge', content: 'Budget info', source: 'general', metadata: {} }],
         transactions: [
           { type: 'transaction', content: 'lunch - ₩5000', source: '2024-03-14', metadata: {} },
@@ -239,16 +235,15 @@ describe('AIService Integration with ContextService', () => {
       );
 
       expect(result.type).toBe('clarify');
-      expect(contextService.getContextForAction).toHaveBeenCalledWith(
+      expect(contextService.getContextForParse).toHaveBeenCalledWith(
         mockDb,
         'user-123',
-        'clarify',
         '점심 (액수 없음)'
       );
     });
 
     it('should gracefully handle context service failure and continue without context', async () => {
-      vi.spyOn(contextService, 'getContextForAction').mockRejectedValue(
+      vi.spyOn(contextService, 'getContextForParse').mockRejectedValue(
         new Error('Context service error')
       );
 
@@ -269,7 +264,7 @@ describe('AIService Integration with ContextService', () => {
     });
 
     it('should not include context for plain_text action', async () => {
-      const getContextSpy = vi.spyOn(contextService, 'getContextForAction').mockResolvedValue({
+      const getContextSpy = vi.spyOn(contextService, 'getContextForParse').mockResolvedValue({
         knowledge: [],
         transactions: [],
         notes: [],
@@ -297,7 +292,7 @@ describe('AIService Integration with ContextService', () => {
     it('should continue processing if context retrieval fails', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      vi.spyOn(contextService, 'getContextForAction').mockRejectedValue(
+      vi.spyOn(contextService, 'getContextForParse').mockRejectedValue(
         new Error('Database connection failed')
       );
 

@@ -35,6 +35,7 @@ const KNOWN_CATEGORIES = new Set([
 
 // Minimal stub for contextService — returns no additional context
 const stubContextService = {
+  getContextForParse: vi.fn().mockResolvedValue(null),
   getContextForAction: vi.fn().mockResolvedValue(null),
 };
 
@@ -53,7 +54,7 @@ describe('LLM smoke: ai parse (mocked)', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('create action has numeric amount and known action type', async () => {
-    // Mock both LLM calls inside parseUserInput (action-determination + context-enhanced)
+    // Mock the single LLM call inside parseUserInput.
     mockLlmResponse(
       JSON.stringify({
         type: 'create',

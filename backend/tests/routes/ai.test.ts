@@ -14,10 +14,15 @@ const sharedParseUserInputMock = vi.fn();
 
 // Mock the AIService module
 vi.mock('../../src/services/ai', () => {
+  const createMockService = () => ({
+    parseUserInput: sharedParseUserInputMock,
+  });
+
   return {
     AIService: class MockAIService {
       parseUserInput = sharedParseUserInputMock;
     },
+    createAIService: vi.fn(createMockService),
   };
 });
 
@@ -35,6 +40,27 @@ vi.mock('../../src/services/chat', () => {
     getChatHistory: vi.fn().mockResolvedValue([]),
     clearChatHistory: vi.fn().mockResolvedValue(0),
     saveMessageToSession: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
+// Keep route tests focused on action handling, not the rate limiter clock/window.
+vi.mock('../../src/middleware/rateLimit', () => {
+  return {
+    createRateLimiter: vi.fn(() => async (_c: any, next: any) => {
+      await next();
+    }),
+  };
+});
+
+vi.mock('../../src/services/sessions', () => {
+  return {
+    getSession: vi.fn().mockResolvedValue({
+      id: 1,
+      userId: 'user-123',
+      title: 'Test session',
+      createdAt: '2024-03-14T08:00:00Z',
+      updatedAt: '2024-03-14T08:00:00Z',
+    }),
   };
 });
 
@@ -503,7 +529,7 @@ describe('POST /api/ai/action', () => {
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.type).toBe('delete');
-      expect(body.result).toHaveProperty('id');
+      expect(body.result).toEqual({ ids: [1], count: 1 });
       expect(body.message).toContain('삭제되었습니다');
     });
 
@@ -586,7 +612,7 @@ describe('POST /api/ai/action', () => {
 
       expect(response.status).toBe(404);
       expect(body.success).toBe(false);
-      expect(body.error).toContain('not found');
+      expect(body.error).toBe('No transactions found');
     });
   });
 
@@ -842,7 +868,7 @@ describe('POST /api/ai/action', () => {
       const body = await response.json() as any;
 
       expect(response.status).toBe(404);
-      expect(body.error).toContain('not found');
+      expect(body.error).toBe('Some transactions not found or unauthorized');
     });
 
     it('prevents accessing other user\'s transactions in delete', async () => {
@@ -889,7 +915,7 @@ describe('POST /api/ai/action', () => {
       const body = await response.json() as any;
 
       expect(response.status).toBe(404);
-      expect(body.error).toContain('not found');
+      expect(body.error).toBe('No transactions found');
     });
   });
 

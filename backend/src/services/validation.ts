@@ -20,6 +20,7 @@
 
 import { z } from 'zod';
 import type { TransactionAction, CreatePayload, UpdatePayload, ReadPayload, DeletePayload, ReportPayload, UndoPayload } from '../types/ai';
+import { APP_CATEGORY_NAMES, LEGACY_CATEGORY_NAMES, toAppCategory } from './categories';
 
 /**
  * AI 모델 응답 구조 검증 스키마
@@ -319,10 +320,16 @@ export function validateCategory(category: string, userCategories: string[]): vo
   }
   // Warn if category is not in user's history, but allow it
   const validCategories = [
-    'food', 'transport', 'work', 'shopping', 'entertainment',
-    'utilities', 'medicine', 'other', ...userCategories
+    ...APP_CATEGORY_NAMES,
+    ...LEGACY_CATEGORY_NAMES,
+    ...userCategories,
   ];
-  if (!validCategories.includes(category.toLowerCase())) {
+  const normalizedCategory = toAppCategory(category);
+  if (
+    !validCategories.includes(category) &&
+    !validCategories.includes(category.toLowerCase()) &&
+    !validCategories.includes(normalizedCategory)
+  ) {
     // Don't throw, just log — allow new categories
     console.warn(`Uncommon category: ${category}`);
   }

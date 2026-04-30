@@ -9,15 +9,11 @@
  *
  * 2. AIReportService aggregation math (src/services/ai-report.ts)
  *    The aggregateTransactionData private method runs against a real DB.
- *    We test it indirectly via generateReport with a mocked callLLM, then
- *    inspect the JSON passed to the LLM to verify:
+ *    We test it indirectly via generateReport's deterministic sections to verify:
  *      - Category sums match hand-calculated fixtures
  *      - Date range filtering excludes out-of-range transactions
  *      - Soft-deleted transactions (deletedAt != null) are excluded
  *      - Empty input → zeroed totals, no error
- *
- * The LLM mock returns a minimal valid sections JSON so generateReport
- * completes without a real network call.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -25,17 +21,9 @@ import { createTestDb, type TestDbHandle } from '../../helpers/db';
 import { seedUser, seedTransaction } from '../../helpers/fixtures';
 import { ReportService, updateReportTitle } from '../../../src/services/reports';
 import { AIReportService } from '../../../src/services/ai-report';
-import * as llmModule from '../../../src/services/llm';
 import { transactions } from '../../../src/db/schema';
 import { eq } from 'drizzle-orm';
-import type { ReportPayload } from '../../../src/types/ai';
-
-// Minimal sections JSON for the LLM mock
-const MOCK_SECTIONS_JSON = JSON.stringify({
-  sections: [
-    { type: 'card', title: 'Total Expense', metric: '₩0', trend: 'stable', data: {} },
-  ],
-});
+import type { Report, ReportPayload } from '../../../src/types/ai';
 
 // LLM config for AIReportService — provider doesn't matter because callLLM is spied on
 const TEST_LLM_CONFIG = {
@@ -162,46 +150,23 @@ describe('reports service — Tier 2 real-DB tests', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // AIReportService aggregation math (real DB + mocked LLM)
-  //
-  // The key insight: AIReportService.generateReport calls aggregateTransactionData
-  // (which queries the real DB) and then passes the JSON to generateReportSections
-  // (which calls callLLM). We capture what the LLM received and parse the
-  // transactionData from the prompt to verify correctness.
+  // AIReportService aggregation math (real DB + deterministic sections)
   // ---------------------------------------------------------------------------
 
   describe('AIReportService aggregation math', () => {
     let aiReportSvc: AIReportService;
-    let capturedPromptData: string;
 
     beforeEach(() => {
       aiReportSvc = new AIReportService(TEST_LLM_CONFIG);
-
-      // Spy on callLLM: capture the raw transactionData JSON from the prompt and
-      // return valid sections so generateReport completes.
-      //
-      // The prompt structure in generateReportSections is:
-      //   "...based on this transaction data:\n\n<transactionData>\n\nCRITICAL..."
-      // We extract just the transactionData JSON block by splitting on the known
-      // surrounding text so we get exactly the JSON object passed as transactionData.
-      vi.spyOn(llmModule, 'callLLM').mockImplementation(async (messages) => {
-        const userMsg = messages.find((m) => m.role === 'user');
-        if (userMsg) {
-          // Extract the JSON block between the intro and the CRITICAL section
-          const content = userMsg.content;
-          const startMarker = 'based on this transaction data:\n\n';
-          const endMarker = '\n\nCRITICAL REQUIREMENTS';
-          const startIdx = content.indexOf(startMarker);
-          const endIdx = content.indexOf(endMarker);
-          if (startIdx !== -1 && endIdx !== -1) {
-            capturedPromptData = content.slice(startIdx + startMarker.length, endIdx).trim();
-          } else {
-            capturedPromptData = userMsg.content;
-          }
-        }
-        return MOCK_SECTIONS_JSON;
-      });
     });
+
+    function totalExpenseSection(report: Report) {
+      return report.sections.find((section) => section.title === '총 지출')!;
+    }
+
+    function categorySection(report: Report) {
+      return report.sections.find((section) => section.title === '카테고리별 지출')!;
+    }
 
     it('sums by category match hand-calculated fixtures', async () => {
       // Seed 3 expense transactions: food×2, transport×1
@@ -214,21 +179,18 @@ describe('reports service — Tier 2 real-DB tests', () => {
         params: { month: '2026-04' },
       };
 
-      await aiReportSvc.generateReport(handle.db, 'alice', payload);
-
-      // capturedPromptData is now exactly the transactionData JSON string
-      expect(capturedPromptData).toBeTruthy();
-      const aggregated = JSON.parse(capturedPromptData);
+      const report = await aiReportSvc.generateReport(handle.db, 'alice', payload);
+      const totalExpense = totalExpenseSection(report);
+      const categoryData = categorySection(report).data as any;
 
       // Hand-calculated:
       //   food expense: 15000 + 10000 = 25000
       //   transport expense: 30000
       //   total expense: 55000, total income: 0
-      expect(aggregated.totalExpense).toBe(55000);
-      expect(aggregated.totalIncome).toBe(0);
-      expect(aggregated.byCategory.food.expense).toBe(25000);
-      expect(aggregated.byCategory.transport.expense).toBe(30000);
-      expect(aggregated.transactionCount).toBe(3);
+      expect((totalExpense.data as any).value).toBe(55000);
+      expect((totalExpense.data as any).transactionCount).toBe(3);
+      expect(categoryData.labels).toEqual(['transport', 'food']);
+      expect(categoryData.values).toEqual([30000, 25000]);
     });
 
     it('excludes transactions outside the date range', async () => {
@@ -244,13 +206,12 @@ describe('reports service — Tier 2 real-DB tests', () => {
         params: { month: '2026-04' },
       };
 
-      await aiReportSvc.generateReport(handle.db, 'alice', payload);
-
-      const aggregated = JSON.parse(capturedPromptData);
+      const report = await aiReportSvc.generateReport(handle.db, 'alice', payload);
+      const totalExpense = totalExpenseSection(report);
 
       // Only the April transaction should be counted
-      expect(aggregated.totalExpense).toBe(20000);
-      expect(aggregated.transactionCount).toBe(1);
+      expect((totalExpense.data as any).value).toBe(20000);
+      expect((totalExpense.data as any).transactionCount).toBe(1);
     });
 
     it('excludes soft-deleted transactions (deletedAt != null)', async () => {
@@ -287,13 +248,12 @@ describe('reports service — Tier 2 real-DB tests', () => {
         params: { month: '2026-04' },
       };
 
-      await aiReportSvc.generateReport(handle.db, 'alice', payload);
-
-      const aggregated = JSON.parse(capturedPromptData);
+      const report = await aiReportSvc.generateReport(handle.db, 'alice', payload);
+      const totalExpense = totalExpenseSection(report);
 
       // Only the active (non-deleted) transaction should be counted
-      expect(aggregated.totalExpense).toBe(10000);
-      expect(aggregated.transactionCount).toBe(1);
+      expect((totalExpense.data as any).value).toBe(10000);
+      expect((totalExpense.data as any).transactionCount).toBe(1);
     });
 
     it('returns zeroed totals on empty input without throwing', async () => {
@@ -309,11 +269,12 @@ describe('reports service — Tier 2 real-DB tests', () => {
       expect(report).toHaveProperty('reportType');
       expect(report).toHaveProperty('sections');
 
-      const aggregated = JSON.parse(capturedPromptData);
+      const totalExpense = totalExpenseSection(report);
+      const cashFlow = report.sections.find((section) => section.title === '순현금흐름')!;
 
-      expect(aggregated.totalExpense).toBe(0);
-      expect(aggregated.totalIncome).toBe(0);
-      expect(aggregated.transactionCount).toBe(0);
+      expect((totalExpense.data as any).value).toBe(0);
+      expect((cashFlow.data as any).values).toEqual([0]);
+      expect((totalExpense.data as any).transactionCount).toBe(0);
     });
 
     it('does not include other users\' transactions in the aggregation', async () => {
@@ -322,13 +283,13 @@ describe('reports service — Tier 2 real-DB tests', () => {
 
       const payload: ReportPayload = { reportType: 'monthly_summary' };
 
-      await aiReportSvc.generateReport(handle.db, 'alice', payload);
-
-      const aggregated = JSON.parse(capturedPromptData);
+      const report = await aiReportSvc.generateReport(handle.db, 'alice', payload);
+      const totalExpense = totalExpenseSection(report);
+      const categoryData = categorySection(report).data as any;
 
       // Bob's 999000 must not appear
-      expect(aggregated.totalExpense).toBe(5000);
-      expect(aggregated.byCategory.shopping).toBeUndefined();
+      expect((totalExpense.data as any).value).toBe(5000);
+      expect(categoryData.labels).not.toContain('shopping');
     });
   });
 });

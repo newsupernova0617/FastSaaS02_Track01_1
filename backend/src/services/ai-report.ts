@@ -2,11 +2,12 @@ import { eq, gte, lte, and, isNull } from 'drizzle-orm';
 import type {
   ReportPayload,
   Report,
+  ReportSection,
   ReportSummaryData,
   ReportBreakdownItem,
 } from '../types/ai';
 import { transactions } from '../db/schema';
-import { callLLM, type LLMConfig } from './llm';
+import type { LLMConfig } from './llm';
 
 interface AggregatedTransactionData {
   totalIncome: number;
@@ -20,19 +21,13 @@ interface AggregatedTransactionData {
 }
 
 export class AIReportService {
-  private config: LLMConfig;
-  private ai?: any;
-
-  constructor(config: LLMConfig, ai?: any) {
-    this.config = config;
-    this.ai = ai;
-  }
+  constructor(_config: LLMConfig, _ai?: any) {}
 
   /**
    * Main method: Generate a financial report
-   * 2-stage process:
-   * 1. Parse user intent + params to determine report type and filters
-   * 2. Aggregate transaction data and call AI to generate report sections
+   * 2-stage process after the chat parser has selected the report intent:
+   * 1. Aggregate transaction data based on the parsed report filters
+   * 2. Generate deterministic report sections from the aggregate
    * @param db - Database instance
    * @param userId - User ID to generate report for
    * @param reportPayload - Parsed report request with type and params
@@ -58,8 +53,8 @@ export class AIReportService {
       ? await this.aggregateTransactionData(db, userId, reportType, comparisonParams)
       : null;
 
-    // Generate report sections using AI
-    const reportSections = await this.generateReportSections(
+    // Generate report sections from aggregated data without another LLM call.
+    const reportSections = this.generateReportSections(
       reportType,
       transactionData
     );
@@ -170,60 +165,98 @@ export class AIReportService {
     return aggregated;
   }
 
-  /**
-   * Calls Groq AI to generate report sections
-   * @param reportType - Type of report
-   * @param transactionData - Aggregated transaction data as JSON
-   * @returns Array of report sections with type, title, data
-   */
-  private async generateReportSections(
+  private generateReportSections(
     reportType: string,
     transactionData: AggregatedTransactionData
-  ) {
-    const transactionDataText = JSON.stringify(transactionData);
-    const prompt = `
-You are a financial report generator. Generate a detailed ${reportType} report based on this transaction data:
+  ): ReportSection[] {
+    const data = transactionData;
 
-${transactionDataText}
+    const expenseByCategory = Object.entries(data.byCategory)
+      .map(([category, totals]) => ({ category, amount: totals.expense }))
+      .filter((item) => item.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
 
-CRITICAL REQUIREMENTS:
-1. Return ONLY and ALWAYS valid JSON in the "sections" object - NEVER explanations or reasoning
-2. Do NOT wrap JSON in markdown code blocks or any text
-3. Do NOT include any text outside the JSON object
-4. Every response MUST be parseable by JSON.parse()
+    const labels = expenseByCategory.map((item) => item.category);
+    const values = expenseByCategory.map((item) => item.amount);
+    const net = data.totalIncome - data.totalExpense;
+    const topCategory = expenseByCategory[0];
 
-Structure (fill in all required fields):
-{
-  "sections": [
-    {
-      "type": "card|pie|bar|line|alert|suggestion",
-      "title": "Section Title",
-      "subtitle": "Optional subtitle",
-      "metric": "₩123,456 or 12.3%",
-      "trend": "up|down|stable",
-      "data": { /* type-specific data */ }
+    const sections: ReportSection[] = [
+      {
+        type: 'card',
+        title: '총 지출',
+        subtitle: `${data.dateRange} 기준`,
+        metric: this.formatAmount(data.totalExpense),
+        trend: 'stable',
+        data: { value: data.totalExpense, transactionCount: data.transactionCount },
+      },
+      {
+        type: 'pie',
+        title: '카테고리별 지출',
+        data: {
+          labels: labels.length > 0 ? labels : ['데이터 없음'],
+          values: values.length > 0 ? values : [0],
+        },
+      },
+      {
+        type: 'bar',
+        title: '수입/지출 비교',
+        data: { labels: ['수입', '지출'], values: [data.totalIncome, data.totalExpense] },
+      },
+      {
+        type: 'line',
+        title: '순현금흐름',
+        data: { labels: [String(data.dateRange)], values: [net] },
+      },
+      {
+        type: 'alert',
+        title: '상태 점검',
+        data: { message: this.buildAlert(data.totalIncome, data.totalExpense, data.transactionCount) },
+      },
+    ];
+
+    sections.push({
+      type: 'suggestion',
+      title: this.getSuggestionTitle(reportType),
+      data: {
+        message: this.buildSuggestion(data.totalIncome, data.totalExpense, topCategory?.category),
+      },
+    });
+
+    return sections;
+  }
+
+  private formatAmount(amount: number): string {
+    return `₩${amount.toLocaleString('ko-KR')}`;
+  }
+
+  private getSuggestionTitle(reportType: string): string {
+    if (reportType === 'anomaly') return '확인할 항목';
+    if (reportType === 'suggestion') return '추천 액션';
+    return '다음에 해볼 일';
+  }
+
+  private buildSuggestion(totalIncome: number, totalExpense: number, topCategory?: string): string {
+    if (totalExpense === 0) {
+      return '아직 지출 데이터가 적습니다. 거래를 더 기록하면 더 의미 있는 분석을 볼 수 있습니다.';
     }
-  ]
-}
+    if (totalIncome > 0 && totalExpense > totalIncome) {
+      return '지출이 수입을 초과했습니다. 고정비와 반복 지출을 먼저 점검해 보세요.';
+    }
+    if (topCategory) {
+      return `${topCategory} 지출 비중이 가장 큽니다. 이번 주에는 이 카테고리 예산을 먼저 확인해 보세요.`;
+    }
+    return '최근 거래를 꾸준히 기록하면 소비 패턴을 더 정확하게 추적할 수 있습니다.';
+  }
 
-Detailed requirements per type:
-- card: MUST include metric (string with ₩) and trend (up/down/stable)
-- pie/bar/line: MUST include data with {"labels": [...], "values": [...]}
-- alert: MUST include data with {"message": "alert text about anomaly"}
-- suggestion: MUST include data with {"message": "actionable advice text"}
-
-Generate at least 3 sections. Start with JSON directly, no preamble.
-`;
-
-    const responseText = await callLLM(
-      [{ role: 'user', content: prompt }],
-      this.config,
-      this.ai
-    );
-
-    // Parse JSON from response
-    const parsed = JSON.parse(responseText);
-    return parsed.sections || [];
+  private buildAlert(totalIncome: number, totalExpense: number, transactionCount: number): string {
+    if (transactionCount === 0) {
+      return '선택한 조건에 해당하는 거래가 없습니다.';
+    }
+    if (totalIncome > 0 && totalExpense > totalIncome) {
+      return '지출이 수입보다 큽니다.';
+    }
+    return '특이한 위험 신호는 없습니다.';
   }
 
   private buildSummary(

@@ -19,9 +19,7 @@
 import { clarificationSessions } from '../db/schema';
 import { eq, and, lt } from 'drizzle-orm';
 import crypto from 'crypto';
-
-// 허용되는 거래 카테고리 목록 (validation.ts와 동일해야 함)
-const VALID_CATEGORIES = ['food', 'transport', 'work', 'shopping', 'entertainment', 'utilities', 'medicine', 'other'] as const;
+import { extractCategoryFromText } from './categories';
 
 export interface ClarificationState {
   missingFields: string[];
@@ -116,12 +114,8 @@ export class ClarificationService {
 
     // Try to extract category if it's missing
     if (missingFields.includes('category')) {
-      for (const cat of VALID_CATEGORIES) {
-        if (lowerResponse.includes(cat)) {
-          mergedData.category = cat;
-          break;
-        }
-      }
+      const category = extractCategoryFromText(lowerResponse);
+      if (category) mergedData.category = category;
     }
 
     // Try to extract transactionType if it's missing

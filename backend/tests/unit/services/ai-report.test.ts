@@ -1,20 +1,13 @@
 /**
- * Task 22: AIReportService non-LLM parts — real DB + mocked callLLM
+ * Task 22: AIReportService deterministic report generation — real DB
  *
- * The existing tests/services/ai-report.test.ts instantiates the service with
- * provider: 'workers-ai' and no `ai` binding.  callLLM with workers-ai and no
- * binding throws immediately, which means those tests rely on the mock DB
- * returning data before callLLM is reached — but the sections assertions
- * (sections.length > 0, sectionTypes includes 'card' and 'pie') cannot pass
- * without a real or mocked LLM response.
- *
- * These tests use:
- *   - Real in-memory DB (createTestDb + seedTransaction) for the aggregation step
- *   - mockLlmResponse from helpers for the sections generation step
+ * These tests use a real in-memory DB (createTestDb + seedTransaction) for the
+ * aggregation step. Report sections are generated in-process so chat requests
+ * can stay at one LLM call total.
  *
  * Scenarios:
  *   1. generateReport returns a report with the expected shape
- *   2. The narrative/sections text from the mocked LLM is included in the report
+ *   2. The deterministic sections include DB-derived totals
  *   3. generateReport with no params and empty DB does not throw
  *   4. getReportTitle and getReportSubtitle produce correct strings (non-LLM)
  */
@@ -22,32 +15,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createTestDb, type TestDbHandle } from '../../helpers/db';
 import { seedUser, seedTransaction } from '../../helpers/fixtures';
-import { mockLlmResponse, restoreLlmMock } from '../../helpers/llm-mock';
 import { AIReportService } from '../../../src/services/ai-report';
 import type { ReportPayload } from '../../../src/types/ai';
-
-// Deterministic sections payload returned by the mocked LLM
-const MOCK_SECTIONS = [
-  {
-    type: 'card',
-    title: 'Total Expense',
-    metric: '₩55,000',
-    trend: 'up',
-    data: {},
-  },
-  {
-    type: 'pie',
-    title: 'By Category',
-    data: { labels: ['food', 'transport'], values: [25000, 30000] },
-  },
-  {
-    type: 'suggestion',
-    title: 'Save More',
-    data: { message: '식비를 줄이세요.' },
-  },
-];
-
-const MOCK_LLM_RESPONSE = JSON.stringify({ sections: MOCK_SECTIONS });
+import * as llmModule from '../../../src/services/llm';
 
 // LLM config — provider doesn't matter because callLLM is spied on
 const TEST_LLM_CONFIG = {
@@ -56,7 +26,7 @@ const TEST_LLM_CONFIG = {
   modelName: 'gemini-pro',
 };
 
-describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
+describe('AIReportService — Tier 2 (real DB + deterministic sections)', () => {
   let handle: TestDbHandle;
   let svc: AIReportService;
 
@@ -69,7 +39,7 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
   });
 
   afterEach(() => {
-    restoreLlmMock();
+    vi.restoreAllMocks();
     handle.client.close();
   });
 
@@ -78,8 +48,6 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
   // ---------------------------------------------------------------------------
 
   it('returns a report with reportType, title, sections, generatedAt fields', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
-
     await seedTransaction(handle.db, { userId: 'alice', type: 'expense', amount: 5000, category: 'food', date: '2026-04-01' });
 
     const payload: ReportPayload = { reportType: 'monthly_summary', params: { month: '2026-04' } };
@@ -87,52 +55,50 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
     const report = await svc.generateReport(handle.db, 'alice', payload);
 
     expect(report).toHaveProperty('reportType', 'monthly_summary');
-    expect(report).toHaveProperty('title', 'Monthly Summary');
+    expect(report).toHaveProperty('title', '월간 요약');
     expect(report).toHaveProperty('sections');
     expect(report).toHaveProperty('generatedAt');
     expect(Array.isArray(report.sections)).toBe(true);
   });
 
   // ---------------------------------------------------------------------------
-  // Narrative: sections from the mocked LLM are present in the report
+  // Sections: deterministic DB-derived sections are present in the report
   // ---------------------------------------------------------------------------
 
-  it('includes the narrative sections returned by the mocked LLM in report.sections', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
+  it('includes deterministic sections derived from transactions in report.sections', async () => {
+    await seedTransaction(handle.db, { userId: 'alice', type: 'expense', amount: 25000, category: 'food', date: '2026-04-01' });
+    await seedTransaction(handle.db, { userId: 'alice', type: 'expense', amount: 30000, category: 'transport', date: '2026-04-02' });
 
     const payload: ReportPayload = { reportType: 'monthly_summary' };
 
     const report = await svc.generateReport(handle.db, 'alice', payload);
 
-    expect(report.sections.length).toBe(MOCK_SECTIONS.length);
+    expect(report.sections.length).toBeGreaterThanOrEqual(3);
 
-    const cardSection = report.sections.find((s) => s.type === 'card');
+    const cardSection = report.sections.find((s) => s.title === '총 지출');
     expect(cardSection).toBeDefined();
-    expect(cardSection!.title).toBe('Total Expense');
     expect(cardSection!.metric).toBe('₩55,000');
+    expect((cardSection!.data as any).transactionCount).toBe(2);
 
-    const suggestionSection = report.sections.find((s) => s.type === 'suggestion');
-    expect(suggestionSection).toBeDefined();
-    expect((suggestionSection!.data as any).message).toBe('식비를 줄이세요.');
+    const categorySection = report.sections.find((s) => s.title === '카테고리별 지출');
+    expect(categorySection).toBeDefined();
+    expect((categorySection!.data as any).labels).toEqual(['transport', 'food']);
+    expect((categorySection!.data as any).values).toEqual([30000, 25000]);
   });
 
   // ---------------------------------------------------------------------------
   // Subtitle: present when month param is provided, absent otherwise
   // ---------------------------------------------------------------------------
 
-  it('includes subtitle "for YYYY-MM" when month param is provided', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
-
+  it('includes Korean month subtitle when month param is provided', async () => {
     const payload: ReportPayload = { reportType: 'category_detail', params: { month: '2026-04' } };
 
     const report = await svc.generateReport(handle.db, 'alice', payload);
 
-    expect(report.subtitle).toBe('for 2026-04');
+    expect(report.subtitle).toBe('2026-04 기준');
   });
 
   it('has no subtitle when month param is not provided', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
-
     const payload: ReportPayload = { reportType: 'monthly_summary' };
 
     const report = await svc.generateReport(handle.db, 'alice', payload);
@@ -145,8 +111,6 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
   // ---------------------------------------------------------------------------
 
   it('generates a report without throwing when the user has no transactions', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
-
     const payload: ReportPayload = { reportType: 'monthly_summary' };
 
     const report = await svc.generateReport(handle.db, 'alice', payload);
@@ -161,20 +125,16 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
 
   it('maps all known report types to their correct titles', async () => {
     const expected: Array<[ReportPayload['reportType'], string]> = [
-      ['monthly_summary', 'Monthly Summary'],
-      ['category_detail', 'Category Analysis'],
-      ['spending_pattern', 'Spending Pattern Analysis'],
-      ['anomaly', 'Anomaly Detection'],
-      ['suggestion', 'Smart Recommendations'],
+      ['monthly_summary', '월간 요약'],
+      ['category_detail', '카테고리 분석'],
+      ['spending_pattern', '지출 패턴 분석'],
+      ['anomaly', '이상 지출 탐지'],
+      ['suggestion', '맞춤 제안'],
     ];
 
     for (const [reportType, expectedTitle] of expected) {
-      mockLlmResponse(MOCK_LLM_RESPONSE);
-
       const report = await svc.generateReport(handle.db, 'alice', { reportType });
       expect(report.title).toBe(expectedTitle);
-
-      restoreLlmMock();
     }
   });
 
@@ -183,8 +143,6 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
   // ---------------------------------------------------------------------------
 
   it('generatedAt is a valid ISO 8601 timestamp', async () => {
-    mockLlmResponse(MOCK_LLM_RESPONSE);
-
     const report = await svc.generateReport(handle.db, 'alice', { reportType: 'monthly_summary' });
 
     const parsed = new Date(report.generatedAt);
@@ -193,15 +151,14 @@ describe('AIReportService — Tier 2 (real DB + mocked LLM)', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // LLM is called exactly once per generateReport invocation
-  // (aggregation happens in-process; only one LLM call for sections)
+  // No LLM call is made during report section generation
   // ---------------------------------------------------------------------------
 
-  it('calls callLLM exactly once per generateReport invocation', async () => {
-    const spy = mockLlmResponse(MOCK_LLM_RESPONSE);
+  it('does not call callLLM during generateReport', async () => {
+    const spy = vi.spyOn(llmModule, 'callLLM');
 
     await svc.generateReport(handle.db, 'alice', { reportType: 'monthly_summary' });
 
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).not.toHaveBeenCalled();
   });
 });

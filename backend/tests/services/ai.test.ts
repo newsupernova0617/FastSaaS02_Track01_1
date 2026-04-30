@@ -22,6 +22,12 @@ describe('AIService', () => {
 
     // Setup mock context service
     mockContextService = {
+      getContextForParse: vi.fn().mockResolvedValue({
+        knowledge: [],
+        transactions: [],
+        notes: [],
+        formatted: '',
+      }),
       getContextForAction: vi.fn().mockResolvedValue({
         knowledge: [],
         transactions: [],
@@ -50,10 +56,9 @@ describe('AIService', () => {
     const result = await service.parseUserInput('점심 12000원 썼어', [], [], 'user-456', mockContextService, mockDb);
 
     expect(result.type).toBe('create');
-    expect(mockContextService.getContextForAction).toHaveBeenCalledWith(
+    expect(mockContextService.getContextForParse).toHaveBeenCalledWith(
       mockDb,
       'user-456',
-      'create',
       '점심 12000원 썼어'
     );
   });
@@ -64,7 +69,7 @@ describe('AIService', () => {
     const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
     const result = await service.parseUserInput('내역 보여줘', [], [], 'user-123', mockContextService, mockDb);
 
-    expect(mockContextService.getContextForAction).toHaveBeenCalled();
+    expect(mockContextService.getContextForParse).toHaveBeenCalled();
   });
 
   it('requires db parameter', async () => {
@@ -73,9 +78,8 @@ describe('AIService', () => {
     const service = new AIService({ provider: 'gemini', apiKey: 'test-api-key', modelName: 'gemini-pro' });
     const result = await service.parseUserInput('내역 보여줘', [], [], 'user-123', mockContextService, mockDb);
 
-    expect(mockContextService.getContextForAction).toHaveBeenCalledWith(
+    expect(mockContextService.getContextForParse).toHaveBeenCalledWith(
       mockDb,
-      expect.any(String),
       expect.any(String),
       expect.any(String)
     );

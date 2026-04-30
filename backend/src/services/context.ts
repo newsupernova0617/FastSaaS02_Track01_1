@@ -37,6 +37,33 @@ export class ContextService {
   }
 
   /**
+   * Get action-agnostic context for the initial parse.
+   *
+   * This keeps the chat pipeline to one LLM call: gather a compact, balanced
+   * context set first, then let the model classify and parse in one pass.
+   */
+  async getContextForParse(
+    db: any,
+    userId: string,
+    userText: string
+  ): Promise<ContextData> {
+    const [knowledge, transactions_context, notes] = await Promise.all([
+      this.retrieveKnowledge(db, 3),
+      this.retrieveTransactions(db, userId, userText, 10),
+      this.retrieveNotes(db, userId, 3),
+    ]);
+
+    const formatted = this.formatContextMessage(knowledge, transactions_context, notes);
+
+    return {
+      knowledge,
+      transactions: transactions_context,
+      notes,
+      formatted,
+    };
+  }
+
+  /**
    * Determine retrieval strategy based on action type
    */
   private getRetrievalStrategy(actionType: ActionType): RetrievalStrategy {

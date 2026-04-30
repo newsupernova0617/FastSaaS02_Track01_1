@@ -3,27 +3,28 @@
  *
  * The existing tests/services/ai.test.ts tests valid JSON and API error paths
  * using hand-rolled spies. These tests add the missing scenarios:
- *   - Malformed JSON on second LLM call → service throws (does not silently return plain_text)
+ *   - Malformed JSON from the single LLM call → service throws (does not silently return plain_text)
  *   - LLM returns confidence < 0.7 with clarify type → returned as-is after validation
  *   - LLM returns valid create JSON → returned with type 'create'
  *   - LLM returns unknown action type → validateAIResponse throws → service re-throws
  *
- * parseUserInput makes TWO callLLM calls:
- *   1. First call: determine action type (JSON with "type" field)
- *   2. Second call: final parse with context (JSON processed by validateAIResponse)
- *
- * mockLlmResponse from helpers replaces ALL callLLM calls in a test with one value.
- * To return different values per call, we spy directly here.
+ * parseUserInput makes one callLLM call with compact context injected.
  */
 
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { AIService } from '../../../src/services/ai';
 import * as llmModule from '../../../src/services/llm';
 
-// Minimal mock contextService — getContextForAction returns empty formatted string
-// so the second LLM call has no extra context injected.
+// Minimal mock contextService — getContextForParse returns empty formatted string
+// so the single LLM call has no extra context injected.
 function makeContextService() {
   return {
+    getContextForParse: vi.fn().mockResolvedValue({
+      knowledge: [],
+      transactions: [],
+      notes: [],
+      formatted: '',
+    }),
     getContextForAction: vi.fn().mockResolvedValue({
       knowledge: [],
       transactions: [],
@@ -72,7 +73,6 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
       confidence: 0.95,
     });
 
-    // Both LLM calls return valid create JSON
     vi.spyOn(llmModule, 'callLLM').mockResolvedValue(createJson);
 
     const result = await service.parseUserInput(
@@ -86,12 +86,11 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
 
     expect(result.type).toBe('create');
     expect(result.confidence).toBeGreaterThanOrEqual(0.9);
+    expect(llmModule.callLLM).toHaveBeenCalledTimes(1);
   });
 
   // -------------------------------------------------------------------------
   // Scenario 2: LLM returns clarify JSON with confidence < 0.7
-  //   First call returns 'clarify' (action determination)
-  //   Second call returns the same clarify payload (final parse)
   // -------------------------------------------------------------------------
   it('returns type "clarify" when LLM returns confidence < 0.7', async () => {
     const clarifyJson = JSON.stringify({
@@ -121,7 +120,7 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Scenario 3: Malformed JSON on both calls → service throws
+  // Scenario 3: Malformed JSON → service throws
   //   The source does not have a plain_text fallback; it re-throws as
   //   "Failed to process request."
   // -------------------------------------------------------------------------
@@ -134,30 +133,32 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Scenario 4: First call succeeds; second call returns malformed JSON → throws
+  // Scenario 4: The parser calls the LLM exactly once
   // -------------------------------------------------------------------------
-  it('throws "Failed to process request" when only the second LLM call is malformed', async () => {
-    const firstCallJson = JSON.stringify({
+  it('calls callLLM exactly once per parseUserInput invocation', async () => {
+    const createJson = JSON.stringify({
       type: 'create',
-      payload: {},
+      payload: {
+        transactionType: 'expense',
+        amount: 9000,
+        category: 'food',
+        date: '2026-04-13',
+      },
       confidence: 0.9,
     });
+    const spy = vi.spyOn(llmModule, 'callLLM').mockResolvedValue(createJson);
 
-    const spy = vi.spyOn(llmModule, 'callLLM');
-    spy.mockResolvedValueOnce(firstCallJson);   // first call (action determination)
-    spy.mockResolvedValueOnce('NOT VALID JSON'); // second call (final parse with context)
+    await service.parseUserInput('점심 9000원', [], [], 'user-alice', contextService, mockDb);
 
-    await expect(
-      service.parseUserInput('점심', [], [], 'user-alice', contextService, mockDb)
-    ).rejects.toThrow('Failed to process request');
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   // -------------------------------------------------------------------------
-  // Scenario 5: Unknown / invalid action type in second call → validateAIResponse
+  // Scenario 5: Unknown / invalid action type → validateAIResponse
   //   throws because 'unknown_action' is not a valid action type, and the catch
   //   block re-throws as "Failed to process request".
   // -------------------------------------------------------------------------
-  it('throws "Failed to process request" when second LLM call returns unknown action type', async () => {
+  it('throws "Failed to process request" when LLM returns unknown action type', async () => {
     const unknownTypeJson = JSON.stringify({
       type: 'unknown_action',
       payload: {},
@@ -196,9 +197,9 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Scenario 7: contextService.getContextForAction is called with the userId arg
+  // Scenario 7: contextService.getContextForParse is called with the userId arg
   // -------------------------------------------------------------------------
-  it('passes userId from argument to contextService.getContextForAction', async () => {
+  it('passes userId from argument to contextService.getContextForParse', async () => {
     const plainTextJson = JSON.stringify({
       type: 'plain_text',
       payload: {},
@@ -216,10 +217,9 @@ describe('AIService.parseUserInput — Tier 2 coverage', () => {
       mockDb
     );
 
-    expect(contextService.getContextForAction).toHaveBeenCalledWith(
+    expect(contextService.getContextForParse).toHaveBeenCalledWith(
       mockDb,
       'user-bob',
-      expect.any(String),
       expect.any(String)
     );
   });

@@ -72,7 +72,7 @@ describe('AIReportService', () => {
       expect(report).toHaveProperty('sections');
       expect(report).toHaveProperty('generatedAt');
       expect(report.reportType).toBe('monthly_summary');
-      expect(report.title).toBe('Monthly Summary');
+      expect(report.title).toBe('월간 요약');
       expect(Array.isArray(report.sections)).toBe(true);
       expect(report.sections.length).toBeGreaterThan(0);
     });
@@ -102,7 +102,7 @@ describe('AIReportService', () => {
 
       // Verify: Check subtitle is present and contains month
       expect(report.subtitle).toBeDefined();
-      expect(report.subtitle).toBe('for 2026-04');
+      expect(report.subtitle).toBe('2026-04 기준');
     });
 
     it('should not include subtitle when month not provided', async () => {
@@ -221,7 +221,7 @@ describe('AIReportService', () => {
 
       // Verify: Check report was generated successfully with category filter
       expect(report.reportType).toBe('category_detail');
-      expect(report.title).toBe('Category Analysis');
+      expect(report.title).toBe('카테고리 분석');
       expect(mockDb.select).toHaveBeenCalled();
     });
 
@@ -611,11 +611,11 @@ describe('AIReportService', () => {
       ]);
 
       const testCases = [
-        { type: 'monthly_summary' as const, expectedTitle: 'Monthly Summary' },
-        { type: 'category_detail' as const, expectedTitle: 'Category Analysis' },
-        { type: 'spending_pattern' as const, expectedTitle: 'Spending Pattern Analysis' },
-        { type: 'anomaly' as const, expectedTitle: 'Anomaly Detection' },
-        { type: 'suggestion' as const, expectedTitle: 'Smart Recommendations' },
+        { type: 'monthly_summary' as const, expectedTitle: '월간 요약' },
+        { type: 'category_detail' as const, expectedTitle: '카테고리 분석' },
+        { type: 'spending_pattern' as const, expectedTitle: '지출 패턴 분석' },
+        { type: 'anomaly' as const, expectedTitle: '이상 지출 탐지' },
+        { type: 'suggestion' as const, expectedTitle: '맞춤 제안' },
       ];
 
       // Execute and verify

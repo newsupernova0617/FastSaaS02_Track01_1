@@ -7,17 +7,26 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // ============================================================
 class AppConstants {
   // 백엔드 API 서버 주소 (Cloudflare Workers)
-  static String get apiBaseUrl =>
-      dotenv.env['API_BASE_URL'] ?? 'https://backend.fastsaas2.workers.dev/api';
+  // .env의 값이 비어있으면 fallback 사용 (dotenv는 빈 문자열을 null 대신 ""로 반환하므로 isNotEmpty 체크 필요)
+  static String get apiBaseUrl {
+    final fromEnv = dotenv.env['API_BASE_URL'] ?? '';
+    return fromEnv.isNotEmpty ? fromEnv : 'https://backend.fastsaas2.workers.dev/api';
+  }
 
   // Supabase 프로젝트 URL (인증, DB 등을 제공하는 BaaS)
-  static String get supabaseUrl =>
-      dotenv.env['SUPABASE_URL'] ?? 'https://uqvnepemplsdkkawbmdc.supabase.co';
+  static String get supabaseUrl {
+    final fromEnv = dotenv.env['SUPABASE_URL'] ?? '';
+    return fromEnv.isNotEmpty ? fromEnv : 'https://uqvnepemplsdkkawbmdc.supabase.co';
+  }
 
   // Supabase 익명 키 (공개 가능한 키, 서버에서 JWT 검증에 사용)
-  static String get supabaseAnonKey =>
-      dotenv.env['SUPABASE_ANON_KEY'] ??
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxdm5lcGVtcGxzZGtrYXdibWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE5MTQsImV4cCI6MjA5MDE1NzkxNH0.X_zFEwbdSwSWNkkhgGRGp_VnmiJvhXZG1D-h45FovTQ';
+  // .env의 값이 비어있거나 플레이스홀더면 fallback 사용
+  static String get supabaseAnonKey {
+    final fromEnv = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    return fromEnv.isNotEmpty
+        ? fromEnv
+        : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxdm5lcGVtcGxzZGtrYXdibWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE5MTQsImV4cCI6MjA5MDE1NzkxNH0.X_zFEwbdSwSWNkkhgGRGp_VnmiJvhXZG1D-h45FovTQ';
+  }
 
   // 앱 기본 정보
   static const String appName = '머니메이트';

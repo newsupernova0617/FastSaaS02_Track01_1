@@ -177,6 +177,28 @@ describe('ClarificationService', () => {
       expect(stillMissingFields).not.toContain('category');
     });
 
+    it('fills in Korean app categories from Korean replies', async () => {
+      const state = makeState({
+        missingFields: ['category'],
+        partialData: { transactionType: 'expense', amount: 4500 },
+      });
+      const { mergedData, stillMissingFields } = await svc.mergeClarificationResponse('식비요', state);
+
+      expect(mergedData.category).toBe('식비');
+      expect(stillMissingFields).not.toContain('category');
+    });
+
+    it('maps item-level Korean replies to broad app categories', async () => {
+      const state = makeState({
+        missingFields: ['category'],
+        partialData: { transactionType: 'expense', amount: 4500 },
+      });
+      const { mergedData, stillMissingFields } = await svc.mergeClarificationResponse('커피값이에요', state);
+
+      expect(mergedData.category).toBe('식비');
+      expect(stillMissingFields).not.toContain('category');
+    });
+
     it('returns stillMissingFields for values it could not extract', async () => {
       const state = makeState({ missingFields: ['amount'], partialData: {} });
       const { stillMissingFields } = await svc.mergeClarificationResponse('no number here', state);

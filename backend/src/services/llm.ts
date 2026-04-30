@@ -214,6 +214,6 @@ export function getLLMConfig(env: {
   return {
     provider: 'workers-ai',
     apiKey: '', // Not used for Workers AI
-    modelName: env.WORKERS_AI_MODEL_NAME || '@cf/meta/llama-2-7b-chat-int8',
+    modelName: env.WORKERS_AI_MODEL_NAME || '@cf/openai/gpt-oss-120b',
   };
 }
