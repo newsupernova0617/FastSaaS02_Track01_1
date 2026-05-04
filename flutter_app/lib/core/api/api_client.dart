@@ -7,6 +7,7 @@ import 'package:flutter_app/shared/models/ai_action.dart';
 import 'package:flutter_app/shared/models/summary_row.dart';
 import 'package:flutter_app/shared/models/report.dart';
 import 'package:flutter_app/shared/models/report_type.dart';
+import 'package:flutter_app/shared/models/billing_plan.dart';
 import 'package:flutter_app/shared/providers/api_provider.dart';
 
 // ============================================================
@@ -258,10 +259,7 @@ class ApiClient {
     try {
       final response = await _dio.get(
         '/reports/current',
-        queryParameters: {
-          'period': period,
-          if (force) 'force': true,
-        },
+        queryParameters: {'period': period, if (force) 'force': true},
       );
 
       if (response.statusCode == 200) {
@@ -481,6 +479,44 @@ class ApiClient {
       if (response.statusCode == 201) {
         final request = response.data['request'] as Map<String, dynamic>;
         return request['id'] as int;
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<BillingPlan> getBillingPlan() async {
+    try {
+      final response = await _dio.get('${AppConstants.billingEndpoint}/plan');
+
+      if (response.statusCode == 200) {
+        return BillingPlan.fromJson(response.data as Map<String, dynamic>);
+      }
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+      );
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<BillingPlan> verifyGooglePlayPurchase({
+    required String productId,
+    required String purchaseToken,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '${AppConstants.billingEndpoint}/google-play/verify',
+        data: {'productId': productId, 'purchaseToken': purchaseToken},
+      );
+
+      if (response.statusCode == 200) {
+        return BillingPlan.fromJson(response.data as Map<String, dynamic>);
       }
       throw DioException(
         requestOptions: response.requestOptions,

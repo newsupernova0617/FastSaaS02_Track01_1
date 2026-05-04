@@ -20,6 +20,12 @@ export type Env = {
     CLOUDFLARE_API_TOKEN?: string; // For Vectorize API authentication
     ALLOWED_ORIGINS?: string; // Comma-separated list of allowed CORS origins
     ENVIRONMENT?: string; // e.g. 'development' | 'production'
+    GOOGLE_PLAY_PACKAGE_NAME?: string;
+    GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL?: string;
+    GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY?: string;
+    GOOGLE_PLAY_ACCESS_TOKEN?: string;
+    GOOGLE_PUBSUB_PUSH_AUDIENCE?: string;
+    GOOGLE_PUBSUB_PUSH_SERVICE_ACCOUNT_EMAIL?: string;
 };
 
 export function createDb(client: Client) {

@@ -1,4 +1,4 @@
-import { users, sessions, transactions } from '../../src/db/schema';
+import { users, sessions, transactions, userSubscriptions } from '../../src/db/schema';
 import type { createDb } from '../../src/db/index';
 
 type Db = ReturnType<typeof createDb>;
@@ -52,6 +52,39 @@ export async function seedTransaction(
       category: overrides.category ?? 'food',
       memo: overrides.memo ?? null,
       date: overrides.date ?? '2026-04-13',
+    })
+    .returning();
+  return inserted[0];
+}
+
+export async function seedUserSubscription(
+  db: Db,
+  overrides: {
+    userId: string;
+    productId?: string;
+    purchaseToken?: string;
+    status?: 'active' | 'expired' | 'canceled' | 'pending' | 'revoked' | 'unknown';
+    plan?: 'free' | 'paid';
+    platform?: 'android';
+    expiresAt?: string | null;
+    autoRenewing?: boolean;
+  }
+) {
+  const inserted = await db
+    .insert(userSubscriptions)
+    .values({
+      id: `sub-${Math.random().toString(36).slice(2, 10)}`,
+      userId: overrides.userId,
+      platform: overrides.platform ?? 'android',
+      productId: overrides.productId ?? 'easy_ai_budget_premium_monthly',
+      purchaseToken: overrides.purchaseToken ?? `token-${Math.random().toString(36).slice(2, 12)}`,
+      status: overrides.status ?? 'active',
+      plan: overrides.plan ?? 'paid',
+      expiresAt: overrides.expiresAt ?? new Date(Date.now() + 86400000).toISOString(),
+      autoRenewing: overrides.autoRenewing ?? true,
+      rawProviderData: '{}',
+      lastVerifiedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .returning();
   return inserted[0];

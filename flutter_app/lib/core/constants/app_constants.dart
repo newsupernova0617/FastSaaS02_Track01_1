@@ -10,13 +10,17 @@ class AppConstants {
   // .env의 값이 비어있으면 fallback 사용 (dotenv는 빈 문자열을 null 대신 ""로 반환하므로 isNotEmpty 체크 필요)
   static String get apiBaseUrl {
     final fromEnv = dotenv.env['API_BASE_URL'] ?? '';
-    return fromEnv.isNotEmpty ? fromEnv : 'https://backend.fastsaas2.workers.dev/api';
+    return fromEnv.isNotEmpty
+        ? fromEnv
+        : 'https://backend.fastsaas2.workers.dev/api';
   }
 
   // Supabase 프로젝트 URL (인증, DB 등을 제공하는 BaaS)
   static String get supabaseUrl {
     final fromEnv = dotenv.env['SUPABASE_URL'] ?? '';
-    return fromEnv.isNotEmpty ? fromEnv : 'https://uqvnepemplsdkkawbmdc.supabase.co';
+    return fromEnv.isNotEmpty
+        ? fromEnv
+        : 'https://uqvnepemplsdkkawbmdc.supabase.co';
   }
 
   // Supabase 익명 키 (공개 가능한 키, 서버에서 JWT 검증에 사용)
@@ -43,4 +47,7 @@ class AppConstants {
   static const String categoriesEndpoint = '/categories';
   static const String statsEndpoint = '/stats';
   static const String aiChatEndpoint = '/ai/chat';
+  static const String billingEndpoint = '/billing';
+  static const String premiumMonthlyProductId =
+      'easy_ai_budget_premium_monthly';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_app/shared/providers/billing_provider.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
 import 'package:flutter_app/routes/app_router.dart';
 import 'package:flutter_app/shared/providers/theme_provider.dart';
@@ -18,6 +19,7 @@ class App extends StatelessWidget {
     return ProviderScope(
       child: Consumer(
         builder: (context, ref, child) {
+          ref.watch(billingPurchaseListenerProvider);
           final goRouter = ref.watch(goRouterProvider);
           final themeMode = ref.watch(themeModeProvider);
           final primaryPreset = ref.watch(primaryColorPresetProvider);

@@ -43,7 +43,7 @@ class AdInterstitialTrigger {
   /// (success or failure), preloads the next one.
   static Future<void> showIfFree(WidgetRef ref) async {
     if (kIsWeb) return;
-    final plan = ref.read(planProvider);
+    final plan = (await ref.read(billingPlanProvider.future)).plan;
     if (plan != PlanStatus.free) return;
 
     final ad = _cached;

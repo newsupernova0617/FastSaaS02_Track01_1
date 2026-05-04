@@ -2,20 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_app/core/ads/plan_provider.dart';
+import 'package:flutter_app/shared/models/billing_plan.dart';
 import 'package:flutter_app/shared/widgets/ad_banner.dart';
 
 void main() {
   group('AdBanner', () {
-    testWidgets('renders empty SizedBox when plan is paid',
-        (WidgetTester tester) async {
+    testWidgets('renders empty SizedBox when plan is paid', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            planProvider.overrideWithValue(PlanStatus.paid),
+            billingPlanProvider.overrideWith(
+              (ref) async =>
+                  const BillingPlan(plan: PlanStatus.paid, status: 'active'),
+            ),
           ],
-          child: const MaterialApp(
-            home: Scaffold(body: AdBanner()),
-          ),
+          child: const MaterialApp(home: Scaffold(body: AdBanner())),
         ),
       );
 
@@ -31,16 +34,18 @@ void main() {
       expect(sizedBox.height, null);
     });
 
-    testWidgets('does not throw when plan is free (SDK mocked by test env)',
-        (WidgetTester tester) async {
+    testWidgets('does not throw when plan is free (SDK mocked by test env)', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            planProvider.overrideWithValue(PlanStatus.free),
+            billingPlanProvider.overrideWith(
+              (ref) async =>
+                  const BillingPlan(plan: PlanStatus.free, status: 'unknown'),
+            ),
           ],
-          child: const MaterialApp(
-            home: Scaffold(body: AdBanner()),
-          ),
+          child: const MaterialApp(home: Scaffold(body: AdBanner())),
         ),
       );
 

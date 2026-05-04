@@ -129,6 +129,28 @@ export const contactRequests = sqliteTable('contact_requests', {
     createdAt: text('created_at').default(sql`(datetime('now'))`),
     updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
+
+export const userSubscriptions = sqliteTable('user_subscriptions', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id),
+    platform: text('platform', {
+        enum: ['android']
+    }).notNull(),
+    productId: text('product_id').notNull(),
+    purchaseToken: text('purchase_token').notNull().unique(),
+    status: text('status', {
+        enum: ['active', 'expired', 'canceled', 'pending', 'revoked', 'unknown']
+    }).notNull(),
+    plan: text('plan', {
+        enum: ['free', 'paid']
+    }).notNull(),
+    expiresAt: text('expires_at'),
+    autoRenewing: integer('auto_renewing', { mode: 'boolean' }).notNull().default(false),
+    rawProviderData: text('raw_provider_data').notNull(),
+    lastVerifiedAt: text('last_verified_at').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
 export interface TransactionSnapshot {
   type: 'income' | 'expense';
   amount: number;
@@ -164,3 +186,5 @@ export type KnowledgeBaseItem = typeof knowledgeBase.$inferSelect;
 export type NewKnowledgeBaseItem = typeof knowledgeBase.$inferInsert;
 export type ContactRequest = typeof contactRequests.$inferSelect;
 export type NewContactRequest = typeof contactRequests.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type NewUserSubscription = typeof userSubscriptions.$inferInsert;

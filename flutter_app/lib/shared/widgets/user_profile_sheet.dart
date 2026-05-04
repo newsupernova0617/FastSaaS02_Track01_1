@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_app/core/ads/plan_provider.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
+import 'package:flutter_app/shared/models/billing_plan.dart';
 import 'package:flutter_app/shared/providers/auth_provider.dart';
+import 'package:flutter_app/shared/providers/billing_provider.dart';
+import 'package:flutter_app/shared/providers/premium_gate_provider.dart';
 import 'package:flutter_app/shared/providers/theme_provider.dart';
 
 // ============================================================
@@ -16,6 +22,10 @@ class UserProfileSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider);
+    final billingPlan = ref.watch(currentBillingPlanProvider);
+    final billingProducts = ref.watch(billingProductsProvider);
+    final billingUiState = ref.watch(billingUiStateProvider);
+    final premiumGuard = ref.watch(premiumGuardProvider);
     final themeMode = ref.watch(themeModeProvider);
     final theme = Theme.of(context);
 
@@ -23,7 +33,8 @@ class UserProfileSheet extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final name = currentUser.userMetadata?['name'] as String? ??
+    final name =
+        currentUser.userMetadata?['name'] as String? ??
         currentUser.email ??
         'User';
     final email = currentUser.email ?? '';
@@ -38,7 +49,8 @@ class UserProfileSheet extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.bottomSheetTheme.backgroundColor ?? theme.colorScheme.surface,
+        color:
+            theme.bottomSheetTheme.backgroundColor ?? theme.colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppRadii.lg),
           topRight: Radius.circular(AppRadii.lg),
@@ -130,8 +142,9 @@ class UserProfileSheet extends ConsumerWidget {
                       Text(
                         email,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -144,6 +157,16 @@ class UserProfileSheet extends ConsumerWidget {
                       isDark: isDark,
                       themeMode: themeMode,
                       theme: theme,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildPremiumSection(
+                      context: context,
+                      ref: ref,
+                      theme: theme,
+                      billingPlan: billingPlan,
+                      billingProducts: billingProducts,
+                      billingUiState: billingUiState,
+                      premiumGuard: premiumGuard,
                     ),
                     const SizedBox(height: AppSpacing.md),
 
@@ -161,12 +184,12 @@ class UserProfileSheet extends ConsumerWidget {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: theme.colorScheme.onSurface,
                           side: BorderSide(
-                            color: theme.colorScheme.outline
-                                .withValues(alpha: 0.4),
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.4,
+                            ),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadii.md),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                       ),
@@ -182,8 +205,7 @@ class UserProfileSheet extends ConsumerWidget {
                           backgroundColor: AppColors.expense,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadii.md),
+                            borderRadius: BorderRadius.circular(AppRadii.md),
                           ),
                         ),
                         child: const Text(
@@ -204,6 +226,122 @@ class UserProfileSheet extends ConsumerWidget {
           SizedBox(
             height: MediaQuery.of(context).padding.bottom + AppSpacing.sm,
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumSection({
+    required BuildContext context,
+    required WidgetRef ref,
+    required ThemeData theme,
+    required BillingPlan billingPlan,
+    required AsyncValue<List<ProductDetails>> billingProducts,
+    required BillingUiState billingUiState,
+    required PremiumGuard premiumGuard,
+  }) {
+    final isPaid = premiumGuard.isPremium;
+    final products = billingProducts.valueOrNull ?? const <ProductDetails>[];
+    final product = products.isNotEmpty ? products.first : null;
+    final expiresLabel = billingPlan.expiresAt != null
+        ? DateFormat('yyyy.MM.dd').format(billingPlan.expiresAt!.toLocal())
+        : null;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isPaid ? Icons.workspace_premium : Icons.star_outline,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  isPaid ? '프리미엄 이용 중' : '프리미엄 업그레이드',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            isPaid
+                ? expiresLabel != null
+                      ? '광고 없이 사용 중 · 다음 갱신 $expiresLabel'
+                      : '광고 없이 사용 중'
+                : '배너 광고와 전면 광고를 제거합니다.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          if (billingUiState.message != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              billingUiState.message!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+          if (!isPaid) ...[
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed:
+                    product == null ||
+                        billingUiState.status ==
+                            BillingFlowStatus.purchasePending
+                    ? null
+                    : () => _startPremiumPurchase(context, ref, product),
+                icon: const Icon(Icons.lock_open_outlined),
+                label: Text(switch (billingUiState.status) {
+                  BillingFlowStatus.purchasePending => '구매 진행 중...',
+                  BillingFlowStatus.loadingProducts => '상품 불러오는 중...',
+                  BillingFlowStatus.storeUnavailable => '스토어 연결 실패',
+                  _ => product != null ? '월 ${product.price}' : '상품 불러오는 중...',
+                }),
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed:
+                    billingUiState.status == BillingFlowStatus.restorePending
+                    ? null
+                    : () => _restorePurchases(context, ref),
+                icon: const Icon(Icons.refresh),
+                label: Text(
+                  billingUiState.status == BillingFlowStatus.restorePending
+                      ? '복원 요청 중...'
+                      : '구독 복원',
+                ),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -242,10 +380,7 @@ class UserProfileSheet extends ConsumerWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  _modeLabel(themeMode),
-                  style: theme.textTheme.bodySmall,
-                ),
+                Text(_modeLabel(themeMode), style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -300,9 +435,49 @@ class UserProfileSheet extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
+      }
+    }
+  }
+
+  Future<void> _startPremiumPurchase(
+    BuildContext context,
+    WidgetRef ref,
+    ProductDetails product,
+  ) async {
+    try {
+      await ref.read(startPremiumPurchaseProvider(product).future);
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로그아웃 실패: $e')),
+          const SnackBar(content: Text('Google Play 결제 화면을 열었습니다.')),
         );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final message = ref.read(billingErrorMessageProvider(e));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    }
+  }
+
+  Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(restorePurchasesProvider.future);
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('구독 복원을 요청했습니다.')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final message = ref.read(billingErrorMessageProvider(e));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }
