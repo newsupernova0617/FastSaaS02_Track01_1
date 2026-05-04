@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -183,6 +184,21 @@ class ForegroundTaskService : Service() {
             .setAllowGeneratedReplies(false)
             .build()
 
+        val voiceIntent = Intent(this, VoiceEntryActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val voicePendingIntent = PendingIntent.getActivity(
+            this,
+            /* requestCode = */ 101,
+            voiceIntent,
+            pendingFlags
+        )
+        val voiceAction = NotificationCompat.Action.Builder(
+            android.R.drawable.ic_btn_speak_now,
+            "음성 입력",
+            voicePendingIntent
+        ).build()
+
         // BigTextStyle's bigText must be strictly longer / multi-line than
         // contentText to trigger the launcher into using the tall layout.
         // If the body is already multi-line, append a trailing hint so the
@@ -211,6 +227,8 @@ class ForegroundTaskService : Service() {
                     .bigText(expanded)
             )
             .addAction(replyAction)
+            .addAction(voiceAction)
+            .setColor(Color.parseColor("#2563EB"))
             .build()
     }
 

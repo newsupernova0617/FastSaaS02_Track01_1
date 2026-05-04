@@ -17,7 +17,7 @@ class MainActivity : FlutterActivity() {
         // Cache the main engine so QuickEntryReceiver can reuse it instead of
         // spawning a headless engine when the app is alive.
         FlutterEngineCache.getInstance().put(
-            QuickEntryReceiver.MAIN_ENGINE_KEY,
+            QuickEntryDispatcher.MAIN_ENGINE_KEY,
             flutterEngine
         )
 
@@ -219,7 +219,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-        FlutterEngineCache.getInstance().remove(QuickEntryReceiver.MAIN_ENGINE_KEY)
+        FlutterEngineCache.getInstance().remove(QuickEntryDispatcher.MAIN_ENGINE_KEY)
         super.onDestroy()
     }
 }
