@@ -20,6 +20,7 @@ import SummaryItem from '../../components/blog/SummaryItem.astro';
 import Checklist from '../../components/blog/Checklist.astro';
 import ProductFlow from '../../components/blog/ProductFlow.astro';
 import InlineCallout from '../../components/blog/InlineCallout.astro';
+import AppShowcase from '../../components/blog/AppShowcase.astro';
 
 자취를 시작하면 생각보다 돈이 조용히 빠져나갑니다. 월세와 관리비는 이미 정해져 있고, 남은 돈으로 식비와 교통비를 버티면 될 것 같지만 월말에는 편의점, 배달, 생필품, 택시비가 한꺼번에 눈에 들어옵니다.
 
@@ -165,6 +166,22 @@ import InlineCallout from '../../components/blog/InlineCallout.astro';
 4. 기록 습관이 아직 덜 잡혀 있다
 
 우리 앱에서는 자취생이 자주 쓰는 `식비`, `교통`, `쇼핑`, `월세`, `기타` 같은 큰 카테고리부터 시작할 수 있습니다. **중요한 건 항목을 예쁘게 만드는 것이 아니라, 배달과 편의점 지출이 어느 항목에서 반복되는지 빨리 보는 것입니다.**
+
+<AppShowcase
+  eyebrow="자취생에게 맞는 기능"
+  title="앱 열지 않아도 알림창에서 바로 기록"
+  description="Android 알림에서 '배달 15000원'처럼 타이핑하면 앱을 켜지 않아도 바로 저장됩니다."
+  features={[
+    'Android 알림 빠른 입력 — 앱 없이 기록',
+    'AI 자동 분류 — 카테고리 직접 선택 불필요',
+    '식비·교통·쇼핑 등 자취 맞춤 카테고리',
+    '월 중간 예산 대비 잔여액 바로 확인',
+  ]}
+  imagePlaceholder="[사진: Android 알림 빠른 입력 스크린샷]"
+  imageAlt="Android 알림창에서 지출 빠른 입력"
+  ctaText="무료로 시작하기"
+  ctaHref="/"
+/>
 
 이런 경우에는 [엑셀 가계부 vs 앱 가계부 비교](/blog/excel-vs-app-household-book/)와 [가계부 앱 추천 TOP 5 솔직 비교](/blog/best-household-book-apps/)를 같이 보면 선택이 쉬워집니다.
 

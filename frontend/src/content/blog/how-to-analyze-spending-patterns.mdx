@@ -20,6 +20,7 @@ import SummaryItem from '../../components/blog/SummaryItem.astro';
 import Checklist from '../../components/blog/Checklist.astro';
 import ProductFlow from '../../components/blog/ProductFlow.astro';
 import InlineCallout from '../../components/blog/InlineCallout.astro';
+import AppShowcase from '../../components/blog/AppShowcase.astro';
 
 가계부를 꽤 열심히 썼는데도 돈이 안 모이는 경우가 있습니다. 기록은 남아 있는데, 막상 월말에 보면 "이번 달도 많이 썼네"에서 끝나는 식입니다. 이럴 때 필요한 건 더 많은 기록이 아니라, **반복되는 소비 구조를 발견하는 방식**입니다.
 
@@ -167,6 +168,22 @@ import InlineCallout from '../../components/blog/InlineCallout.astro';
       description: '주간/월간 리포트나 맞춤 리포트로 소비 흐름을 글과 차트 형태로 다시 점검합니다.',
     },
   ]}
+/>
+
+<AppShowcase
+  eyebrow="앱에서 직접 보면"
+  title="AI가 소비 패턴을 정리해서 알려줍니다"
+  description="'지난달 식비 분석해줘'라고 물으면 총액·건수·항목 비중·이상 지출까지 한 번에 정리됩니다."
+  features={[
+    '6가지 AI 리포트 — 주간·월간·이상지출·절감 제안',
+    '카테고리 파이차트 + AI 인사이트 텍스트',
+    '반복 결제 자동 감지',
+    '전월 대비 증감률 표시',
+  ]}
+  imagePlaceholder="[사진: AI 리포트 화면 스크린샷]"
+  imageAlt="AI 소비 패턴 리포트 화면"
+  ctaText="리포트 직접 보기"
+  ctaHref="/"
 />
 
 <Callout title="TIP" tone="tip">
