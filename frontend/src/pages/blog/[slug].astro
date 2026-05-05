@@ -167,35 +167,57 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
 
         {tocItems.length >= 3 && (
           <aside class="hidden xl:block">
-            <nav aria-label="Table of contents" class="toc-panel toc-panel-sticky">
-              <div class="text-[0.7rem] font-black uppercase tracking-[0.2em] text-primary/70">
-                Reading Guide
+            <div class="sticky top-24 flex flex-col gap-4">
+              <nav aria-label="Table of contents" class="toc-panel">
+                <div class="text-[0.7rem] font-black uppercase tracking-[0.2em] text-primary/70">
+                  Reading Guide
+                </div>
+                <div class="mt-2 text-xl font-black leading-tight text-base-content">On This Page</div>
+                <p class="mt-2 text-sm leading-6 text-base-content/58">
+                  지금 읽는 글의 핵심 섹션을 바로 이동할 수 있습니다.
+                </p>
+                <ol class="toc-list mt-6 space-y-2">
+                  {tocItems.map((heading, index) => (
+                    <li class:list={[heading.depth === 3 && 'toc-subitem']}>
+                      <a
+                        href={`#${heading.slug}`}
+                        data-track-event="blog_toc_click"
+                        data-track-source="blog_detail_desktop"
+                        data-track-slug={post.data.slug}
+                        data-track-heading={heading.slug}
+                        class:list={[
+                          'toc-link',
+                          heading.depth === 3 && 'toc-link-subtle',
+                        ]}
+                      >
+                        <span class="toc-index">{String(index + 1).padStart(2, '0')}</span>
+                        <span>{heading.text}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+
+              <div class="sidebar-app-card rounded-[18px] border border-primary/15 p-5">
+                <p class="text-[0.68rem] font-black uppercase tracking-[0.2em] text-primary/75">앱 소개</p>
+                <h3 class="mt-2 text-[1.05rem] font-black leading-tight text-slate-950">쉬운AI가계부</h3>
+                <p class="mt-2 text-[0.82rem] leading-6 text-slate-600">한국어로 말하듯 기록하는 AI 가계부</p>
+                <ul class="sidebar-feature-list mt-3 space-y-2">
+                  {['AI 자동 분류', '주간·월간 AI 리포트', '채팅으로 기록·조회', 'Android 알림 빠른 입력'].map((feature) => (
+                    <li class="flex items-center gap-2 text-[0.82rem] text-slate-700">
+                      <span class="inline-flex h-4 w-4 flex-none items-center justify-center rounded-full bg-primary/10 text-[0.62rem] font-black text-primary">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="/"
+                  class="mt-4 block rounded-full bg-slate-950 py-2.5 text-center text-[0.82rem] font-bold text-white transition-opacity hover:opacity-80"
+                >
+                  무료로 시작하기
+                </a>
               </div>
-              <div class="mt-2 text-xl font-black leading-tight text-base-content">On This Page</div>
-              <p class="mt-2 text-sm leading-6 text-base-content/58">
-                지금 읽는 글의 핵심 섹션을 바로 이동할 수 있습니다.
-              </p>
-              <ol class="toc-list mt-6 space-y-2">
-                {tocItems.map((heading, index) => (
-                  <li class:list={[heading.depth === 3 && 'toc-subitem']}>
-                    <a
-                      href={`#${heading.slug}`}
-                      data-track-event="blog_toc_click"
-                      data-track-source="blog_detail_desktop"
-                      data-track-slug={post.data.slug}
-                      data-track-heading={heading.slug}
-                      class:list={[
-                        'toc-link',
-                        heading.depth === 3 && 'toc-link-subtle',
-                      ]}
-                    >
-                      <span class="toc-index">{String(index + 1).padStart(2, '0')}</span>
-                      <span>{heading.text}</span>
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </nav>
+            </div>
           </aside>
         )}
       </div>
@@ -255,11 +277,6 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
     border-radius: 1.125rem;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
     padding: 1.1rem;
-  }
-
-  .toc-panel-sticky {
-    position: sticky;
-    top: 6rem;
   }
 
   .toc-list {
@@ -560,6 +577,16 @@ const ogImage = post.data.ogImage ?? `/blog/og/${post.data.slug}.svg`;
     max-width: 42rem;
     margin-top: 2.5rem;
     margin-bottom: 2.5rem;
+  }
+
+  .sidebar-app-card {
+    background: linear-gradient(160deg, rgb(37 99 235 / 0.05) 0%, transparent 60%);
+  }
+
+  .sidebar-feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
   @media (max-width: 640px) {
