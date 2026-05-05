@@ -121,7 +121,7 @@ export function GET({ props, site }: { props: { post: BlogEntry }; site?: URL })
   </text>
 
   <rect x="122" y="500" width="212" height="54" rx="27" fill="#2563EB" />
-  <text x="228" y="534" text-anchor="middle" font-family="Pretendard, Noto Sans KR, sans-serif" font-size="22" font-weight="800" fill="white">FastSaaS 블로그</text>
+  <text x="228" y="534" text-anchor="middle" font-family="Pretendard, Noto Sans KR, sans-serif" font-size="22" font-weight="800" fill="white">쉬운AI가계부 블로그</text>
 
   <text x="1078" y="528" text-anchor="end" font-family="Pretendard, Noto Sans KR, sans-serif" font-size="20" font-weight="700" fill="#64748B">가계부를 더 쉽게 관리하는 AI</text>
   <text x="1078" y="558" text-anchor="end" font-family="Pretendard, Noto Sans KR, sans-serif" font-size="16" font-weight="500" fill="#94A3B8">${escapeXml(new URL(`/blog/${post.data.slug}/`, origin).toString())}</text>

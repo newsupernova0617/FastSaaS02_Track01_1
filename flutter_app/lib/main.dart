@@ -63,7 +63,7 @@ void main() async {
           await ForegroundServiceManager.hasNotificationPermission();
       if (granted) {
         await ForegroundServiceManager.startForegroundService(
-          title: '머니메이트',
+          title: '쉬운AI가계부',
           body: '알림을 눌러 거래를 바로 입력하세요\n예) 점심 8000원 / 교통비 1250원',
         );
       } else {

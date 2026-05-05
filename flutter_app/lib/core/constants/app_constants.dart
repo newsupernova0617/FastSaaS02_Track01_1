@@ -33,7 +33,7 @@ class AppConstants {
   }
 
   // 앱 기본 정보
-  static const String appName = '머니메이트';
+  static const String appName = '쉬운AI가계부';
   static const String appVersion = '1.0.0';
 
   // API 타임아웃 설정 (초 단위)

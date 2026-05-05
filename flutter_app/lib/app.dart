@@ -25,7 +25,7 @@ class App extends StatelessWidget {
           final primaryPreset = ref.watch(primaryColorPresetProvider);
 
           return MaterialApp.router(
-            title: '머니메이트',
+            title: '쉬운AI가계부',
             theme: AppTheme.lightThemeFor(primaryPreset.palette),
             darkTheme: AppTheme.darkThemeFor(primaryPreset.palette),
             themeMode: themeMode,

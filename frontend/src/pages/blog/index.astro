@@ -51,7 +51,7 @@ const initialCategory = categoryOrder.includes(Astro.url.searchParams.get('categ
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'FastSaaS 블로그',
+      name: '쉬운AI가계부 블로그',
       url: blogUrl,
       description: '가계부와 돈 관리에 대한 실용적인 가이드를 정리한 블로그입니다.',
     },
@@ -220,20 +220,20 @@ const initialCategory = categoryOrder.includes(Astro.url.searchParams.get('categ
 <script>
   const initialCategory =
     document.querySelector('main[data-initial-category]')?.getAttribute('data-initial-category') || 'all';
-  const filterButtons = Array.from(document.querySelectorAll('[data-blog-filter-btn]'));
-  const cardGroups = Array.from(document.querySelectorAll('[data-blog-filter-group]'));
-  const cards = Array.from(document.querySelectorAll('[data-blog-card]'));
-  const emptyState = document.querySelector('[data-blog-empty]');
+  const filterButtons = Array.from(document.querySelectorAll<HTMLElement>('[data-blog-filter-btn]'));
+  const cardGroups = Array.from(document.querySelectorAll<HTMLElement>('[data-blog-filter-group]'));
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-blog-card]'));
+  const emptyState = document.querySelector<HTMLElement>('[data-blog-empty]');
   const activeClasses = ['border-primary', 'bg-primary', 'text-primary-content', 'shadow-sm'];
   const inactiveClasses = ['border-base-300', 'bg-white/80', 'text-base-content/65'];
 
-  const setButtonState = (button, active) => {
+  const setButtonState = (button: HTMLElement, active: boolean) => {
     button.setAttribute('aria-pressed', String(active));
     activeClasses.forEach((className) => button.classList.toggle(className, active));
     inactiveClasses.forEach((className) => button.classList.toggle(className, !active));
   };
 
-  const applyFilter = (selectedCategory) => {
+  const applyFilter = (selectedCategory: string) => {
     let visibleCards = 0;
 
     cards.forEach((card) => {
@@ -243,7 +243,7 @@ const initialCategory = categoryOrder.includes(Astro.url.searchParams.get('categ
     });
 
     cardGroups.forEach((group) => {
-      const groupCards = Array.from(group.querySelectorAll('[data-blog-card]'));
+      const groupCards = Array.from(group.querySelectorAll<HTMLElement>('[data-blog-card]'));
       const hasVisibleCard = groupCards.some((card) => !card.hidden);
       group.hidden = !hasVisibleCard;
     });
