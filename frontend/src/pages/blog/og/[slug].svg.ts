@@ -72,7 +72,7 @@ export async function getStaticPaths() {
 
 export function GET({ props, site }: { props: { post: BlogEntry }; site?: URL }) {
   const { post } = props;
-  const origin = site?.toString() ?? 'https://fastsaas.pages.dev';
+  const origin = site?.toString() ?? 'https://easyaibudget.com';
   const categoryLabel = categoryLabels[post.data.category];
   const title = post.data.seoTitle ?? post.data.title;
   const description = post.data.excerpt || post.data.description;

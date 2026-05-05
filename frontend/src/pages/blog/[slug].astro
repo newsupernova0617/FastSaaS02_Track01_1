@@ -34,7 +34,7 @@ const relatedPosts = (await getCollection('blog'))
         item.data.tags.some((tag: string) => post.data.tags.includes(tag))),
   )
   .slice(0, 3);
-const origin = Astro.site?.toString() ?? 'https://fastsaas.pages.dev';
+const origin = Astro.site?.toString() ?? 'https://easyaibudget.com';
 const canonical = new URL(`/blog/${post.data.slug}/`, origin).toString();
 const publishedTime = post.data.publishDate.toISOString();
 const modifiedTime = (post.data.updatedDate ?? post.data.publishDate).toISOString();

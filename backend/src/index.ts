@@ -32,6 +32,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:4321',
   'http://localhost:3000',
   'capacitor://localhost',
+  'https://easyaibudget.com',
   'https://fastsaas02-track01-1.pages.dev',
   'https://landing-page-7hu.pages.dev',
   'https://fastsaas2.fastsaas2.workers.dev',

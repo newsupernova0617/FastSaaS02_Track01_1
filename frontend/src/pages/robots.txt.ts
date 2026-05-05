@@ -1,5 +1,5 @@
 export function GET({ site }: { site?: URL }) {
-  const origin = site?.toString() ?? 'https://fastsaas.pages.dev';
+  const origin = site?.toString() ?? 'https://easyaibudget.com';
   const body = `User-agent: *
 Allow: /
 

@@ -27,7 +27,7 @@ const {
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.brand}` : `${site.brand} · ${site.tagline}`;
 const pageDescription = description ?? site.description;
-const origin = Astro.site?.toString() ?? 'https://fastsaas.pages.dev';
+const origin = Astro.site?.toString() ?? 'https://easyaibudget.com';
 const canonical = new URL(Astro.url.pathname, origin).toString();
 const imageUrl = new URL(ogImage ?? '/og-default.svg', origin).toString();
 const defaultStructuredData = [

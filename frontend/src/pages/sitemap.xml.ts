@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 const staticPaths = ['/', '/blog/', '/privacy/', '/terms/'];
 
 export async function GET({ site }: { site?: URL }) {
-  const origin = site?.toString() ?? 'https://fastsaas.pages.dev';
+  const origin = site?.toString() ?? 'https://easyaibudget.com';
   const posts = await getCollection('blog');
   const publishedPosts = posts.filter((post) => !post.data.draft);
 

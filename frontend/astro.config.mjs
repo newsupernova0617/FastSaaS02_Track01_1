@@ -11,5 +11,5 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  site: 'https://fastsaas.pages.dev',
+  site: 'https://easyaibudget.com',
 });
