@@ -26,7 +26,7 @@ class UserProfileButton extends ConsumerWidget {
     final name =
         currentUser.userMetadata?['name'] as String? ??
         currentUser.email ??
-        'User';
+        '사용자';
     final avatarUrl = currentUser.userMetadata?['avatar_url'] as String?;
 
     return Padding(

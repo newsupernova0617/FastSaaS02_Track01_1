@@ -19,6 +19,28 @@ class ForegroundServiceManager {
   static const platform =
       MethodChannel('com.fastsaas02.app/foreground_service');
 
+  /// Request permission if needed and start the quick-input foreground service.
+  static Future<void> enableQuickInput({
+    required String title,
+    required String body,
+    int notificationId = 1,
+  }) async {
+    try {
+      await platform.invokeMethod<void>(
+        'enableQuickInput',
+        {
+          'title': title,
+          'body': body,
+          'notificationId': notificationId,
+        },
+      );
+    } on PlatformException catch (e) {
+      throw ForegroundServiceException(
+        'Failed to enable quick input: ${e.message}',
+      );
+    }
+  }
+
   /// Start the foreground service
   static Future<void> startForegroundService({
     required String title,

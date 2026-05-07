@@ -10,6 +10,10 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     private val overlayChannelName = "com.fastsaas02.app/overlay"
     private val foregroundServiceChannelName = "com.fastsaas02.app/foreground_service"
+    private var pendingForegroundTitle: String? = null
+    private var pendingForegroundBody: String? = null
+    private var pendingForegroundNotificationId: Int? = null
+    private val notificationPermissionRequestCode = 1001
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -69,6 +73,13 @@ class MainActivity : FlutterActivity() {
                     startForegroundService(title, body, notificationId)
                     result.success(null)
                 }
+                "enableQuickInput" -> {
+                    val title = call.argument<String>("title") ?: "FastSaaS"
+                    val body = call.argument<String>("body") ?: ""
+                    val notificationId = call.argument<Int>("notificationId") ?: 1
+                    enableQuickInput(title, body, notificationId)
+                    result.success(null)
+                }
                 "stopForegroundService" -> {
                     stopForegroundService()
                     result.success(null)
@@ -91,6 +102,22 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 else -> result.notImplemented()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == notificationPermissionRequestCode) {
+            if (hasNotificationPermission()) {
+                startPendingForegroundService()
+            } else {
+                clearPendingForegroundService()
             }
         }
     }
@@ -212,10 +239,41 @@ class MainActivity : FlutterActivity() {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(
                     arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                    1001
+                    notificationPermissionRequestCode
                 )
             }
         }
+    }
+
+    private fun enableQuickInput(title: String, body: String, notificationId: Int) {
+        if (isForegroundServiceRunning()) {
+            updateNotification(title, body, notificationId)
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission()) {
+            pendingForegroundTitle = title
+            pendingForegroundBody = body
+            pendingForegroundNotificationId = notificationId
+            requestNotificationPermission()
+            return
+        }
+
+        startForegroundService(title, body, notificationId)
+    }
+
+    private fun startPendingForegroundService() {
+        val title = pendingForegroundTitle ?: return
+        val body = pendingForegroundBody ?: return
+        val notificationId = pendingForegroundNotificationId ?: 1
+        clearPendingForegroundService()
+        startForegroundService(title, body, notificationId)
+    }
+
+    private fun clearPendingForegroundService() {
+        pendingForegroundTitle = null
+        pendingForegroundBody = null
+        pendingForegroundNotificationId = null
     }
 
     override fun onDestroy() {

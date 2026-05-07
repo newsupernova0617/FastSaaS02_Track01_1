@@ -94,7 +94,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final name =
         (user?.userMetadata?['name'] as String?) ??
         user?.email?.split('@').first ??
-        'User';
+        '사용자';
 
     return Scaffold(
       extendBody: true,
@@ -451,7 +451,7 @@ class _InlineTransactionResult extends StatelessWidget {
             child: Text(
               transaction.memo?.isNotEmpty == true
                   ? transaction.memo!
-                  : transaction.category ?? 'Unclassified',
+                  : transaction.category ?? '미분류',
               style: theme.textTheme.bodyMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -635,7 +635,7 @@ class _AutoReportsSection extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Scheduled Reports',
+              '정기 리포트',
               style: theme.textTheme.titleSmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 letterSpacing: 0.5,
@@ -1174,12 +1174,12 @@ class _Greeting extends StatelessWidget {
     final theme = Theme.of(context);
     final hour = DateTime.now().hour;
     final greet = hour < 6
-        ? 'Late Night'
+        ? '늦은 밤'
         : hour < 12
-        ? 'Good Morning'
+        ? '좋은 아침'
         : hour < 18
-        ? 'Good Afternoon'
-        : 'Good Evening';
+        ? '좋은 오후'
+        : '좋은 저녁';
 
     return Row(
       children: [
@@ -1367,7 +1367,7 @@ class _InsightSection extends ConsumerWidget {
           ? const []
           : [
               PromptChip(
-                label: 'Details',
+                label: '자세히 보기',
                 icon: FontAwesomeIcons.chartPie,
                 onTap: () {
                   GoRouter.of(context).go('/stats');
@@ -1417,16 +1417,16 @@ class _InsightSection extends ConsumerWidget {
 
     if (topCat != null) {
       final currency = NumberFormat('#,###', 'ko_KR');
-      return 'This month "$topCat" spending is '
-          '${topDelta.toStringAsFixed(0)}% higher than last month. '
-          'Current ₩${currency.format(topNow.round())}.';
+      return '이번 달 "$topCat" 지출은 지난달보다 '
+          '${topDelta.toStringAsFixed(0)}% 높아요. '
+          '현재 ₩${currency.format(topNow.round())}입니다.';
     }
 
     final largest = now.entries.reduce((a, b) => a.value >= b.value ? a : b);
     final pct =
         largest.value / now.values.fold<num>(0, (sum, v) => sum + v) * 100;
-    return 'This month ${pct.toStringAsFixed(0)}% of spend is '
-        'concentrated in "${largest.key}".';
+    return '이번 달 지출의 ${pct.toStringAsFixed(0)}%가 '
+        '"${largest.key}"에 집중되어 있어요.';
   }
 }
 
@@ -1495,11 +1495,11 @@ class _EmptyRecent extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'No recent transactions yet',
+            '최근 거래가 아직 없어요',
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
-          Text('Record your first expense', style: theme.textTheme.bodySmall),
+          Text('첫 지출을 기록해보세요', style: theme.textTheme.bodySmall),
         ],
       ),
     );

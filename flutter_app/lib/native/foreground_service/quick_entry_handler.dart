@@ -94,7 +94,7 @@ Future<String> _processQuickEntry({
 
   // Send the message — mirrors ApiClient.sendSessionMessage.
   final sendResp = await dio.post(
-    '/sessions/$sessionId/messages',
+    'sessions/$sessionId/messages',
     data: {'content': text},
   );
   if (sendResp.statusCode != 200 && sendResp.statusCode != 201) {
@@ -117,7 +117,7 @@ Future<String> _processQuickEntry({
   }
 
   if (assistantContent == null) {
-    final historyResp = await dio.get('/sessions/$sessionId/messages');
+    final historyResp = await dio.get('sessions/$sessionId/messages');
     final historyData = historyResp.data as Map<String, dynamic>;
     final msgs = (historyData['messages'] as List).cast<Map<String, dynamic>>();
     final assistantMsgs = msgs.where((m) => m['role'] == 'assistant').toList();

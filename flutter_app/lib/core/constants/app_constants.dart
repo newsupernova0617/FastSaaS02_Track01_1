@@ -10,9 +10,10 @@ class AppConstants {
   // .env의 값이 비어있으면 fallback 사용 (dotenv는 빈 문자열을 null 대신 ""로 반환하므로 isNotEmpty 체크 필요)
   static String get apiBaseUrl {
     final fromEnv = dotenv.env['API_BASE_URL'] ?? '';
-    return fromEnv.isNotEmpty
+    final resolved = fromEnv.isNotEmpty
         ? fromEnv
         : 'https://backend.fastsaas2.workers.dev/api';
+    return resolved.endsWith('/') ? resolved : '$resolved/';
   }
 
   // Supabase 프로젝트 URL (인증, DB 등을 제공하는 BaaS)
@@ -41,13 +42,13 @@ class AppConstants {
   static const int connectTimeoutSeconds = 10; // 연결 시도 최대 시간
 
   // API 엔드포인트 경로 (apiBaseUrl 뒤에 붙음)
-  static const String authEndpoint = '/auth';
-  static const String usersEndpoint = '/users';
-  static const String transactionsEndpoint = '/transactions';
-  static const String categoriesEndpoint = '/categories';
-  static const String statsEndpoint = '/stats';
-  static const String aiChatEndpoint = '/ai/chat';
-  static const String billingEndpoint = '/billing';
+  static const String authEndpoint = 'auth';
+  static const String usersEndpoint = 'users';
+  static const String transactionsEndpoint = 'transactions';
+  static const String categoriesEndpoint = 'categories';
+  static const String statsEndpoint = 'stats';
+  static const String aiChatEndpoint = 'ai/chat';
+  static const String billingEndpoint = 'billing';
   static const String premiumMonthlyProductId =
       'easy_ai_budget_premium_monthly';
 }

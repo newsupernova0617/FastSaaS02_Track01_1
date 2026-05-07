@@ -178,82 +178,89 @@ class _SlideView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Center(
-        child: GlassCard(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.xxl,
-            AppSpacing.xl,
-            AppSpacing.xxl,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: GlassCard(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xxl,
+                  AppSpacing.xl,
+                  AppSpacing.xxl,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                          width: 112,
+                          height: 112,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(AppRadii.xl),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                            ),
+                          ),
+                          child: Center(
+                            child: FaIcon(
+                              slide.icon,
+                              size: 44,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                        .animate(target: isActive ? 1 : 0)
+                        .scaleXY(
+                          begin: 0.94,
+                          end: 1.0,
+                          duration: 360.ms,
+                          curve: AppMotion.emphasized,
+                        )
+                        .fadeIn(duration: 280.ms),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                          slide.title,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                        .animate(target: isActive ? 1 : 0)
+                        .fadeIn(delay: 90.ms, duration: 360.ms)
+                        .slideY(
+                          begin: 0.08,
+                          end: 0,
+                          curve: AppMotion.emphasizedDecel,
+                        ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                          slide.subtitle,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.62,
+                            ),
+                            height: 1.55,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                        .animate(target: isActive ? 1 : 0)
+                        .fadeIn(delay: 160.ms, duration: 360.ms)
+                        .slideY(
+                          begin: 0.08,
+                          end: 0,
+                          curve: AppMotion.emphasizedDecel,
+                        ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                    width: 112,
-                    height: 112,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(AppRadii.xl),
-                      border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.18),
-                      ),
-                    ),
-                    child: Center(
-                      child: FaIcon(
-                        slide.icon,
-                        size: 44,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  )
-                  .animate(target: isActive ? 1 : 0)
-                  .scaleXY(
-                    begin: 0.94,
-                    end: 1.0,
-                    duration: 360.ms,
-                    curve: AppMotion.emphasized,
-                  )
-                  .fadeIn(duration: 280.ms),
-              const SizedBox(height: AppSpacing.xxl),
-              Text(
-                    slide.title,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                    textAlign: TextAlign.center,
-                  )
-                  .animate(target: isActive ? 1 : 0)
-                  .fadeIn(delay: 90.ms, duration: 360.ms)
-                  .slideY(
-                    begin: 0.08,
-                    end: 0,
-                    curve: AppMotion.emphasizedDecel,
-                  ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                    slide.subtitle,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.62,
-                      ),
-                      height: 1.55,
-                    ),
-                    textAlign: TextAlign.center,
-                  )
-                  .animate(target: isActive ? 1 : 0)
-                  .fadeIn(delay: 160.ms, duration: 360.ms)
-                  .slideY(
-                    begin: 0.08,
-                    end: 0,
-                    curve: AppMotion.emphasizedDecel,
-                  ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

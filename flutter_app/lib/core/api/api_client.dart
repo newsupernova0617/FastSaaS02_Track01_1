@@ -157,7 +157,7 @@ class ApiClient {
         data['summaryData'] = summaryData;
       }
 
-      final response = await _dio.post('/reports', data: data);
+      final response = await _dio.post('reports', data: data);
 
       if (response.statusCode == 201) {
         return response.data['id'] as int;
@@ -181,7 +181,7 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.post(
-        '/reports/generate',
+        'reports/generate',
         data: {
           'period': period,
           if (month != null) 'month': month,
@@ -214,7 +214,7 @@ class ApiClient {
         params['month'] = month;
       }
 
-      final response = await _dio.get('/reports', queryParameters: params);
+      final response = await _dio.get('reports', queryParameters: params);
 
       if (response.statusCode == 200) {
         final reports = (response.data['reports'] as List)
@@ -235,7 +235,7 @@ class ApiClient {
   /// GET /api/reports/:id
   Future<ReportDetail> getReportDetail(int reportId) async {
     try {
-      final response = await _dio.get('/reports/$reportId');
+      final response = await _dio.get('reports/$reportId');
 
       if (response.statusCode == 200) {
         final reportJson = response.data['report'] as Map<String, dynamic>;
@@ -258,7 +258,7 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.get(
-        '/reports/current',
+        'reports/current',
         queryParameters: {'period': period, if (force) 'force': true},
       );
 
@@ -280,7 +280,7 @@ class ApiClient {
   /// DELETE /api/reports/:id
   Future<void> deleteReport(int reportId) async {
     try {
-      final response = await _dio.delete('/reports/$reportId');
+      final response = await _dio.delete('reports/$reportId');
 
       if (response.statusCode != 200) {
         throw DioException(
@@ -298,7 +298,7 @@ class ApiClient {
   Future<void> updateReport(int reportId, String newTitle) async {
     try {
       final response = await _dio.patch(
-        '/reports/$reportId',
+        'reports/$reportId',
         data: {'title': newTitle},
       );
 
@@ -318,7 +318,7 @@ class ApiClient {
   Future<Map<String, dynamic>> getSessions({int limit = 50}) async {
     try {
       final response = await _dio.get(
-        '/sessions',
+        'sessions',
         queryParameters: {'limit': limit},
       );
 
@@ -339,7 +339,7 @@ class ApiClient {
   /// Returns the ID of the created session
   Future<int> createSession(String title) async {
     try {
-      final response = await _dio.post('/sessions', data: {'title': title});
+      final response = await _dio.post('sessions', data: {'title': title});
 
       if (response.statusCode == 201) {
         final responseData = response.data as Map<String, dynamic>;
@@ -360,7 +360,7 @@ class ApiClient {
   Future<void> renameSession(int sessionId, String newTitle) async {
     try {
       final response = await _dio.patch(
-        '/sessions/$sessionId',
+        'sessions/$sessionId',
         data: {'title': newTitle},
       );
 
@@ -379,7 +379,7 @@ class ApiClient {
   /// DELETE /api/sessions/:id
   Future<void> deleteSession(int sessionId) async {
     try {
-      final response = await _dio.delete('/sessions/$sessionId');
+      final response = await _dio.delete('sessions/$sessionId');
 
       if (response.statusCode != 200) {
         throw DioException(
@@ -396,7 +396,7 @@ class ApiClient {
   /// GET /api/sessions/:sessionId/messages
   Future<List<ChatMessage>> getSessionMessages(int sessionId) async {
     try {
-      final response = await _dio.get('/sessions/$sessionId/messages');
+      final response = await _dio.get('sessions/$sessionId/messages');
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -420,7 +420,7 @@ class ApiClient {
   Future<void> sendSessionMessage(int sessionId, String message) async {
     try {
       final response = await _dio.post(
-        '/sessions/$sessionId/messages',
+        'sessions/$sessionId/messages',
         data: {'content': message},
       );
 
@@ -443,7 +443,7 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.post(
-        '/ai/action',
+        'ai/action',
         data: {'text': text, 'sessionId': sessionId},
       );
 
@@ -467,7 +467,7 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.post(
-        '/contact-requests',
+        'contact-requests',
         data: {
           'type': type,
           'title': title,

@@ -9,7 +9,7 @@ class AIInsightCard extends StatelessWidget {
 
   const AIInsightCard({
     super.key,
-    this.title = 'AI Insight',
+    this.title = 'AI 인사이트',
     required this.body,
     this.leadingIcon = Icons.auto_awesome_rounded,
     this.actions = const [],

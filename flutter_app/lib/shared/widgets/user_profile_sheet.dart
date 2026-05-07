@@ -36,7 +36,7 @@ class UserProfileSheet extends ConsumerWidget {
     final name =
         currentUser.userMetadata?['name'] as String? ??
         currentUser.email ??
-        'User';
+        '사용자';
     final email = currentUser.email ?? '';
     final avatarUrl = currentUser.userMetadata?['avatar_url'] as String?;
 
