@@ -12,7 +12,7 @@ export interface LLMMessage {
 }
 
 /**
- * Unified LLM caller supporting Groq and Gemini providers.
+ * Unified LLM caller supporting Workers AI, Gemini, and OpenAI providers.
  * Returns the text content of the model's response.
  */
 export async function callLLM(
@@ -32,40 +32,8 @@ export async function callLLM(
   if (config.provider === 'openai') {
     return callOpenAI(messages, config);
   }
-  // Groq provider removed - use Workers AI instead
   throw new Error('Unknown LLM provider');
 }
-
-// async function callGroq(messages: LLMMessage[], config: LLMConfig): Promise<string> {
-//   console.log('[Groq API Call] Starting request to api.groq.com');
-//   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//       'Authorization': `Bearer ${config.apiKey}`,
-//     },
-//     body: JSON.stringify({
-//       model: config.modelName,
-//       messages,
-//       response_format: { type: 'json_object' },
-//     }),
-//   });
-//
-//   if (!response.ok) {
-//     const err = await response.json().catch(() => ({}));
-//     console.error('[Groq API Error]', {
-//       status: response.status,
-//       statusText: response.statusText,
-//       error: err,
-//     });
-//     throw new Error(`Groq API error: ${response.status} ${JSON.stringify(err)}`);
-//   }
-//
-//   const data = await response.json() as { choices: { message: { content: string } }[] };
-//   const text = data.choices[0]?.message?.content;
-//   if (!text) throw new Error('No response from Groq');
-//   return text;
-// }
 
 async function callOpenAI(messages: LLMMessage[], config: LLMConfig): Promise<string> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -177,12 +145,10 @@ async function callWorkersAI(
  * If AI_PROVIDER is 'workers-ai', uses Cloudflare Workers AI.
  * If AI_PROVIDER is 'openai' and OPENAI_API_KEY is set, uses OpenAI.
  * If AI_PROVIDER is 'gemini' and GEMINI_API_KEY is set, uses Gemini.
- * Otherwise falls back to Groq.
+ * Otherwise falls back to Workers AI.
  */
 export function getLLMConfig(env: {
   AI_PROVIDER?: string;
-  // GROQ_API_KEY: string;
-  // GROQ_MODEL_NAME?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL_NAME?: string;
   OPENAI_API_KEY?: string;
@@ -210,7 +176,6 @@ export function getLLMConfig(env: {
       modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }
-  // Groq fallback removed - using Workers AI as default
   return {
     provider: 'workers-ai',
     apiKey: '', // Not used for Workers AI

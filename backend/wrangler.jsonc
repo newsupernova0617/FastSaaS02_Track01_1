@@ -17,7 +17,7 @@
 	// 프로덕션 환경에서는 wrangler secret 또는 Cloudflare 대시보드에서 설정하세요
 	//
 	// AI Provider options (set AI_PROVIDER in vars above):
-	// - groq: requires GROQ_API_KEY, optionally GROQ_MODEL_NAME (default: llama-3.1-8b-instant)
+	// - workers-ai: uses the Cloudflare AI binding configured below (default: @cf/openai/gpt-oss-120b)
 	// - gemini: requires GEMINI_API_KEY, optionally GEMINI_MODEL_NAME (default: gemini-2.5-flash)
 	// - openai: requires OPENAI_API_KEY, optionally OPENAI_MODEL_NAME (default: gpt-4o-mini)
 	// "kv_namespaces": [

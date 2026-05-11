@@ -1,4 +1,5 @@
 -- Demo seed data for the real account provided by the user
+-- Drizzle Studio / web-console ready version
 -- Target user:
 --   id: b780aece-4fe3-450f-96ac-502fad1a6026
 --   email: jungyujin052@gmail.com
@@ -7,20 +8,31 @@
 --   created_at: 2026-04-05 06:54:09
 
 PRAGMA foreign_keys = ON;
-BEGIN TRANSACTION;
 
 -- ------------------------------------------------------------------
 -- Cleanup
 -- ------------------------------------------------------------------
-DELETE FROM chat_messages WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM clarification_sessions WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM sessions WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM reports WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM user_notes WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM contact_requests WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM user_subscriptions WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM transactions WHERE user_id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
-DELETE FROM users WHERE id IN ('b780aece-4fe3-450f-96ac-502fad1a6026', 'demo-bob');
+DELETE FROM chat_messages;
+DELETE FROM clarification_sessions;
+DELETE FROM sessions;
+DELETE FROM reports;
+DELETE FROM user_notes;
+DELETE FROM contact_requests;
+DELETE FROM user_subscriptions;
+DELETE FROM transactions;
+DELETE FROM users;
+
+DELETE FROM sqlite_sequence
+WHERE name IN (
+  'chat_messages',
+  'clarification_sessions',
+  'sessions',
+  'reports',
+  'user_notes',
+  'contact_requests',
+  'user_subscriptions',
+  'transactions'
+);
 
 -- ------------------------------------------------------------------
 -- Users
@@ -100,7 +112,7 @@ INSERT INTO reports (
   'monthly_summary',
   '월간 요약',
   '2026-04 기준',
-  '[{"type":"card","title":"총 지출","subtitle":"2026-04 기준","metric":"₩1,312,200","trend":"up","data":{"value":1312200,"transactionCount":19}},{"type":"pie","title":"카테고리별 지출","data":{"labels":["월세","쇼핑","식비","문화여가","의료","교통","기타"],"values":[980000,140000,119700,35000,18000,11800,7700]}},{"type":"bar","title":"수입/지출 비교","data":{"labels":["수입","지출"],"values":[4050000,1312200]}},{"type":"line","title":"순현금흐름","data":{"labels":["2026-04"],"values":[2737800]}},{"type":"alert","title":"상태 점검","data":{"message":"특이한 위험 신호는 없습니다."}},{"type":"suggestion","title":"다음에 해볼 일","data":{"message":"월세 지출 비중이 가장 큽니다. 이번 달 예산부터 다시 확인해 보세요."}}]',
+  '[{"type":"card","title":"총 지출","subtitle":"2026-04 기준","metric":"₩1,312,200","trend":"up","data":{"value":1312200,"transactionCount":23}},{"type":"pie","title":"카테고리별 지출","data":{"labels":["월세","쇼핑","식비","문화여가","의료","교통","기타"],"values":[980000,140000,119700,35000,18000,11800,7700]}},{"type":"bar","title":"수입/지출 비교","data":{"labels":["수입","지출"],"values":[4050000,1312200]}},{"type":"line","title":"순현금흐름","data":{"labels":["2026-04"],"values":[2737800]}},{"type":"alert","title":"상태 점검","data":{"message":"특이한 위험 신호는 없습니다."}},{"type":"suggestion","title":"다음에 해볼 일","data":{"message":"월세 지출 비중이 가장 큽니다. 이번 달 예산부터 다시 확인해 보세요."}}]',
   '{"periodLabel":"2026-04 기준","totalExpense":1312200,"totalIncome":4050000,"netAmount":2737800,"deltaPercent":21.3,"insight":"이번 달은 월세 지출이 가장 컸고, 지난 기간보다 21.3% 늘었습니다.","breakdown":[{"label":"월세","amount":980000,"ratio":75},{"label":"쇼핑","amount":140000,"ratio":11},{"label":"식비","amount":119700,"ratio":9}]}',
   '{"month":"2026-04"}',
   '2026-04-28T11:10:00Z',
@@ -182,5 +194,3 @@ INSERT INTO users (id, email, name, avatar_url, provider, created_at) VALUES
 INSERT INTO transactions (id, user_id, type, amount, category, memo, date) VALUES
   (101, 'demo-bob', 'expense', 15000, '식비', '점심', '2026-04-14'),
   (102, 'demo-bob', 'income', 120000, '용돈', '가족 지원', '2026-04-15');
-
-COMMIT;

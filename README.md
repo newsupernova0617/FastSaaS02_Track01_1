@@ -10,7 +10,7 @@ AI 기반 가계부 챗봇 애플리케이션입니다. 자연어로 가계부�
 | Backend | Hono (Cloudflare Workers) |
 | Database | Turso (Serverless SQLite) + Drizzle ORM |
 | Auth | Supabase (OAuth + JWT) |
-| AI | Groq API |
+| AI | Cloudflare Workers AI |
 | Mobile | Capacitor |
 
 ## 개발 서버 실행 방법
@@ -30,7 +30,7 @@ npm run dev      # wrangler dev 실행
 http://localhost:8787
 ```
 
-> **환경 변수**: 민감 정보(`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `GROQ_API_KEY`, `GROQ_MODEL_NAME`)는 `backend/.dev.vars`에 저장합니다. 이 파일은 `.gitignore`에 포함되어 있으므로 git에 올라가지 않습니다.
+> **환경 변수**: 민감 정보(`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`)는 `backend/.dev.vars`에 저장합니다. AI는 Cloudflare Workers AI(`AI_PROVIDER=workers-ai`, `WORKERS_AI_MODEL_NAME`)를 사용합니다. 이 파일은 `.gitignore`에 포함되어 있으므로 git에 올라가지 않습니다.
 
 ### 터미널 2: 프론트엔드
 
