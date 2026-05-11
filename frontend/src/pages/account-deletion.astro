@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../content';
+
+const updatedAt = '2026-05-11';
+const deletionSubject = encodeURIComponent('쉬운AI가계부 계정 삭제 요청');
+const deletionMailto = `mailto:${site.contactEmail}?subject=${deletionSubject}`;
+---
+
+<BaseLayout title="계정 삭제 요청" description="쉬운AI가계부 계정 삭제 요청 안내 페이지입니다.">
+  <main class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+    <a href="/privacy" class="app-link text-sm">← 개인정보처리방침</a>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <h1 class="text-3xl font-bold sm:text-4xl">계정 삭제 요청</h1>
+      <span class="rounded-full border border-base-300 bg-base-100 px-3 py-1 text-xs font-semibold text-base-content/60">
+        최종 업데이트 {updatedAt}
+      </span>
+    </div>
+
+    <p class="mt-4 text-base text-base-content/75">
+      계정 삭제를 원하시면 아래 방법 중 하나로 요청해 주세요.
+      본인 확인 후 계정과 연결된 데이터를 삭제하거나 익명화합니다.
+    </p>
+
+    <div class="mt-8 rounded-3xl border border-base-300 bg-base-100 p-6 shadow-sm">
+      <h2 class="text-xl font-bold text-base-content">요청 방법</h2>
+      <ol class="prose prose-slate mt-4 max-w-none text-base-content/85">
+        <li>이메일 <a href={deletionMailto}>{site.contactEmail}</a> 로 요청 메일을 보내주세요.</li>
+        <li>가능하면 앱 로그인에 사용한 이메일과 로그인 방식을 함께 적어 주세요.</li>
+        <li>앱에서 이미 로그인된 상태라면 설정 화면의 <strong>문의하기</strong>에서 <strong>계정/로그인</strong> 유형으로 요청하실 수 있습니다.</li>
+      </ol>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href={deletionMailto} class="app-btn app-btn-primary px-5 py-3">
+          이메일로 삭제 요청
+        </a>
+        <a href="/privacy" class="app-btn border border-base-300 bg-base-100 px-5 py-3 font-semibold text-base-content">
+          개인정보처리방침 보기
+        </a>
+      </div>
+    </div>
+
+    <div class="prose prose-slate mt-10 max-w-none text-base-content/85">
+      <h2>삭제 대상</h2>
+      <ul>
+        <li>사용자 계정 및 프로필 정보</li>
+        <li>거래 내역, 채팅 기록, 세션 정보</li>
+        <li>AI 리포트, 개인 메모, 저장된 문의 내역</li>
+        <li>웹사이트와 앱에서 수집된 식별 가능한 지원 정보</li>
+      </ul>
+
+      <h2>일부 보관될 수 있는 정보</h2>
+      <p>
+        법적 의무, 결제 정산, 보안 로그, 부정 사용 방지와 관련된 최소 정보는
+        일정 기간 보관될 수 있습니다. 이 경우에도 계정 식별이 필요하지 않은 범위로 제한합니다.
+      </p>
+
+      <h2>처리 기간</h2>
+      <p>
+        계정 삭제 요청은 확인 후 최대한 신속하게 처리하며, 일반적으로는 수령 후 30일 이내를 목표로 합니다.
+      </p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

@@ -1,6 +1,6 @@
 import { getCollection } from 'astro:content';
 
-const staticPaths = ['/', '/blog/', '/privacy/', '/terms/'];
+const staticPaths = ['/', '/blog/', '/privacy/', '/account-deletion/', '/terms/'];
 
 export async function GET({ site }: { site?: URL }) {
   const origin = site?.toString() ?? 'https://easyaibudget.com';

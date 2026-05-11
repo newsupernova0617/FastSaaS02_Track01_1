@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter_app/core/constants/app_constants.dart';
 import 'package:flutter_app/core/theme/app_theme.dart';
@@ -50,6 +51,15 @@ class SettingsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openExternalLink(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      messenger.showSnackBar(SnackBar(content: Text('링크를 열 수 없습니다: $url')));
+    }
   }
 
   Widget _sectionTitle(ThemeData theme, String title) {
@@ -324,16 +334,34 @@ class SettingsPage extends ConsumerWidget {
               color: theme.colorScheme.primary,
             ),
             title: const Text('개인정보 처리방침'),
+            subtitle: const Text('웹에서 정책을 확인합니다.'),
             trailing: Icon(
               Icons.arrow_forward_ios_rounded,
               size: 14,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
             ),
-            onTap: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('준비 중입니다.')));
-            },
+            onTap: () =>
+                _openExternalLink(context, AppConstants.privacyPolicyUrl),
+          ),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.4),
+          ),
+          ListTile(
+            leading: FaIcon(
+              FontAwesomeIcons.trashCan,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+            title: const Text('계정 삭제 요청'),
+            subtitle: const Text('웹에서 계정 삭제를 요청합니다.'),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+            onTap: () =>
+                _openExternalLink(context, AppConstants.accountDeletionUrl),
           ),
           Divider(
             height: 1,

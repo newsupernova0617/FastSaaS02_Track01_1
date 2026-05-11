@@ -6,6 +6,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // .env 파일에 값이 있으면 그 값을 사용하고, 없으면 기본값(fallback)을 사용합니다.
 // ============================================================
 class AppConstants {
+  static String _trimTrailingSlash(String value) {
+    return value.endsWith('/') ? value.substring(0, value.length - 1) : value;
+  }
+
+  static String _envOrDefault(String key, String fallback) {
+    final fromEnv = dotenv.env[key] ?? '';
+    final resolved = fromEnv.trim().isNotEmpty ? fromEnv.trim() : fallback;
+    return _trimTrailingSlash(resolved);
+  }
+
   // 백엔드 API 서버 주소 (Cloudflare Workers)
   // .env의 값이 비어있으면 fallback 사용 (dotenv는 빈 문자열을 null 대신 ""로 반환하므로 isNotEmpty 체크 필요)
   static String get apiBaseUrl {
@@ -32,6 +42,17 @@ class AppConstants {
         ? fromEnv
         : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxdm5lcGVtcGxzZGtrYXdibWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE5MTQsImV4cCI6MjA5MDE1NzkxNH0.X_zFEwbdSwSWNkkhgGRGp_VnmiJvhXZG1D-h45FovTQ';
   }
+
+  static String get publicWebsiteUrl =>
+      _envOrDefault('PUBLIC_WEBSITE_URL', 'https://easyaibudget.com');
+
+  static String get privacyPolicyUrl =>
+      _envOrDefault('PRIVACY_POLICY_URL', '$publicWebsiteUrl/privacy');
+
+  static String get accountDeletionUrl => _envOrDefault(
+    'ACCOUNT_DELETION_URL',
+    '$publicWebsiteUrl/account-deletion',
+  );
 
   // 앱 기본 정보
   static const String appName = '쉬운AI가계부';
