@@ -102,7 +102,7 @@
 - **How**: Mock fetch() with realistic response format
 - **Benefit**: Tests actual request/response handling without external dependency
 
-### ✅ LLM APIs (Groq, Gemini, OpenAI, Workers AI)
+### ✅ LLM APIs (Workers AI, Gemini, OpenAI)
 - **Why Mock**: Would incur costs and require credentials
 - **How**: Mock fetch() with realistic JSON responses
 - **Benefit**: Tests message format and response parsing without external calls

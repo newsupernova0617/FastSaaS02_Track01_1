@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend**: Cloudflare Workers (Hono) + Turso SQLite + Drizzle ORM
 - **Frontend**: Flutter (mobile) / React + Vite (web, `frontend/` directory)
 - **Authentication**: Supabase (OAuth + JWT ES256)
-- **AI/LLM**: Configurable provider (Workers AI, Groq, Gemini, OpenAI)
+- **AI/LLM**: Configurable provider (Workers AI, Gemini, OpenAI)
 
 Users describe financial transactions in natural language (Korean) and the AI automatically extracts/categorizes them, generates reports, and maintains session-based chat history.
 
@@ -69,11 +69,11 @@ TURSO_AUTH_TOKEN=
 SUPABASE_JWT_SECRET=
 SUPABASE_URL=https://your-project.supabase.co   # added 2026-04-13
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-AI_PROVIDER=groq
-GROQ_API_KEY=
+AI_PROVIDER=workers-ai
+WORKERS_AI_MODEL_NAME=@cf/openai/gpt-oss-120b
 ```
 
-For production, `wrangler secret put` each of the above. `wrangler.jsonc` has placeholder values for non-secret vars (`SUPABASE_URL`, `ALLOWED_ORIGINS`, `AI_PROVIDER`).
+For production, `wrangler secret put` the secret-backed values (`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`) and add `OPENAI_API_KEY` / `GEMINI_API_KEY` only if you switch providers. `wrangler.jsonc` has placeholder values for non-secret vars (`ALLOWED_ORIGINS`, `AI_PROVIDER`).
 
 ## Architecture
 
@@ -158,9 +158,10 @@ Register in `backend/src/index.ts`: `app.route('/api/new-feature', newFeatureRou
 
 In `backend/wrangler.jsonc` vars + `backend/.dev.vars`:
 ```
-AI_PROVIDER=groq   # groq | gemini | openai | workers-ai
-GROQ_API_KEY=...
-GROQ_MODEL_NAME=llama-3.1-8b-instant  # optional
+AI_PROVIDER=workers-ai   # workers-ai | gemini | openai
+WORKERS_AI_MODEL_NAME=@cf/openai/gpt-oss-120b  # optional
+OPENAI_API_KEY=...  # only if using OpenAI
+GEMINI_API_KEY=...  # only if using Gemini
 ```
 
 ## Deployment
@@ -171,7 +172,6 @@ wrangler secret put TURSO_DB_URL
 wrangler secret put TURSO_AUTH_TOKEN
 wrangler secret put SUPABASE_JWT_SECRET
 wrangler secret put SUPABASE_URL
-wrangler secret put GROQ_API_KEY
 npm run deploy
 ```
 

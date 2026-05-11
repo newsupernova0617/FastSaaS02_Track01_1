@@ -1,17 +1,3 @@
--- Demo seed data for the real account provided by the user
--- Drizzle Studio / web-console ready version
--- Target user:
---   id: b780aece-4fe3-450f-96ac-502fad1a6026
---   email: jungyujin052@gmail.com
---   name: yujin jung
---   provider: google
---   created_at: 2026-04-05 06:54:09
-
-PRAGMA foreign_keys = ON;
-
--- ------------------------------------------------------------------
--- Cleanup
--- ------------------------------------------------------------------
 DELETE FROM chat_messages;
 DELETE FROM clarification_sessions;
 DELETE FROM sessions;
@@ -22,21 +8,6 @@ DELETE FROM user_subscriptions;
 DELETE FROM transactions;
 DELETE FROM users;
 
-DELETE FROM sqlite_sequence
-WHERE name IN (
-  'chat_messages',
-  'clarification_sessions',
-  'sessions',
-  'reports',
-  'user_notes',
-  'contact_requests',
-  'user_subscriptions',
-  'transactions'
-);
-
--- ------------------------------------------------------------------
--- Users
--- ------------------------------------------------------------------
 INSERT INTO users (id, email, name, avatar_url, provider, created_at) VALUES
   (
     'b780aece-4fe3-450f-96ac-502fad1a6026',
@@ -47,10 +18,7 @@ INSERT INTO users (id, email, name, avatar_url, provider, created_at) VALUES
     '2026-04-05 06:54:09'
   );
 
--- ------------------------------------------------------------------
--- Transactions: March and April data
--- ------------------------------------------------------------------
-INSERT INTO transactions (id, user_id, type, amount, category, memo, date) VALUES
+INSERT OR REPLACE INTO transactions (id, user_id, type, amount, category, memo, date) VALUES
   (1, 'b780aece-4fe3-450f-96ac-502fad1a6026', 'income', 3500000, '월급', NULL, '2026-03-01'),
   (2, 'b780aece-4fe3-450f-96ac-502fad1a6026', 'expense', 980000, '월세', NULL, '2026-03-05'),
   (3, 'b780aece-4fe3-450f-96ac-502fad1a6026', 'expense', 10000, '식비', '아침', '2026-03-08'),
@@ -84,17 +52,11 @@ INSERT INTO transactions (id, user_id, type, amount, category, memo, date) VALUE
   (31, 'b780aece-4fe3-450f-96ac-502fad1a6026', 'expense', 42000, '쇼핑', '장보기', '2026-04-27'),
   (32, 'b780aece-4fe3-450f-96ac-502fad1a6026', 'expense', 26000, '식비', '외식', '2026-04-28');
 
--- ------------------------------------------------------------------
--- Sessions
--- ------------------------------------------------------------------
 INSERT INTO sessions (id, user_id, title, created_at, updated_at) VALUES
   (1, 'b780aece-4fe3-450f-96ac-502fad1a6026', '점심 기록', '2026-04-28T10:00:00Z', '2026-04-28T10:10:02Z'),
   (2, 'b780aece-4fe3-450f-96ac-502fad1a6026', '4월 요약', '2026-04-28T10:30:00Z', '2026-04-28T10:45:02Z'),
   (3, 'b780aece-4fe3-450f-96ac-502fad1a6026', '식비 조회', '2026-04-28T11:00:00Z', '2026-04-28T11:05:02Z');
 
--- ------------------------------------------------------------------
--- Reports
--- ------------------------------------------------------------------
 INSERT INTO reports (
   id,
   user_id,
@@ -167,9 +129,6 @@ INSERT INTO reports (
   '2026-04-28T10:20:00Z'
 );
 
--- ------------------------------------------------------------------
--- Chat messages
--- ------------------------------------------------------------------
 INSERT INTO chat_messages (id, user_id, session_id, role, content, metadata, created_at) VALUES
   (1, 'b780aece-4fe3-450f-96ac-502fad1a6026', 1, 'user', '어제 점심 12000원 썼어', NULL, '2026-04-28T10:10:00Z'),
   (2, 'b780aece-4fe3-450f-96ac-502fad1a6026', 1, 'assistant', '지출 ₩12,000 식비로 2026-04-02에 저장되었습니다', '{"actionType":"create","action":{"count":1,"ids":[12],"totalAmount":12000}}', '2026-04-28T10:10:02Z'),
@@ -178,19 +137,13 @@ INSERT INTO chat_messages (id, user_id, session_id, role, content, metadata, cre
   (5, 'b780aece-4fe3-450f-96ac-502fad1a6026', 3, 'user', '이번달 식비 얼마야?', NULL, '2026-04-28T11:05:00Z'),
   (6, 'b780aece-4fe3-450f-96ac-502fad1a6026', 3, 'assistant', '2026-04월 식비 거래 8건 조회됨 (총 ₩119,700)', '{"actionType":"read","action":{"month":"2026-04","category":"식비","type":"expense","count":8},"summary":{"periodLabel":"2026-04","categoryLabel":"식비","totalAmount":119700,"count":8,"dailyAverage":14963,"breakdown":[{"label":"외식","amount":26000},{"label":"마트","amount":22000},{"label":"배달","amount":16000}],"insight":"식비 중 외식 항목이 가장 큽니다."},"transactions":[{"id":32,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":26000,"category":"식비","memo":"외식","date":"2026-04-28","createdAt":"2026-04-28T09:00:00Z"},{"id":30,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":13200,"category":"식비","memo":"간식","date":"2026-04-26","createdAt":"2026-04-26T09:00:00Z"},{"id":27,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":12500,"category":"식비","memo":"커피","date":"2026-04-23","createdAt":"2026-04-23T09:00:00Z"},{"id":26,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":16000,"category":"식비","memo":"배달","date":"2026-04-22","createdAt":"2026-04-22T09:00:00Z"},{"id":23,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":9500,"category":"식비","memo":"저녁","date":"2026-04-18","createdAt":"2026-04-18T09:00:00Z"},{"id":19,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":22000,"category":"식비","memo":"마트","date":"2026-04-09","createdAt":"2026-04-09T09:00:00Z"},{"id":14,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":8500,"category":"식비","memo":"카페","date":"2026-04-04","createdAt":"2026-04-04T09:00:00Z"},{"id":12,"userId":"b780aece-4fe3-450f-96ac-502fad1a6026","type":"expense","amount":12000,"category":"식비","memo":"점심값","date":"2026-04-02","createdAt":"2026-04-02T09:00:00Z"}]}', '2026-04-28T11:05:02Z');
 
--- ------------------------------------------------------------------
--- User notes
--- ------------------------------------------------------------------
 INSERT INTO user_notes (id, user_id, content, embedding_id, created_at, updated_at) VALUES
   (1, 'b780aece-4fe3-450f-96ac-502fad1a6026', '식비는 점심, 카페, 배달로 나눠서 본다.', NULL, '2026-04-28T09:10:00Z', '2026-04-28T09:10:00Z'),
   (2, 'b780aece-4fe3-450f-96ac-502fad1a6026', '월말에는 월세와 구독부터 먼저 확인한다.', NULL, '2026-04-28T09:20:00Z', '2026-04-28T09:20:00Z');
 
--- ------------------------------------------------------------------
--- Optional Bob account for isolation testing
--- ------------------------------------------------------------------
 INSERT INTO users (id, email, name, avatar_url, provider, created_at) VALUES
   ('demo-bob', 'bob@example.com', 'Bob', NULL, 'test', '2026-04-01T09:05:00Z');
 
-INSERT INTO transactions (id, user_id, type, amount, category, memo, date) VALUES
+INSERT OR REPLACE INTO transactions (id, user_id, type, amount, category, memo, date) VALUES
   (101, 'demo-bob', 'expense', 15000, '식비', '점심', '2026-04-14'),
   (102, 'demo-bob', 'income', 120000, '용돈', '가족 지원', '2026-04-15');

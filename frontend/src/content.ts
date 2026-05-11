@@ -3,7 +3,7 @@ export const site = {
   tagline: '자연어로 대화하듯 기록하는 AI 가계부',
   subTagline: '영수증도, 엑셀도 필요 없어요. 한국어로 말만 하면 AI가 알아서 분류합니다.',
   description: '자연어로 대화하듯 기록하는 AI 가계부. 한국어로 거래를 말하면 AI가 자동으로 분류하고 리포트를 만들어 드립니다.',
-  contactEmail: 'support@easyaibudget.com',
+  contactEmail: 'yj43773@gmail.com',
 } as const;
 
 export const features = [

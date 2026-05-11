@@ -296,7 +296,7 @@ All tests in this file fail at runtime with a mock chain error. The file uses `v
 
 **`tests/services/ai-report.test.ts`**
 
-All tests in this file fail with `Workers AI binding not available in environment`. The test constructs `AIReportService` with a fake API key but does not set `AI_PROVIDER` in the test environment. The `callLLM` function defaults to `workers-ai`, which requires a Cloudflare `AI` binding that is `undefined` in the Node.js test environment. The fix is to either set `AI_PROVIDER=groq` in the test setup or mock `callLLM` via `mockLlmResponse` before instantiating the service.
+All tests in this file fail with `Workers AI binding not available in environment`. The test constructs `AIReportService` with a fake API key but does not set `AI_PROVIDER` in the test environment. The `callLLM` function defaults to `workers-ai`, which requires a Cloudflare `AI` binding that is `undefined` in the Node.js test environment. The fix is to mock `callLLM` via `mockLlmResponse` before instantiating the service, or provide a Workers AI binding in the test environment.
 
 **Two integration test files** also fail due to the same broken mock chain pattern:
 
