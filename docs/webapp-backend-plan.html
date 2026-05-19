@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Webapp Backend Plan</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --text: #111318;
+        --muted: #5b6472;
+        --line: #dde3ec;
+        --blue: #2563eb;
+        --red: #ff5a4d;
+        --green: #0f9f6e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+      }
+      h1, h2, h3, p { margin: 0; }
+      .hero, .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 16px 40px -28px rgba(15, 23, 42, 0.22);
+      }
+      .hero {
+        padding: 28px;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+      }
+      .hero h1 {
+        margin-top: 14px;
+        font-size: 38px;
+        line-height: 1.12;
+      }
+      .hero p {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 17px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 22px;
+      }
+      .stat {
+        padding: 16px;
+        border-radius: 16px;
+        background: #f9fbff;
+        border: 1px solid var(--line);
+      }
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat-value {
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 900;
+      }
+      section {
+        margin-top: 24px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .card h2 {
+        font-size: 24px;
+      }
+      .card > p {
+        margin-top: 8px;
+        color: var(--muted);
+      }
+      .plan-list {
+        margin-top: 18px;
+        display: grid;
+        gap: 14px;
+      }
+      .step {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fcfdff;
+      }
+      .step-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .step-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .tag-backend { background: rgba(37,99,235,.10); color: var(--blue); }
+      .tag-webapp { background: rgba(15,159,110,.10); color: var(--green); }
+      .tag-risk { background: rgba(255,90,77,.10); color: var(--red); }
+      .step p {
+        margin-top: 10px;
+        color: var(--muted);
+      }
+      ul {
+        margin: 12px 0 0;
+        padding-left: 18px;
+      }
+      li + li {
+        margin-top: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+      }
+      th, td {
+        text-align: left;
+        vertical-align: top;
+        padding: 12px 10px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+      }
+      th {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        background: #f3f6fb;
+        border-radius: 8px;
+        padding: 2px 6px;
+      }
+      .note {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 90, 77, 0.06);
+        border: 1px solid rgba(255, 90, 77, 0.16);
+        color: #7f2b24;
+      }
+      @media (max-width: 760px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          font-size: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow"><span class="dot"></span>Migration Plan</div>
+        <h1>Flutter 대체용 웹앱 + 백엔드 재편 계획</h1>
+        <p>
+          방향은 <code>flutter_app</code>을 점진적으로 웹앱/PWA로 대체하는 것입니다.
+          다만 Flutter를 당장 걷어내는 전제가 아니므로, 기존 low-level API는 유지하고 그 위에 웹앱용 API를 보강하는 계획으로 갑니다.
+        </p>
+        <div class="grid stats">
+          <div class="stat">
+            <div class="stat-label">목표 앱</div>
+            <div class="stat-value">webapp</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">콘텐츠 앱</div>
+            <div class="stat-value">frontend 유지</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">핵심 변화</div>
+            <div class="stat-value">API 보강</div>
+          </div>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2>1. 목표 구조</h2>
+        <p>최종적으로는 역할을 아래처럼 분리합니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>역할</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>frontend/</code></td>
+              <td>랜딩, 블로그, SEO 콘텐츠</td>
+              <td>Astro SSG 유지</td>
+            </tr>
+            <tr>
+              <td><code>webapp/</code></td>
+              <td>실제 제품 앱, PWA, 설치형 UX</td>
+              <td>Flutter 대체 대상</td>
+            </tr>
+            <tr>
+              <td><code>backend/</code></td>
+              <td>도메인 API 유지 + 웹앱 화면 단위 집계 API 보강</td>
+              <td><code>/api/app/*</code> 추가</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>2. 핵심 판단</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong><code>webapp-preview.ts</code>는 더 이상 런타임 의존이 아님</strong>
+              <span class="tag tag-risk">정리됨</span>
+            </div>
+            <p>
+              지금 preview 라우트는 UI와 인증이 아직 완전히 붙지 않은 상태에서 화면을 유지하기 위한 fallback입니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong>실제 백엔드를 화면 중심 응답으로 보강</strong>
+              <span class="tag tag-backend">Backend</span>
+            </div>
+            <p>
+              기존 도메인 API는 유지하고, 웹앱이 바로 쓰기 좋은 집계 endpoint를 별도로 둡니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong>Flutter 기능을 웹앱 단위로 이식</strong>
+              <span class="tag tag-webapp">Webapp</span>
+            </div>
+            <p>
+              화면, 상태, 인증, 라우팅, 오프라인 캐시를 웹앱 기준으로 재구성하고 Flutter는 점진적으로 역할을 잃게 됩니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. 실행 계획</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong>Flutter 기능 인벤토리 작성</strong>
+            </div>
+            <p>먼저 <code>flutter_app/lib</code> 기준으로 기능과 화면을 전부 뽑아야 합니다.</p>
+            <ul>
+              <li>로그인/세션</li>
+              <li>대화 기록</li>
+              <li>거래 생성, 수정, 삭제</li>
+              <li>월별 리포트</li>
+              <li>검색/질의</li>
+              <li>설정, 결제, 메모 등 부가 기능</li>
+            </ul>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong>백엔드에 앱 전용 API 계층 추가</strong>
+              <span class="tag tag-backend">Backend</span>
+            </div>
+            <p>추천 경로는 아래와 같습니다.</p>
+            <ul>
+              <li><code>GET /api/app/bootstrap</code></li>
+              <li><code>GET /api/app/home</code></li>
+              <li><code>GET /api/app/report?month=YYYY-MM</code></li>
+              <li><code>GET /api/app/search?q=...</code></li>
+              <li><code>GET /api/app/timeline?sessionId=...</code></li>
+              <li><code>POST /api/app/chat</code> 또는 세션 기반 메시지 endpoint 정리</li>
+            </ul>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong>preview 응답 구조를 실제 계약으로 승격</strong>
+            </div>
+            <p>
+              preview의 장점은 응답이 화면 단위라는 점입니다. 이 형식을 유지하되, 데이터 소스만 실제 DB/서비스로 바꾸는 방식이 좋습니다.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">4</span>
+              <strong><code>webapp</code>을 실제 <code>/api/app/*</code> 우선 사용으로 전환</strong>
+              <span class="tag tag-webapp">Webapp</span>
+            </div>
+            <p>
+              현재 <code>webapp/src/data/preview-api.ts</code>에서 인증 세션이 있으면 <code>/api/app/*</code>를 우선 사용하고, 없으면 preview로 fallback 하도록 바꿉니다.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">5</span>
+              <strong>인증/JWT 주입 구조 확정</strong>
+            </div>
+            <p>
+              지금 백엔드의 대부분 <code>/api/*</code>는 인증 전제입니다. 웹앱도 토큰 저장, 재주입, 만료 처리 흐름을 확정해야 합니다.
+            </p>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">6</span>
+              <strong><code>webapp-preview.ts</code> 제거</strong>
+              <span class="tag tag-risk">Cleanup</span>
+            </div>
+            <p>
+               실제 앱 API와 인증 전환이 끝나면 preview 라우트는 제거하거나 dev-only fixture로 격하합니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3-1. 백엔드를 어떻게 바꿀지 상세</h2>
+        <p>
+          핵심은 “기존 API를 버리는 것”이 아니라, 기존 도메인 API 위에 <strong>웹앱 화면 단위 API</strong>를 추가하는 것입니다.
+          즉 데이터 모델 중심 응답에서, 화면이 바로 소비할 수 있는 응답으로 한 층 올립니다.
+        </p>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">A</span>
+              <strong>라우트 계층을 분리</strong>
+              <span class="tag tag-backend">Backend</span>
+            </div>
+            <p>추천 구조는 아래와 같습니다.</p>
+            <ul>
+              <li><code>/api/transactions</code>, <code>/api/reports</code>, <code>/api/sessions</code>: 기존 low-level 도메인 API 유지</li>
+              <li><code>/api/app/bootstrap</code>, <code>/api/app/home</code>, <code>/api/app/report</code>, <code>/api/app/search</code>, <code>/api/app/timeline</code>: 웹앱용 aggregated API 신설</li>
+              <li>게스트 fallback: 웹앱 내부 mock 데이터로 처리</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">B</span>
+              <strong>서비스 계층에서 화면용 응답 조립</strong>
+            </div>
+            <p>
+              라우트에서 직접 DB를 여러 번 치고 응답을 손으로 합치기보다,
+              <code>services/app-home.ts</code>, <code>services/app-report.ts</code> 같은 조합 서비스를 두는 편이 낫습니다.
+            </p>
+            <ul>
+              <li>라우트: 입력 검증, 인증, 응답 반환만 담당</li>
+              <li>서비스: 여러 기존 서비스/쿼리를 묶어서 화면 응답 생성</li>
+              <li>Zod 스키마: 요청/응답 계약을 명시적으로 보장</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">C</span>
+              <strong>Flutter식 기능 단위를 화면 단위 계약으로 치환</strong>
+            </div>
+            <p>
+              Flutter에서는 여러 provider/service가 화면 하나를 구성했을 수 있는데,
+              웹앱에서는 그걸 프론트가 재조합하지 않도록 백엔드에서 미리 정리해 주는 편이 낫습니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3-2. 추천 API 계약</h2>
+        <p>현재 preview 응답 형식을 발전시켜, 실제 앱 계약으로 아래처럼 잡는 것을 권장합니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>역할</th>
+              <th>응답 방향</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>GET /api/app/home</code></td>
+              <td>앱 첫 화면 데이터</td>
+              <td>최근 메시지, 최근 기록 카드, 입력 placeholder, 빠른 상태 요약</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/app/report?month=YYYY-MM</code></td>
+              <td>월별 리포트 화면 데이터</td>
+              <td>총액, 전월 비교, 일자별 추이, 카테고리 집계, 인사이트</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/app/search?q=...</code></td>
+              <td>검색/질의 결과 화면</td>
+              <td>질문, 기간, 총액, 하이라이트 항목, 짧은 해설</td>
+            </tr>
+            <tr>
+              <td><code>POST /api/app/chat</code></td>
+              <td>홈 화면 입력창 전송</td>
+              <td>유저 메시지, 파싱 결과, 생성/수정된 거래, 후속 응답</td>
+            </tr>
+            <tr>
+              <td><code>GET /api/app/timeline</code></td>
+              <td>대화/기록 타임라인 조회</td>
+              <td>메시지와 거래 카드가 섞인 렌더 친화적 리스트</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>3-3. 각 API가 내부적으로 무엇을 하게 될지</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">H</span>
+              <strong><code>GET /api/app/home</code></strong>
+            </div>
+            <p>단순히 메시지 하나를 반환하는 게 아니라, 홈 화면이 바로 렌더되도록 필요한 조각을 같이 줍니다.</p>
+            <ul>
+              <li>최근 사용자 메시지 1~N개</li>
+              <li>최근 assistant 응답</li>
+              <li>최근 생성되거나 수정된 거래 카드</li>
+              <li>오늘/이번주 간단 요약</li>
+              <li>입력창 placeholder나 추천 질문</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">R</span>
+              <strong><code>GET /api/app/report</code></strong>
+            </div>
+            <p>기존 <code>/api/transactions</code>와 <code>/api/reports</code> 결과를 프론트가 다시 조합하지 않도록, 차트 친화적 구조로 정리합니다.</p>
+            <ul>
+              <li>월 총 지출 / 수입 / 순액</li>
+              <li>전월 대비 증감</li>
+              <li>일별 시계열 데이터</li>
+              <li>카테고리별 합계와 비율</li>
+              <li>AI가 만든 짧은 인사이트</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">S</span>
+              <strong><code>GET /api/app/search</code></strong>
+            </div>
+            <p>
+              현재 Flutter에서 자연어 질의나 조회 UX가 있다면, 웹앱에서는 질의 결과를 카드 한 장으로 바로 그릴 수 있게 응답을 평탄화하는 편이 좋습니다.
+            </p>
+            <ul>
+              <li>질문 원문</li>
+              <li>질문이 해석된 기간/카테고리/필터</li>
+              <li>합계와 평균</li>
+              <li>세부 항목 요약 리스트</li>
+              <li>비교 문장 또는 한 줄 인사이트</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">C</span>
+              <strong><code>POST /api/app/chat</code></strong>
+            </div>
+            <p>
+              이 endpoint는 결국 홈 화면의 입력창 액션이 됩니다. 그래서 low-level create transaction API보다 화면 반응이 좋아야 합니다.
+            </p>
+            <ul>
+              <li>입력 문장을 파싱</li>
+              <li>필요하면 AI/규칙 기반 분류 수행</li>
+              <li>거래 생성 또는 기존 거래 수정</li>
+              <li>assistant 메시지와 거래 카드 DTO를 함께 반환</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3-4. 인증은 어떻게 바꿀지</h2>
+        <p>
+          지금의 핵심 문제는 웹앱이 실제 <code>/api/*</code>를 쓰려면 인증/JWT를 안정적으로 붙여야 한다는 점입니다.
+        </p>
+        <ul>
+          <li>웹앱 로그인 후 access token 저장 위치 결정</li>
+          <li><code>hono/client</code> 또는 fetch wrapper에서 Authorization 헤더 자동 주입</li>
+          <li>토큰 만료 시 refresh 또는 재로그인 흐름 정의</li>
+          <li>PWA 재실행 시 세션 복원 정책 정리</li>
+        </ul>
+        <div class="note">
+          즉, preview API를 없애려면 단순히 endpoint 이름만 바꾸는 게 아니라 인증과 사용자 컨텍스트를 웹앱 쪽에 정착시켜야 합니다.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3-5. 실제 코드 레벨 변경 예상</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>예상 변경</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>backend/src/routes/</code></td>
+              <td><code>app-home.ts</code>, <code>app-report.ts</code>, <code>app-search.ts</code>, <code>app-chat.ts</code> 같은 라우트 추가</td>
+            </tr>
+            <tr>
+              <td><code>backend/src/services/</code></td>
+              <td>기존 transactions, reports, sessions 로직을 묶는 조합 서비스 추가</td>
+            </tr>
+            <tr>
+              <td><code>backend/src/app.ts</code></td>
+              <td><code>app.route('/api/app', ...)</code> 마운트, preview 라우트 제거</td>
+            </tr>
+            <tr>
+              <td><code>backend/src/schemas/</code> 또는 공용 스키마 파일</td>
+              <td>웹앱 응답 DTO용 Zod 스키마 정리</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/data/preview-api.ts</code></td>
+              <td><code>app-api.ts</code>로 교체, 실제 auth header 주입 포함</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/lib/query.ts</code></td>
+              <td>preview query key에서 실제 앱 query key로 변경</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>3-6. 단계별 전환 순서</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong>새 앱 API를 추가한다</strong>
+            </div>
+            <p>기존 API는 건드리지 않고 <code>/api/app/*</code>만 먼저 추가합니다.</p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong>webapp을 새 API로 바꾼다</strong>
+            </div>
+            <p>홈, 리포트, 검색 화면이 실제 데이터로 렌더되도록 교체합니다.</p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong>chat/거래 입력을 실제 API로 연결한다</strong>
+            </div>
+            <p>입력창이 더 이상 더미가 아니라 실제 거래 생성/수정 흐름이 되게 만듭니다.</p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">4</span>
+              <strong>preview 라우트를 제거했다</strong>
+            </div>
+            <p>실데이터 전환이 끝나면 기존 <code>webapp-preview.ts</code>는 삭제하고, 현재는 웹앱 내부 mock 데이터만 fallback으로 남깁니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4. 파일별 예상 영향 범위</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>파일/폴더</th>
+              <th>예상 작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>backend/src/routes/</code></td>
+              <td>앱 전용 집계 라우트 추가 또는 기존 라우트 재정리</td>
+            </tr>
+            <tr>
+              <td><code>backend/src/services/</code></td>
+              <td>화면 단위 응답을 만드는 조합 서비스 추가</td>
+            </tr>
+            <tr>
+              <td><code>backend/src/app.ts</code></td>
+              <td>preview 라우트 제거, 실제 <code>/api/app/*</code> 라우트 마운트</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/data/preview-api.ts</code></td>
+              <td>실제 앱 API 클라이언트로 전환</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/data/schemas.ts</code></td>
+              <td>실계약에 맞게 요청/응답 스키마 확장</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/app.tsx</code></td>
+              <td>실제 데이터와 상태 전이 반영, placeholder 제거</td>
+            </tr>
+            <tr>
+              <td><code>flutter_app/lib</code></td>
+              <td>기능 참조원 역할, 웹 이식 완료 후 축소 또는 제거 대상</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>5. 우선순위</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">A</span>
+              <strong>가장 먼저 할 일</strong>
+            </div>
+            <ul>
+              <li>Flutter 기능 목록 문서화</li>
+              <li>웹앱 홈/리포트/검색에 대응하는 실제 백엔드 계약 확정</li>
+              <li>인증 전략 확정</li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">B</span>
+              <strong>그 다음</strong>
+            </div>
+            <ul>
+              <li>preview 라우트 의존 제거</li>
+              <li>실제 거래/리포트/검색 데이터 연결</li>
+              <li>PWA 캐시 정책 정교화</li>
+            </ul>
+          </div>
+        </div>
+        <div class="note">
+          주의: 기존 low-level API를 모두 없애는 방향은 비추천입니다. 웹앱용 집계 API를 추가하고, 기존 도메인 API는 유지하는 쪽이 더 안전합니다.
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

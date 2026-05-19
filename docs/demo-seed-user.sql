@@ -4,7 +4,6 @@ DELETE FROM sessions;
 DELETE FROM reports;
 DELETE FROM user_notes;
 DELETE FROM contact_requests;
-DELETE FROM user_subscriptions;
 DELETE FROM transactions;
 DELETE FROM users;
 

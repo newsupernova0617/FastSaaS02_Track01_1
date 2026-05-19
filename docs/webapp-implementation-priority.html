@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Webapp Implementation Priority</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --accent: #2563eb;
+        --done-bg: #dcfce7;
+        --done-fg: #166534;
+        --partial-bg: #fef9c3;
+        --partial-fg: #854d0e;
+        --miss-bg: #fee2e2;
+        --miss-fg: #991b1b;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 20%);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+      .hero {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      }
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+      .sub {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+        background: #fff;
+      }
+      .pill.done { background: var(--done-bg); color: var(--done-fg); border-color: #bbf7d0; }
+      .pill.partial { background: var(--partial-bg); color: var(--partial-fg); border-color: #fde68a; }
+      .pill.miss { background: var(--miss-bg); color: var(--miss-fg); border-color: #fecaca; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+      }
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+      .meta {
+        color: var(--muted);
+        line-height: 1.65;
+        font-size: 14px;
+      }
+      .section {
+        margin-top: 28px;
+      }
+      .section h2 {
+        margin: 0 0 12px;
+        font-size: 21px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+      th, td {
+        padding: 14px 12px;
+        vertical-align: top;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        text-align: left;
+        font-size: 13px;
+        color: var(--muted);
+        background: #f8fafc;
+      }
+      tr:last-child td { border-bottom: 0; }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .status.done { background: var(--done-bg); color: var(--done-fg); }
+      .status.partial { background: var(--partial-bg); color: var(--partial-fg); }
+      .status.miss { background: var(--miss-bg); color: var(--miss-fg); }
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      li + li { margin-top: 8px; }
+      .checklist {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+      .check-item {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        gap: 10px;
+        align-items: start;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #fff;
+      }
+      .check-item strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+      .check-item small {
+        display: block;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .foot {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      code {
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: #eef2ff;
+        color: #4338ca;
+      }
+      .muted {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <h1>Webapp Implementation Priority</h1>
+        <p class="sub">
+          목적은 다음 goal을 작게 자르는 것입니다. webapp은 Flutter의 핵심 기능을 많이 흡수했지만, 아직 전부는 아닙니다.
+          따라서 먼저 실데이터 런타임 검증을 하고, 그 다음 핵심 상호작용을 보강하고, 마지막에 진입점과 보조 화면을 정리하는 순서가 맞습니다.
+        </p>
+        <div class="pills">
+          <span class="pill done">이미 흡수됨: record / calendar / stats / monthly report / sessions</span>
+          <span class="pill partial">부분 흡수: login / home / report detail / settings / chat</span>
+          <span class="pill miss">미흡수: onboarding / help / contact / ai hub</span>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h2>원칙</h2>
+            <div class="meta">
+              1. 사용자 핵심 흐름부터 한다.<br />
+              2. Flutter 1:1 복제보다 webapp/PWA 기준의 사용성을 우선한다.<br />
+              3. backend low-level API는 유지하고 webapp이 app-facing API를 우선 소비한다.<br />
+              4. 런타임 검증 전에는 Flutter 제거 결정을 하지 않는다.
+            </div>
+          </div>
+          <div class="card">
+            <h2>현재 판단</h2>
+            <div class="meta">
+              webapp은 이미 핵심 업무 화면 대부분을 커버한다. 남은 작업은 기능 이식보다
+              <strong>완성도와 진입점 정리</strong>에 가깝다.
+            </div>
+          </div>
+          <div class="card">
+            <h2>다음 goal의 범위</h2>
+            <div class="meta">
+              한 번에 전체를 잡지 말고 P0, P1, P2처럼 잘라야 한다.
+              가장 좋은 단위는 <strong>실데이터 검증</strong> 또는 <strong>세션/리포트 상세 보강</strong>이다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>P0. 실데이터 런타임 검증</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 180px;">범위</th>
+              <th style="width: 120px;">중요도</th>
+              <th>해야 할 일</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>로그인 / 세션</td>
+              <td><span class="status done">최우선</span></td>
+              <td>Supabase 세션, bootstrap, active session, logout 흐름을 실제 환경에서 확인한다.</td>
+            </tr>
+            <tr>
+              <td>읽기 API</td>
+              <td><span class="status done">최우선</span></td>
+              <td><code>/api/app/home</code>, <code>/calendar</code>, <code>/record</code>, <code>/stats</code>, <code>/reports/current</code>, <code>/reports</code>, <code>/search</code>를 실데이터로 검증한다.</td>
+            </tr>
+            <tr>
+              <td>쓰기 API</td>
+              <td><span class="status done">최우선</span></td>
+              <td><code>/api/app/chat</code>, <code>/api/app/sessions</code>, <code>/api/app/transactions</code>의 저장/수정/삭제가 DB에 반영되는지 확인한다.</td>
+            </tr>
+            <tr>
+              <td>fallback 정책</td>
+              <td><span class="status done">최우선</span></td>
+              <td>guest fallback이 live 경로를 덮지 않고, 비로그인 사용자에게만 제한적으로 동작하는지 확인한다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>P1. 핵심 상호작용 보강</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 180px;">기능</th>
+              <th style="width: 120px;">상태</th>
+              <th>우선 이유</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>세션 채팅</td>
+              <td><span class="status partial">부분</span></td>
+              <td>Flutter의 핵심 상호작용이다. full-screen chat, session sidebar, rename/delete, 메시지 입력 경험을 더 다듬는다.</td>
+            </tr>
+            <tr>
+              <td>리포트 상세 CRUD</td>
+              <td><span class="status partial">부분</span></td>
+              <td>리포트 생성/조회는 되지만, 이름 변경/저장/삭제의 완성도가 아직 Flutter 수준과 다르다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>P2. 진입점과 계정 화면</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 180px;">기능</th>
+              <th style="width: 120px;">상태</th>
+              <th>메모</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>로그인 UX</td>
+              <td><span class="status partial">부분</span></td>
+              <td>OAuth 정책, 세션 복원, 실패 처리, Kakao 버튼 정책을 정리한다.</td>
+            </tr>
+            <tr>
+              <td>온보딩</td>
+              <td><span class="status miss">미흡수</span></td>
+              <td>별도 4-step 온보딩이 필요한지 먼저 판단한다. 필요 없으면 로그인/랜딩 카피로 흡수한다.</td>
+            </tr>
+            <tr>
+              <td>설정</td>
+              <td><span class="status partial">부분</span></td>
+              <td>프로필/구독/로그아웃/약관/문의를 settings route로 둘지, 프로필 카드로 흡수할지 결정한다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2>P3. 지원/보조 화면</h2>
+        <ul class="checklist">
+          <li class="check-item">
+            <input type="checkbox" />
+            <div>
+              <strong>도움말</strong>
+              <small>별도 help page가 필요한지 판단하고, 필요하면 FAQ와 지원 링크 위주로 최소 구현한다.</small>
+            </div>
+          </li>
+          <li class="check-item">
+            <input type="checkbox" />
+            <div>
+              <strong>문의</strong>
+              <small>contact form을 앱 내부에 유지할지, 외부 폼/지원 채널로 넘길지 결정한다.</small>
+            </div>
+          </li>
+          <li class="check-item">
+            <input type="checkbox" />
+            <div>
+              <strong>AI 허브</strong>
+              <small>홈/검색/월간 리포트로 기능이 분산되어 있으면 별도 AI hub는 중복일 수 있다.</small>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>P4. 네이티브 대체 후보</h2>
+        <div class="card">
+          <div class="meta">
+            아래 항목은 Flutter의 네이티브 기능을 그대로 옮기는 대상이 아니라, webapp/PWA에서 <strong>주경로를 최대한 살리고</strong> fallback을 보조로 두는 영역이다.
+          </div>
+          <div class="grid" style="margin-top: 14px;">
+            <div class="card" style="box-shadow:none; background:#fff; border-style:dashed;">
+              <h2 style="font-size:16px; margin-bottom:8px;">Ads / interstitial / banner</h2>
+              <div class="meta">
+                웹에서는 이 영역을 <strong>AdSense</strong> 같은 웹 광고 체계로 바꾸는 것이 현실적이다.
+                다만 core app 화면에 직접 박기보다는 랜딩, 도움말, 콘텐츠 영역, 또는 비핵심 패널에 제한하는 편이 낫다.
+                webapp에서는 광고가 제품 흐름을 방해하지 않도록 별도 정책을 두는 것을 권장한다.
+              </div>
+            </div>
+            <div class="card" style="box-shadow:none; background:#fff; border-style:dashed;">
+              <h2 style="font-size:16px; margin-bottom:8px;">Foreground service / quick entry</h2>
+              <div class="meta">
+                이 기능의 <strong>주경로</strong>는 <strong>Web Push Notification + inline reply</strong>다.
+                Flutter의 빠른 입력과 가장 비슷한 UX를 web에서 먼저 구현하고, 지원되지 않거나 실패할 때만 fallback을 둔다.
+                Flutter 쪽의 빠른 입력은
+                <code>flutter_app/lib/native/foreground_service/quick_entry_main.dart</code>,
+                <code>quick_entry_handler.dart</code>,
+                <code>foreground_service_manager.dart</code>처럼 백그라운드 서비스와 MethodChannel에 붙어 있다.
+                웹에서는 Android Chrome을 1차 지원 대상으로 두고, 미지원 환경이나 실패 시에만 <em>앱 열기 + 미리 채운 입력창</em>으로 fallback한다.
+              </div>
+            </div>
+            <div class="card" style="box-shadow:none; background:#fff; border-style:dashed;">
+              <h2 style="font-size:16px; margin-bottom:8px;">알림 tag / 재표시 정책</h2>
+              <div class="meta">
+                <code>tag</code>는 같은 알림을 <strong>교체/묶기</strong> 위한 식별자이고,
+                <code>renotify</code>는 교체 시 다시 알릴지 여부를 제어한다.
+                이 둘만으로는 <strong>n시간 뒤 재표시</strong>를 예약하지 못한다.
+                재방문 시 다시 보여주려면 앱 상태 저장 후 재노출, 또는 서버/스케줄러 기반 재푸시가 필요하다.
+                참고로 Chrome 계열에서는 Notification Triggers(<code>showTrigger</code>) 같은 예약 옵션이 있지만, 이 역시 광범위한 브라우저 공통 대체로 보기엔 제한적이다.
+              </div>
+            </div>
+          </div>
+          <div class="meta" style="margin-top: 14px;">
+            정리하면, 이 구간은 “fallback 중심”이 아니라 “inline reply 주경로 + fallback 보조”로 설계해야 한다.
+            목표 UX가 알림 안에서 바로 기록하는 흐름이므로, webapp은 그 경로를 먼저 만족시키고 보조 경로는 실패 대비로만 둔다.
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>다음 goal에 대한 권장 방식</h2>
+        <div class="card">
+          <div class="meta">
+            1. P0만 목표로 잡는다.<br />
+            2. P0가 끝나면 런타임 검증 결과를 기준으로 P1로 간다.<br />
+            3. P1은 세션 채팅과 리포트 상세를 따로 나눌 수 있다.<br />
+            4. P2/P3는 제품 판단이 섞이므로, 구현 전에 범위를 다시 확인한다.
+          </div>
+        </div>
+      </section>
+
+      <p class="foot">
+        참조 범위: <code>flutter_app/lib/routes/app_router.dart</code>, <code>flutter_app/lib/features/*</code>,
+        <code>webapp/src/*</code>. 이 문서는 goal 입력용 우선순위 문서이며, 실제 구현은 P0부터 단계적으로 진행하는 것을 전제로 한다.
+      </p>
+    </main>
+  </body>
+</html>

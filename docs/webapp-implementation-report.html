@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Webapp Implementation Report</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --text: #111318;
+        --muted: #5b6472;
+        --line: #dde3ec;
+        --blue: #2563eb;
+        --red: #ff5a4d;
+        --green: #0f9f6e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+      }
+      h1, h2, h3, p { margin: 0; }
+      .hero {
+        background: linear-gradient(135deg, #ffffff, #f2f6ff);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 16px 40px -28px rgba(15, 23, 42, 0.28);
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--red);
+      }
+      .hero h1 {
+        margin-top: 14px;
+        font-size: 40px;
+        line-height: 1.1;
+      }
+      .hero p {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 17px;
+      }
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 22px;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .stat-label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .stat-value {
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 800;
+      }
+      section {
+        margin-top: 24px;
+      }
+      .section-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 24px;
+      }
+      .section-card h2 {
+        font-size: 24px;
+      }
+      .section-card > p {
+        margin-top: 8px;
+        color: var(--muted);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+      }
+      th, td {
+        text-align: left;
+        vertical-align: top;
+        padding: 12px 10px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+      }
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        background: #f3f6fb;
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .tag-modified {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--blue);
+      }
+      .tag-new {
+        background: rgba(15, 159, 110, 0.1);
+        color: var(--green);
+      }
+      .tag-note {
+        background: rgba(255, 90, 77, 0.1);
+        color: var(--red);
+      }
+      ul {
+        margin: 14px 0 0;
+        padding-left: 18px;
+      }
+      li + li {
+        margin-top: 8px;
+      }
+      @media (max-width: 760px) {
+        .meta {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          font-size: 32px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow"><span class="dot"></span>Webapp Implementation Report</div>
+        <h1>웹앱 구현 작업 파일 보고서</h1>
+        <p>
+          이번 작업에서 제가 직접 수정한 파일과 새로 만든 파일을 구분해서 정리한 HTML 보고서입니다.
+          기준 시점은 <code>git status --short</code>와 실제 작업 내용입니다.
+        </p>
+        <div class="meta">
+          <div class="stat">
+            <div class="stat-label">수정 파일</div>
+            <div class="stat-value">4개</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">신설 파일</div>
+            <div class="stat-value">14개</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">비고</div>
+            <div class="stat-value">별도 더티 파일 존재</div>
+          </div>
+        </div>
+      </div>
+
+      <section class="section-card">
+        <h2>1. 수정한 파일</h2>
+        <p>기존 파일을 직접 변경한 목록입니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>파일</th>
+              <th>변경 내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag tag-modified">Modified</span></td>
+              <td><code>backend/package.json</code></td>
+              <td><code>@hono/zod-validator</code> 의존성 추가</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-modified">Modified</span></td>
+              <td><code>backend/package-lock.json</code></td>
+              <td>백엔드 의존성 변경에 따른 lockfile 갱신</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-modified">Modified</span></td>
+              <td><code>backend/src/index.ts</code></td>
+              <td>앱 조립을 <code>app.ts</code>로 분리하고 Worker fetch 엔트리만 남기도록 정리</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-modified">Modified</span></td>
+              <td><code>backend/src/app.ts</code>를 기준으로 CORS 허용 로직 정비</td>
+              <td>
+                기본 허용 오리진에 <code>127.0.0.1</code> 개발 주소를 추가하고,
+                <code>ALLOWED_ORIGINS</code>와 합집합으로 동작하도록 변경
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-card">
+        <h2>2. 새로 만든 파일</h2>
+        <p>이번 웹앱 구현에서 신설한 파일들입니다.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>파일</th>
+              <th>역할</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>backend/src/app.ts</code></td>
+              <td>Hono 앱 조립부 분리, <code>AppType</code> export, preview 라우트 마운트</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/data/mock-data.ts</code></td>
+              <td>게스트 fallback용 로컬 mock 응답 데이터</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/package.json</code></td>
+              <td>새 웹앱 패키지 정의</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/tsconfig.json</code></td>
+              <td>웹앱 TypeScript 설정</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/vite.config.ts</code></td>
+              <td>Vite 개발 서버와 PWA 설정</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/index.html</code></td>
+              <td>웹앱 진입 HTML</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/public/icon.svg</code></td>
+              <td>PWA 아이콘</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/data/schemas.ts</code></td>
+              <td>preview API 응답 Zod 스키마</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/data/preview-api.ts</code></td>
+              <td><code>hono/client</code> 기반 preview API 호출부</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/lib/query.ts</code></td>
+              <td>TanStack Query Core 클라이언트와 query option 정의</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/state/app-store.ts</code></td>
+              <td>Zustand Vanilla 앱 상태 저장소</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/app.tsx</code></td>
+              <td>랜딩 mock UI 기반 홈/리포트/검색 화면 렌더링</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/main.tsx</code></td>
+              <td>라우팅, query observer, 렌더 부트스트랩</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-new">New</span></td>
+              <td><code>webapp/src/styles.css</code></td>
+              <td>랜딩 톤을 가져온 웹앱 전용 스타일</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-card">
+        <h2>3. 작업 요약</h2>
+        <ul>
+          <li>새로운 <code>webapp/</code> 패키지를 만들고 PWA 셸을 구성했습니다.</li>
+          <li><code>vite + hono/jsx/dom + Navigo + @tanstack/query-core + zustand/vanilla + zod</code> 조합을 넣었습니다.</li>
+          <li>랜딩페이지 mock UI와 같은 톤으로 홈, 리포트, AI 검색 화면을 구현했습니다.</li>
+          <li>실제 Flutter 전체 기능 이식이 아니라, 먼저 동작하는 웹앱 베이스와 preview 데이터 연결까지 만든 상태입니다.</li>
+        </ul>
+      </section>
+
+      <section class="section-card">
+        <h2>4. 별도 참고</h2>
+        <p>
+          아래 파일들은 현재 작업 트리에 변경으로 보이지만, 이번 웹앱 구현에서 제가 수정한 대상은 아닙니다.
+        </p>
+        <ul>
+          <li><span class="tag tag-note">Existing Dirty</span> <code>docs/demo-seed-user.sql</code></li>
+          <li><span class="tag tag-note">Existing Dirty</span> <code>docs/메뉴얼.md</code> (git status 상 한글 파일명 인코딩 표시)</li>
+          <li><span class="tag tag-note">Existing Dirty</span> <code>docs/google-play-listing.md</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

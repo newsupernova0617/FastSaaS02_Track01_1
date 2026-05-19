@@ -23,7 +23,7 @@ export function createTestApp(handle: TestDbHandle): TestAppHandle {
     AI_PROVIDER: 'workers-ai',
     ENVIRONMENT: 'test',
     TURSO_DB_URL: ':memory:',
-    TURSO_AUTH_TOKEN: '',
+    TURSO_AUTH_TOKEN: 'test-token',
     AI: undefined,
   };
 

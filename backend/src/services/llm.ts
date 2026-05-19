@@ -1,4 +1,4 @@
-export type LLMProvider = 'gemini' | 'openai' | 'workers-ai';
+export type LLMProvider = 'ai-studio' | 'gemini' | 'openrouter' | 'openai' | 'workers-ai';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -12,7 +12,7 @@ export interface LLMMessage {
 }
 
 /**
- * Unified LLM caller supporting Workers AI, Gemini, and OpenAI providers.
+ * Unified LLM caller supporting Workers AI, Gemini / AI Studio, OpenRouter, and OpenAI providers.
  * Returns the text content of the model's response.
  */
 export async function callLLM(
@@ -26,8 +26,11 @@ export async function callLLM(
     }
     return callWorkersAI(messages, config, ai);
   }
-  if (config.provider === 'gemini') {
+  if (config.provider === 'gemini' || config.provider === 'ai-studio') {
     return callGemini(messages, config);
+  }
+  if (config.provider === 'openrouter') {
+    return callOpenRouter(messages, config);
   }
   if (config.provider === 'openai') {
     return callOpenAI(messages, config);
@@ -92,6 +95,30 @@ async function callGemini(messages: LLMMessage[], config: LLMConfig): Promise<st
   return text;
 }
 
+async function callOpenRouter(messages: LLMMessage[], config: LLMConfig): Promise<string> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.modelName,
+      messages,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json() as { choices: { message: { content: string } }[] };
+  const text = data.choices[0]?.message?.content;
+  if (!text) throw new Error('No response from OpenRouter');
+  return text;
+}
+
 async function callWorkersAI(
   messages: LLMMessage[],
   config: LLMConfig,
@@ -143,14 +170,18 @@ async function callWorkersAI(
 /**
  * Build LLMConfig from environment variables.
  * If AI_PROVIDER is 'workers-ai', uses Cloudflare Workers AI.
+ * If AI_PROVIDER is 'openrouter' and OPENROUTER_API_KEY is set, uses OpenRouter.
  * If AI_PROVIDER is 'openai' and OPENAI_API_KEY is set, uses OpenAI.
- * If AI_PROVIDER is 'gemini' and GEMINI_API_KEY is set, uses Gemini.
+ * If AI_PROVIDER is 'gemini' or 'ai-studio' and a Gemini key is set, uses Gemini AI Studio / Gemini API.
  * Otherwise falls back to Workers AI.
  */
 export function getLLMConfig(env: {
   AI_PROVIDER?: string;
+  AI_STUDIO_API_KEY?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL_NAME?: string;
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL_NAME?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL_NAME?: string;
   WORKERS_AI_MODEL_NAME?: string;
@@ -162,6 +193,13 @@ export function getLLMConfig(env: {
       modelName: env.WORKERS_AI_MODEL_NAME || '@cf/openai/gpt-oss-120b',
     };
   }
+  if (env.AI_PROVIDER === 'openrouter' && env.OPENROUTER_API_KEY) {
+    return {
+      provider: 'openrouter',
+      apiKey: env.OPENROUTER_API_KEY,
+      modelName: env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini',
+    };
+  }
   if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
     return {
       provider: 'openai',
@@ -169,10 +207,11 @@ export function getLLMConfig(env: {
       modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
     };
   }
-  if (env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY) {
+  const geminiApiKey = env.AI_STUDIO_API_KEY || env.GEMINI_API_KEY;
+  if ((env.AI_PROVIDER === 'gemini' || env.AI_PROVIDER === 'ai-studio') && geminiApiKey) {
     return {
-      provider: 'gemini',
-      apiKey: env.GEMINI_API_KEY,
+      provider: env.AI_PROVIDER === 'ai-studio' ? 'ai-studio' : 'gemini',
+      apiKey: geminiApiKey,
       modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }

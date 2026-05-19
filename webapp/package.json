@@ -1,0 +1,28 @@
+{
+  "name": "webapp",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/query-core": "^5.90.2",
+    "hono": "^4.12.9",
+    "navigo": "^8.11.1",
+    "@supabase/supabase-js": "^2.57.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/node": "^24.7.2",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.7",
+    "workbox-precaching": "^7.4.0",
+    "vite-plugin-pwa": "^1.1.0"
+  }
+}

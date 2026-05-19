@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flutter -> Webapp 기능 체크리스트</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --done-bg: #dcfce7;
+        --done-fg: #166534;
+        --partial-bg: #fef9c3;
+        --partial-fg: #854d0e;
+        --miss-bg: #fee2e2;
+        --miss-fg: #991b1b;
+        --accent: #2563eb;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 18%);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      .hero {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+
+      .sub {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+        background: #fff;
+      }
+
+      .pill.done { background: var(--done-bg); color: var(--done-fg); border-color: #bbf7d0; }
+      .pill.partial { background: var(--partial-bg); color: var(--partial-fg); border-color: #fde68a; }
+      .pill.miss { background: var(--miss-bg); color: var(--miss-fg); border-color: #fecaca; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      th, td {
+        padding: 14px 12px;
+        vertical-align: top;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        text-align: left;
+        font-size: 13px;
+        color: var(--muted);
+        background: #f8fafc;
+      }
+
+      tr:last-child td { border-bottom: 0; }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 92px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .status.done { background: var(--done-bg); color: var(--done-fg); }
+      .status.partial { background: var(--partial-bg); color: var(--partial-fg); }
+      .status.miss { background: var(--miss-bg); color: var(--miss-fg); }
+
+      ul.checklist {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .check-item {
+        display: grid;
+        grid-template-columns: 18px 1fr;
+        gap: 10px;
+        align-items: start;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .check-item input {
+        margin-top: 2px;
+      }
+
+      .check-item strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+
+      .check-item small {
+        display: block;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .section-title {
+        margin: 26px 0 12px;
+        font-size: 20px;
+      }
+
+      .foot {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      code {
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: #eef2ff;
+        color: #4338ca;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <h1>Flutter → Webapp 기능 흡수 체크리스트</h1>
+        <p class="sub">
+          판정: <strong>전부 흡수되지 않았습니다.</strong><br />
+          핵심 거래/달력/통계/월간 리포트/세션 관리 쪽은 webapp으로 많이 옮겼지만,
+          온보딩, 도움말, 문의, AI 허브, 리포트 상세 관리, 일부 로그인 UX, 그리고 Flutter 전용 네이티브 기능은 아직 남아 있습니다.
+        </p>
+
+        <div class="pill-row">
+          <span class="pill done">완료에 가까움</span>
+          <span class="pill partial">부분 흡수</span>
+          <span class="pill miss">미흡수 / 의도적 제외</span>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h2>흡수된 핵심</h2>
+            <div class="meta">
+              기록, 달력, 통계, 월간 리포트 생성/조회, 세션 CRUD, 프로필/로그아웃 기본 표시,
+              그리고 guest fallback 기반 PWA 셸은 webapp 쪽에 들어와 있습니다.
+            </div>
+          </div>
+          <div class="card">
+            <h2>남은 큰 구간</h2>
+            <div class="meta">
+              Flutter의 전용 화면들 중 onboarding, help, contact, AI hub, report detail, settings의 1:1 대응은 아직 부족합니다.
+              로그인 UX도 OAuth 중심 Flutter 화면과 동일하진 않습니다.
+            </div>
+          </div>
+          <div class="card">
+            <h2>의도적 차이</h2>
+            <div class="meta">
+              webapp은 Flutter를 그대로 복제하기보다, web-first PWA로 재구성했습니다.
+              따라서 ads, foreground service, native overlay, quick entry 같은 네이티브 전용 기능은 그대로 이식 대상이 아닙니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="section-title">기능별 상태</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 180px;">Flutter 기능</th>
+            <th style="width: 120px;">상태</th>
+            <th>webapp 대응 / 메모</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>login_page</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>webapp에 로그인 패널은 있지만 Flutter의 Google/Kakao OAuth 플로우와 동일하진 않음.</td>
+          </tr>
+          <tr>
+            <td>onboarding_page</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>webapp에 별도 온보딩 시퀀스는 없다.</td>
+          </tr>
+          <tr>
+            <td>home_page</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>webapp 홈은 채팅/세션 중심으로 재구성되어 Flutter 대시보드와 1:1 동일하지 않음.</td>
+          </tr>
+          <tr>
+            <td>ai_hub_page</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>별도 AI 허브 화면은 없다. 일부 기능은 홈/검색/월간 리포트로 분산됨.</td>
+          </tr>
+          <tr>
+            <td>record_page</td>
+            <td><span class="status done">흡수 완료</span></td>
+            <td>거래 입력, 조회, 삭제를 webapp의 record 탭에서 처리한다.</td>
+          </tr>
+          <tr>
+            <td>calendar_page</td>
+            <td><span class="status done">흡수 완료</span></td>
+            <td>월간 달력, 날짜 선택, 해당 일 거래 목록이 webapp에 있다.</td>
+          </tr>
+          <tr>
+            <td>stats_page</td>
+            <td><span class="status done">흡수 완료</span></td>
+            <td>월별 통계, 카테고리 분포, 최근 리포트 표시가 webapp에 있다.</td>
+          </tr>
+          <tr>
+            <td>monthly_report_page</td>
+            <td><span class="status done">흡수 완료</span></td>
+            <td>월간/주간 리포트 생성, 현재 리포트 보기, 저장된 리포트 목록이 있다.</td>
+          </tr>
+          <tr>
+            <td>report_detail_page</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>리포트 데이터는 조회되지만 Flutter처럼 상세 저장/이름변경/삭제 UX가 완전히 동일하진 않다.</td>
+          </tr>
+          <tr>
+            <td>chat_screen + session_sidebar</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>세션 CRUD와 대화 입력은 있지만, Flutter의 전용 풀스크린 채팅 + 사이드바 경험과는 다르다.</td>
+          </tr>
+          <tr>
+            <td>settings_page</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>프로필/구독 정보는 보이지만 독립 설정 페이지는 없다.</td>
+          </tr>
+          <tr>
+            <td>help_page</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>별도 도움말 페이지 없음.</td>
+          </tr>
+          <tr>
+            <td>contact_page</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>문의/피드백 폼은 webapp에 없다.</td>
+          </tr>
+          <tr>
+            <td>report naming dialog</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>Flutter의 리포트 이름 지정 대화상자 대응 UI는 아직 없다.</td>
+          </tr>
+          <tr>
+            <td>login/logout/profile basics</td>
+            <td><span class="status done">흡수 완료</span></td>
+            <td>Supabase 세션, 로그아웃, 프로필/구독 상태 표시는 webapp에서 지원한다.</td>
+          </tr>
+          <tr>
+            <td>ads / interstitial / banner</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>PWA 방향상 기본적으로 제외. Flutter native 광고와 동일한 구현은 없다.</td>
+          </tr>
+          <tr>
+            <td>foreground service / overlay / quick entry</td>
+            <td><span class="status miss">미흡수</span></td>
+            <td>네이티브 전용 기능이라 webapp에 직접 대응되지 않는다.</td>
+          </tr>
+          <tr>
+            <td>auto report scheduling</td>
+            <td><span class="status partial">부분 흡수</span></td>
+            <td>리포트 생성 API는 있지만 Flutter의 백그라운드 자동 스케줄러와 동일한 체계는 아니다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="section-title">다음 체크리스트</h2>
+      <ul class="checklist">
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>전용 채팅 화면 정리</strong>
+            <small>webapp의 홈 중심 채팅을 Flutter의 full-screen chat + session sidebar 경험에 더 가깝게 맞출지 결정한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>리포트 상세 화면 보강</strong>
+            <small>리포트 저장, 이름 변경, 삭제, 상세 진입을 webapp UI로 흡수한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>로그인 UX 통일</strong>
+            <small>Flutter의 OAuth 중심 로그인과 webapp의 현재 Supabase 로그인 패널을 하나의 정책으로 정리한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>온보딩 / 도움말 / 문의</strong>
+            <small>별도 페이지를 webapp에 유지할지, 랜딩 페이지나 지원 문서로 넘길지 결정한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>설정 페이지 여부 결정</strong>
+            <small>프로필, 구독, 로그아웃, 약관, 계정 관리가 별도 settings 화면으로 필요한지 검토한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>네이티브 전용 기능 제외 확정</strong>
+            <small>ads, foreground service, overlay, quick entry 같은 Flutter 전용 기능을 PWA에서 어떤 수준까지 대체할지 확정한다.</small>
+          </div>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" />
+          <div>
+            <strong>최종 흡수 판정</strong>
+            <small>실데이터 런타임 검증이 끝난 뒤 Flutter를 유지할지, 레거시로 둘지, 제거할지 결론을 낸다.</small>
+          </div>
+        </li>
+      </ul>
+
+      <p class="foot">
+        참조 범위: <code>flutter_app/lib/routes/app_router.dart</code>, <code>flutter_app/lib/features/*</code>,
+        <code>webapp/src/*</code>. 이 체크리스트는 정적 코드 기준의 비교 결과이며, 실데이터 런타임 검증은 별도로 남아 있다.
+      </p>
+    </main>
+  </body>
+</html>

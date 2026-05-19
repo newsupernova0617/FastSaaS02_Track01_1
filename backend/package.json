@@ -15,6 +15,7 @@
     "test:llm": "cross-env RUN_LLM_TESTS=1 vitest run --config vitest.llm.config.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.2",
     "@libsql/client": "^0.17.2",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.12.9",

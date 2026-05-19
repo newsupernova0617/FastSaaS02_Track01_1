@@ -226,6 +226,11 @@ export async function verifyJWT(
 
 export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: Variables }>(
   async (c, next) => {
+    if (c.req.path === '/api/app/push/reply') {
+      await next();
+      return;
+    }
+
     // HTTP 요청의 Authorization 헤더에서 JWT 토큰 추출
     // 형식: Authorization: Bearer <token>
     const authHeader = c.req.header('Authorization');
