@@ -1,7 +1,6 @@
 /** @jsxImportSource hono/jsx */
 import type { QueryObserverResult } from '@tanstack/query-core';
 import type { HomeResponse, BootstrapResponse, TimelineResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { appStore } from '../../state/app-store';
 import { buildHomeViewModel } from '../../lib/home-view';
 import { formatWon } from '../../lib/format';
@@ -10,7 +9,7 @@ import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function HomeScreen(props: {
-  result: QueryObserverResult<SourcedData<HomeResponse>, Error>;
+  result: QueryObserverResult<HomeResponse, Error>;
   bootstrap: BootstrapResponse | null;
   timeline: TimelineResponse | null;
   isAuthenticated: boolean;
@@ -20,7 +19,7 @@ export function HomeScreen(props: {
   if (props.result.isError || !props.result.data) return <ErrorCard message="홈 데이터를 불러오지 못했습니다." />;
 
   const state = appStore.getState();
-  const homeView = buildHomeViewModel(props.result.data.data, props.bootstrap, props.timeline, props.isAuthenticated);
+  const homeView = buildHomeViewModel(props.result.data, props.bootstrap, props.timeline, props.isAuthenticated);
 
   return (
     <div class="phone-panel">
@@ -33,7 +32,7 @@ export function HomeScreen(props: {
         </div>
         <div class="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-slate-900 shadow-sm">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-          {props.result.data.source === 'live' ? 'LIVE' : 'AI'}
+          LIVE
         </div>
       </div>
 

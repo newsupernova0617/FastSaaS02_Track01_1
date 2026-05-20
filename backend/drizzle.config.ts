@@ -1,7 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 import { readFileSync } from 'fs';
 
-// .dev.vars 파일에서 환경변수 로드 (drizzle-kit은 wrangler의 .dev.vars를 자동으로 읽지 않음)
+// .dev.vars 파일에서 환경변수 로드 (drizzle-kit은 앱의 런타임 env 파일을 자동으로 읽지 않음)
 try {
     const vars = readFileSync('.dev.vars', 'utf-8');
     vars.split('\n').forEach((line) => {

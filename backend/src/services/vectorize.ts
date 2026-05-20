@@ -80,9 +80,7 @@ export class VectorizeService {
         OPENROUTER_MODEL_NAME: process.env.OPENROUTER_MODEL_NAME,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
-        WORKERS_AI_MODEL_NAME: process.env.WORKERS_AI_MODEL_NAME,
         AI_PROVIDER: process.env.AI_PROVIDER as Env['AI_PROVIDER'],
-        AI: undefined,
         VECTORIZE: undefined,
         CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
         CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
@@ -106,7 +104,7 @@ export class VectorizeService {
     this.client = (clientOrApiToken as Client | undefined) ?? getDbClient(envOrAccountId);
   }
 
-  private resolveEmbeddingProvider(): 'ai-studio' | 'gemini' | 'openai' | 'openrouter' | 'workers-ai' | 'local' {
+  private resolveEmbeddingProvider(): 'ai-studio' | 'gemini' | 'openai' | 'openrouter' | 'local' {
     const provider = this.env.AI_PROVIDER;
 
     if ((provider === 'ai-studio' || provider === 'gemini') && (this.env.AI_STUDIO_API_KEY || this.env.GEMINI_API_KEY)) {
@@ -121,10 +119,6 @@ export class VectorizeService {
       return 'openrouter';
     }
 
-    if (provider === 'workers-ai' && this.env.AI) {
-      return 'workers-ai';
-    }
-
     if (this.env.AI_STUDIO_API_KEY || this.env.GEMINI_API_KEY) {
       return 'ai-studio';
     }
@@ -135,10 +129,6 @@ export class VectorizeService {
 
     if (this.env.OPENAI_API_KEY) {
       return 'openai';
-    }
-
-    if (this.env.AI) {
-      return 'workers-ai';
     }
 
     return 'local';
@@ -201,14 +191,6 @@ export class VectorizeService {
         } catch (error) {
           console.warn('[RAG] OpenRouter embedding failed, falling back:', error);
         }
-      }
-    }
-
-    if (provider === 'workers-ai' && this.env.AI) {
-      try {
-        return await this.embedWithWorkersAI(text);
-      } catch (error) {
-        console.warn('[RAG] Workers AI embedding failed, falling back:', error);
       }
     }
 
@@ -412,18 +394,6 @@ export class VectorizeService {
     return normalizeEmbedding(data.data?.[0]?.embedding ?? []);
   }
 
-  private async embedWithWorkersAI(text: string): Promise<number[]> {
-    const response = await this.env.AI.run('@cf/baai/bge-base-en-v1.5', {
-      text,
-    });
-
-    const embedding =
-      (response as { embedding?: number[] }).embedding ||
-      (response as { data?: number[] }).data ||
-      [];
-
-    return normalizeEmbedding(embedding);
-  }
 }
 
 let cachedVectorizeKey: string | undefined;
@@ -444,9 +414,7 @@ export const vectorizeService = (envOrAccountId: Env | string, clientOrApiToken?
         OPENROUTER_MODEL_NAME: process.env.OPENROUTER_MODEL_NAME,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
-        WORKERS_AI_MODEL_NAME: process.env.WORKERS_AI_MODEL_NAME,
         AI_PROVIDER: process.env.AI_PROVIDER as Env['AI_PROVIDER'],
-        AI: undefined,
         VECTORIZE: undefined,
         CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
         CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,

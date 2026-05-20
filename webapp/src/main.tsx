@@ -8,7 +8,7 @@ import { appStore, type RouteName } from './state/app-store';
 import { authStore } from './state/auth-store';
 import type { AppCurrentReportResponse, AppProfileResponse, AppReportsResponse, AppTransactionsResponse, BootstrapResponse, CalendarResponse, HomeResponse, ReportResponse, SearchResponse, StatsResponse, TimelineResponse } from './data/schemas';
 import { getCurrentSession, onAuthStateChange, signInWithPassword, signOut, signUpWithPassword } from './lib/supabase-auth';
-import { createAppSession, createAppTransaction, deleteAppReport, deleteAppSession, deleteAppTransaction, fetchAppBootstrap, fetchAppProfile, fetchAppPushPublicKey, fetchAppReportDetail, fetchAppReports, fetchAppTimeline, generateAppReport, registerAppPushSubscription, sendAppChat, sendAppQuickEntryTest, type SourcedData, unregisterAppPushSubscription, updateAppReport, updateAppSession } from './data/preview-api';
+import { createAppSession, createAppTransaction, deleteAppReport, deleteAppSession, deleteAppTransaction, fetchAppBootstrap, fetchAppProfile, fetchAppPushPublicKey, fetchAppReportDetail, fetchAppReports, fetchAppTimeline, generateAppReport, registerAppPushSubscription, sendAppChat, sendAppQuickEntryTest, unregisterAppPushSubscription, updateAppReport, updateAppSession } from './data/app-api';
 import { clearQuickEntryRegistration, getQuickEntryRegistration, setQuickEntryRegistration, type QuickEntryRegistration } from './lib/quick-entry-store';
 import { pageEntries } from './lib/page-registry';
 import './styles.css';
@@ -23,42 +23,42 @@ const root = rootElement;
 
 const router = new Navigo('/');
 
-const homeObserver = new QueryObserver<SourcedData<HomeResponse>, Error>(queryClient, homeQueryOptions());
-const calendarObserver = new QueryObserver<SourcedData<CalendarResponse>, Error>(
+const homeObserver = new QueryObserver<HomeResponse, Error>(queryClient, homeQueryOptions());
+const calendarObserver = new QueryObserver<CalendarResponse, Error>(
   queryClient,
   calendarQueryOptions(appStore.getState().calendarMonth, appStore.getState().calendarDate)
 );
-const recordObserver = new QueryObserver<SourcedData<AppTransactionsResponse>, Error>(
+const recordObserver = new QueryObserver<AppTransactionsResponse, Error>(
   queryClient,
   recordQueryOptions(appStore.getState().recordMonth)
 );
-const statsObserver = new QueryObserver<SourcedData<StatsResponse>, Error>(
+const statsObserver = new QueryObserver<StatsResponse, Error>(
   queryClient,
   statsQueryOptions(appStore.getState().statsMonth)
 );
-const monthlyReportObserver = new QueryObserver<SourcedData<AppCurrentReportResponse>, Error>(
+const monthlyReportObserver = new QueryObserver<AppCurrentReportResponse, Error>(
   queryClient,
   monthlyReportQueryOptions(appStore.getState().monthlyReportMonth)
 );
-const reportObserver = new QueryObserver<SourcedData<ReportResponse>, Error>(queryClient, reportQueryOptions('2026-04'));
-const searchObserver = new QueryObserver<SourcedData<SearchResponse>, Error>(
+const reportObserver = new QueryObserver<ReportResponse, Error>(queryClient, reportQueryOptions('2026-04'));
+const searchObserver = new QueryObserver<SearchResponse, Error>(
   queryClient,
   searchQueryOptions(appStore.getState().submittedSearch)
 );
 
-let homeResult: QueryObserverResult<SourcedData<HomeResponse>, Error> = homeObserver.getCurrentResult();
-let calendarResult: QueryObserverResult<SourcedData<CalendarResponse>, Error> = calendarObserver.getCurrentResult();
-let recordResult: QueryObserverResult<SourcedData<AppTransactionsResponse>, Error> = recordObserver.getCurrentResult();
-let statsResult: QueryObserverResult<SourcedData<StatsResponse>, Error> = statsObserver.getCurrentResult();
-let monthlyReportResult: QueryObserverResult<SourcedData<AppCurrentReportResponse>, Error> = monthlyReportObserver.getCurrentResult();
-let reportResult: QueryObserverResult<SourcedData<ReportResponse>, Error> = reportObserver.getCurrentResult();
-let searchResult: QueryObserverResult<SourcedData<SearchResponse>, Error> = searchObserver.getCurrentResult();
+let homeResult: QueryObserverResult<HomeResponse, Error> = homeObserver.getCurrentResult();
+let calendarResult: QueryObserverResult<CalendarResponse, Error> = calendarObserver.getCurrentResult();
+let recordResult: QueryObserverResult<AppTransactionsResponse, Error> = recordObserver.getCurrentResult();
+let statsResult: QueryObserverResult<StatsResponse, Error> = statsObserver.getCurrentResult();
+let monthlyReportResult: QueryObserverResult<AppCurrentReportResponse, Error> = monthlyReportObserver.getCurrentResult();
+let reportResult: QueryObserverResult<ReportResponse, Error> = reportObserver.getCurrentResult();
+let searchResult: QueryObserverResult<SearchResponse, Error> = searchObserver.getCurrentResult();
 let sessionCount = 0;
 let bootstrapData: BootstrapResponse | null = null;
 let timelineData: TimelineResponse | null = null;
 let reportsData: AppReportsResponse | null = null;
 let profileData: AppProfileResponse | null = null;
-let selectedReportData: SourcedData<AppCurrentReportResponse> | null = null;
+let selectedReportData: AppCurrentReportResponse | null = null;
 let selectedReportLoading = false;
 let selectedReportError: string | null = null;
 let selectedReportRequestSeq = 0;
@@ -188,16 +188,13 @@ async function handleSubmitRecord() {
   appStore.getState().setRecordError(null);
   appStore.getState().setRecordSubmitting(true);
   try {
-    const created = await createAppTransaction({
+    await createAppTransaction({
       transactionType: state.recordType,
       amount,
       category: state.recordCategory.trim(),
       memo: state.recordMemo.trim() || undefined,
       date: state.recordDate,
     });
-    if (!created) {
-      throw new Error('거래를 저장하지 못했습니다.');
-    }
     appStore.getState().resetRecordForm();
     await refreshAllQueries();
   } catch (error) {
@@ -216,10 +213,7 @@ async function handleDeleteTransaction(id: number) {
   appStore.getState().setSessionActionError(null);
   appStore.getState().setSessionActionLoading(true);
   try {
-    const deleted = await deleteAppTransaction(id);
-    if (!deleted) {
-      throw new Error('거래를 삭제하지 못했습니다.');
-    }
+    await deleteAppTransaction(id);
     await refreshAllQueries();
   } catch (error) {
     appStore.getState().setSessionActionError(error instanceof Error ? error.message : '거래 삭제에 실패했습니다.');
@@ -255,10 +249,7 @@ async function handleGenerateMonthlyReport() {
   appStore.getState().setSessionActionError(null);
 
   try {
-    const generated = await generateAppReport({ period: 'monthly', month });
-    if (!generated) {
-      throw new Error('리포트를 생성하지 못했습니다.');
-    }
+    await generateAppReport({ period: 'monthly', month });
     monthlyReportObserver.setOptions(monthlyReportQueryOptions(month));
     await refreshAllQueries();
   } catch (error) {
@@ -284,14 +275,11 @@ async function handleGenerateWeeklyReport() {
   appStore.getState().setSessionActionError(null);
 
   try {
-    const generated = await generateAppReport({
+    await generateAppReport({
       period: 'weekly',
       weekStart: `${weekStart.getFullYear()}-${pad2(weekStart.getMonth() + 1)}-${pad2(weekStart.getDate())}`,
       weekEnd: `${weekEnd.getFullYear()}-${pad2(weekEnd.getMonth() + 1)}-${pad2(weekEnd.getDate())}`,
     });
-    if (!generated) {
-      throw new Error('리포트를 생성하지 못했습니다.');
-    }
     await refreshAllQueries();
   } catch (error) {
     appStore.getState().setSessionActionError(error instanceof Error ? error.message : '리포트 생성에 실패했습니다.');
@@ -415,7 +403,7 @@ async function handleEnableQuickEntry() {
     }
 
     const publicKeyResponse = await fetchAppPushPublicKey();
-    if (!publicKeyResponse?.publicKey) {
+    if (!publicKeyResponse.publicKey) {
       throw new Error('푸시 공개키를 불러오지 못했습니다.');
     }
 
@@ -444,10 +432,6 @@ async function handleEnableQuickEntry() {
         auth: subscriptionJson.keys.auth,
       },
     });
-
-    if (!registered) {
-      throw new Error('푸시 구독 등록에 실패했습니다.');
-    }
 
     await setQuickEntryRegistration({
       userId: registered.userId,
@@ -492,7 +476,7 @@ async function handleSendQuickEntryTest() {
 
   try {
     const response = await sendAppQuickEntryTest();
-    if (!response || !response.success) {
+    if (!response.success) {
       throw new Error('테스트 알림 발송에 실패했습니다.');
     }
   } catch (error) {
@@ -527,14 +511,8 @@ async function loadSelectedReport(reportId: number | null) {
     if (requestSeq !== selectedReportRequestSeq) {
       return;
     }
-    if (!detail) {
-      throw new Error('리포트 상세를 불러오지 못했습니다.');
-    }
 
-    selectedReportData = {
-      source: 'live',
-      data: detail,
-    };
+    selectedReportData = detail;
     appStore.getState().setSelectedReportId(reportId);
   } catch (error) {
     if (requestSeq !== selectedReportRequestSeq) {
@@ -666,10 +644,7 @@ async function handleDeleteReport(reportId: number) {
   appStore.getState().setReportActionError(null);
 
   try {
-    const deleted = await deleteAppReport(reportId);
-    if (!deleted) {
-      throw new Error('리포트를 삭제하지 못했습니다.');
-    }
+    await deleteAppReport(reportId);
 
     if (appStore.getState().selectedReportId === reportId) {
       appStore.getState().setSelectedReportId(null);
@@ -706,15 +681,9 @@ async function handleRenameReport(reportId: number) {
 
   try {
     const updated = await updateAppReport(reportId, { title: nextTitle });
-    if (!updated) {
-      throw new Error('리포트 이름 변경에 실패했습니다.');
-    }
 
     if (appStore.getState().selectedReportId === reportId) {
-      selectedReportData = {
-        source: 'live',
-        data: updated,
-      };
+      selectedReportData = updated;
     }
 
     appStore.getState().stopEditingReport();
@@ -737,11 +706,7 @@ async function handleCreateSession() {
 
   try {
     const created = await createAppSession({ title: '새 대화' });
-    const sessionId = created?.session.id ?? null;
-
-    if (!sessionId) {
-      throw new Error('세션을 만들지 못했습니다.');
-    }
+    const sessionId = created.session.id;
 
     appStore.getState().setActiveSessionId(sessionId);
     timelineData = {
@@ -767,10 +732,7 @@ async function handleDeleteSession(sessionId: number) {
   appStore.getState().setSessionActionError(null);
 
   try {
-    const deleted = await deleteAppSession(sessionId);
-    if (!deleted) {
-      throw new Error('세션 삭제에 실패했습니다.');
-    }
+    await deleteAppSession(sessionId);
 
     if (appStore.getState().activeSessionId === sessionId) {
       appStore.getState().setActiveSessionId(null);
@@ -801,10 +763,7 @@ async function handleRenameSession(sessionId: number) {
   appStore.getState().setSessionActionError(null);
 
   try {
-    const updated = await updateAppSession(sessionId, { title: nextTitle });
-    if (!updated) {
-      throw new Error('세션 이름 변경에 실패했습니다.');
-    }
+    await updateAppSession(sessionId, { title: nextTitle });
 
     appStore.getState().stopEditingSession();
     await refreshAllQueries();
@@ -833,9 +792,6 @@ async function handleComposerSubmit() {
       sessionId: appStore.getState().activeSessionId,
       content,
     });
-    if (!response) {
-      throw new Error('메시지 전송에 실패했습니다.');
-    }
     if (!response.success) {
       throw new Error(response.error || '메시지 전송에 실패했습니다.');
     }
@@ -854,7 +810,6 @@ async function handleComposerSubmit() {
 }
 
 async function handleSignIn(email: string, password: string) {
-  const auth = authStore.getState();
   authStore.getState().setLoading(true);
   authStore.getState().setError(null);
   authStore.getState().setNotice(null);

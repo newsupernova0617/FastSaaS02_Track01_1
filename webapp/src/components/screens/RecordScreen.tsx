@@ -2,14 +2,13 @@
 import type { QueryObserverResult } from '@tanstack/query-core';
 import { appStore } from '../../state/app-store';
 import type { AppTransactionsResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { formatWon } from '../../lib/format';
 import { AppButton } from '../ui/AppButton';
 import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function RecordScreen(props: {
-  result: QueryObserverResult<SourcedData<AppTransactionsResponse>, Error>;
+  result: QueryObserverResult<AppTransactionsResponse, Error>;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSubmit: () => void;
@@ -19,7 +18,7 @@ export function RecordScreen(props: {
   if (props.result.isError || !props.result.data) return <ErrorCard message="기록 데이터를 불러오지 못했습니다." />;
 
   const state = appStore.getState();
-  const transactions = props.result.data.data.transactions;
+  const transactions = props.result.data.transactions;
   const totalExpense = transactions.filter((item) => item.type === 'expense').reduce((sum, item) => sum + item.amount, 0);
   const totalIncome = transactions.filter((item) => item.type === 'income').reduce((sum, item) => sum + item.amount, 0);
 
@@ -27,17 +26,17 @@ export function RecordScreen(props: {
     <div class="phone-panel">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <div class="text-[11px] font-bold text-slate-500">{props.result.data.data.month}</div>
+          <div class="text-[11px] font-bold text-slate-500">{props.result.data.month}</div>
           <div class="mt-1 text-[10px] font-medium text-slate-400">거래 입력</div>
         </div>
-        <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.result.data.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-          {props.result.data.source}
+        <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+          live
         </div>
       </div>
 
       <div class="mt-4 flex items-center justify-between gap-3">
         <AppButton kind="ghost" class="px-3 py-2 text-lg leading-none" onClick={props.onPreviousMonth}>‹</AppButton>
-        <div class="text-sm font-semibold text-slate-950">{props.result.data.data.month}</div>
+        <div class="text-sm font-semibold text-slate-950">{props.result.data.month}</div>
         <AppButton kind="ghost" class="px-3 py-2 text-lg leading-none" onClick={props.onNextMonth}>›</AppButton>
       </div>
 

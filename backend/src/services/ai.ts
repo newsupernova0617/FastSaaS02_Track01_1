@@ -110,11 +110,9 @@ Only return valid JSON. No explanations.`;
 
 export class AIService {
   private config: LLMConfig;
-  private ai?: any;
 
-  constructor(config: LLMConfig, ai?: any) {
+  constructor(config: LLMConfig) {
     this.config = config;
-    this.ai = ai;
   }
 
   async parseUserInput(
@@ -175,8 +173,7 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
       // Make one LLM call with context-enhanced messages.
       const responseText = await callLLM(
         messages,
-        this.config,
-        this.ai
+        this.config
       );
 
       // Extract first JSON object from response (model may return extra text)
@@ -198,17 +195,15 @@ User's categories: ${userCategories.join(', ') || '(none)'}`;
 }
 
 let cachedAIServiceKey: string | undefined;
-let cachedAIServiceBinding: any;
 let cachedAIService: AIService | undefined;
 
-export function createAIService(config: LLMConfig, ai?: any): AIService {
+export function createAIService(config: LLMConfig): AIService {
   const key = `${config.provider}\0${config.modelName}\0${config.apiKey}`;
-  if (cachedAIService && cachedAIServiceKey === key && cachedAIServiceBinding === ai) {
+  if (cachedAIService && cachedAIServiceKey === key) {
     return cachedAIService;
   }
 
-  cachedAIService = new AIService(config, ai);
+  cachedAIService = new AIService(config);
   cachedAIServiceKey = key;
-  cachedAIServiceBinding = ai;
   return cachedAIService;
 }

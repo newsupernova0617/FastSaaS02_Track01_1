@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>webapp API Refactor + Mock Removal Plan</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --text: #101828;
+        --muted: #5b6472;
+        --line: #d9e2ec;
+        --blue: #2563eb;
+        --teal: #0f766e;
+        --amber: #b45309;
+        --red: #dc2626;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #eef6ff 0%, var(--bg) 260px);
+        color: var(--text);
+        font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 40px 20px 72px;
+      }
+      .hero, .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: 0 18px 44px -30px rgba(15, 23, 42, 0.22);
+      }
+      .hero {
+        padding: 30px;
+      }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #f8fbff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--blue);
+      }
+      h1, h2, h3, p { margin: 0; }
+      h1 {
+        margin-top: 14px;
+        font-size: 38px;
+        line-height: 1.12;
+      }
+      h2 {
+        font-size: 24px;
+      }
+      h3 {
+        font-size: 18px;
+      }
+      .hero p {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 17px;
+      }
+      section {
+        margin-top: 24px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .card > p {
+        margin-top: 8px;
+        color: var(--muted);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 22px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fbfdff;
+      }
+      .stat-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat-value {
+        margin-top: 8px;
+        font-size: 24px;
+        font-weight: 900;
+      }
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .tag-blue { background: rgba(37,99,235,.10); color: var(--blue); }
+      .tag-teal { background: rgba(15,118,110,.10); color: var(--teal); }
+      .tag-amber { background: rgba(180,83,9,.10); color: var(--amber); }
+      .tag-red { background: rgba(220,38,38,.10); color: var(--red); }
+      .plan-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .step {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        background: #fcfdff;
+      }
+      .step-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .step-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .step p {
+        margin-top: 10px;
+        color: var(--muted);
+      }
+      ul {
+        margin: 12px 0 0;
+        padding-left: 18px;
+      }
+      li + li {
+        margin-top: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+      }
+      th, td {
+        text-align: left;
+        vertical-align: top;
+        padding: 12px 10px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+      }
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        background: #f3f6fb;
+        border-radius: 8px;
+        padding: 2px 6px;
+      }
+      .note {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(180, 83, 9, 0.07);
+        border: 1px solid rgba(180, 83, 9, 0.16);
+        color: #7c4708;
+      }
+      @media (max-width: 760px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 30px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow"><span class="dot"></span>Refactor Plan</div>
+        <h1><code>preview-api.ts</code> 실제 API 계층 전환 + mock fallback 제거 계획</h1>
+        <p>
+          이 문서는 <code>docs/webapp-backend-plan.html</code>의 방향을 실제 코드 수준으로 내린 계획입니다.
+          핵심은 <code>preview-api.ts</code>를 더 이상 preview 중심 파일로 두지 않고,
+          실제 <code>/api/app/*</code> 계약을 쓰는 앱 API 계층으로 바꾸는 것입니다.
+        </p>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">현재 파일</div>
+            <div class="stat-value"><code>preview-api.ts</code></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">목표 파일</div>
+            <div class="stat-value"><code>app-api.ts</code></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">제거 대상</div>
+            <div class="stat-value"><code>mock-data.ts</code></div>
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag tag-blue">실제 API 우선이 아니라 실제 API 전용으로 전환</span>
+          <span class="tag tag-teal">query 계층도 preview 명칭 제거</span>
+          <span class="tag tag-red">런타임 fallback 삭제</span>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2>1. 현재 구조 진단</h2>
+        <p>
+          현재 <code>webapp/src/data/preview-api.ts</code>는 이름과 다르게 두 역할을 동시에 하고 있습니다.
+        </p>
+        <ul>
+          <li>실제 <code>/api/app/*</code> 호출</li>
+          <li>실패 시 <code>mock-data.ts</code> fallback</li>
+        </ul>
+        <div class="note">
+          이 구조는 전환기에는 유용했지만, 실제 앱 계약이 생긴 지금은 책임이 섞여 있습니다.
+          파일 이름도 현재 역할을 정확히 설명하지 못합니다.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. 리팩토링 목표</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong>preview 개념을 런타임 데이터 계층에서 제거</strong>
+            </div>
+            <p>
+              읽기 화면도 실제 API만 호출하도록 바꿉니다. 실패 시 mock을 반환하지 않고 에러를 그대로 surface 합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong><code>preview-api.ts</code>를 <code>app-api.ts</code>로 치환</strong>
+            </div>
+            <p>
+              앱이 실제로 쓰는 계층이라는 점을 파일명과 함수명에 반영합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong>query key와 query function 명칭도 실제 API 기준으로 정리</strong>
+            </div>
+            <p>
+              현재 <code>preview</code> 키를 쓰는 query cache 이름도 앱 계약 기준으로 바꿉니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">4</span>
+              <strong>mock 데이터는 런타임 코드에서 제거</strong>
+            </div>
+            <p>
+              필요하면 fixture/test data로만 남기고, 제품 코드에서 import 하지 않도록 정리합니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. 대상 함수 분류</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>현재 함수</th>
+              <th>현재 역할</th>
+              <th>목표</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fetchHomePreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppHome()</code>로 변경, fallback 제거</td>
+            </tr>
+            <tr>
+              <td><code>fetchReportPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppReport()</code>로 변경, fallback 제거</td>
+            </tr>
+            <tr>
+              <td><code>fetchSearchPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppSearch()</code>로 변경, fallback 제거</td>
+            </tr>
+            <tr>
+              <td><code>fetchCalendarPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppCalendar()</code>로 변경, fallback 제거</td>
+            </tr>
+            <tr>
+              <td><code>fetchTransactionsPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppTransactions()</code>를 primary query 함수로 승격</td>
+            </tr>
+            <tr>
+              <td><code>fetchMonthlyReportPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppCurrentReport()</code>를 primary query 함수로 승격</td>
+            </tr>
+            <tr>
+              <td><code>fetchStatsPreview()</code></td>
+              <td>live 호출 후 mock fallback</td>
+              <td><code>fetchAppStats()</code>로 변경, fallback 제거</td>
+            </tr>
+            <tr>
+              <td><code>SourcedData&lt;T&gt;</code></td>
+              <td><code>source: 'live' | 'preview'</code> 메타 포함</td>
+              <td>삭제 또는 단순 API 응답 타입으로 대체</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>4. 실제 코드 리팩토링 방향</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">A</span>
+              <strong>공통 fetch wrapper를 명시적 에러 방식으로 변경</strong>
+            </div>
+            <p>
+              현재 <code>fetchWithOptionalAuth()</code>는 토큰이 없거나 <code>401/403</code>이면 <code>null</code>을 반환합니다.
+              실제 API 계층에서는 이걸 숨기지 말고 에러나 인증 상태로 분리하는 편이 낫습니다.
+            </p>
+            <ul>
+              <li><code>Missing auth token</code></li>
+              <li><code>Unauthorized</code></li>
+              <li><code>Forbidden</code></li>
+              <li><code>Request failed with status ...</code></li>
+            </ul>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">B</span>
+              <strong>읽기 API도 전부 실제 함수명으로 정리</strong>
+            </div>
+            <p>
+              preview 접두사는 더 이상 맞지 않습니다. 함수명만 봐도 백엔드 엔드포인트가 드러나야 합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">C</span>
+              <strong>쓰기 API와 읽기 API의 반환 패턴 통일</strong>
+            </div>
+            <p>
+              지금은 어떤 함수는 <code>null</code>, 어떤 함수는 <code>SourcedData</code>를 돌려줍니다.
+              목표 구조에서는 전부 parse된 DTO를 반환하고 실패는 예외로 다룹니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. 권장 파일 구조</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>파일</th>
+              <th>역할</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>webapp/src/data/app-api.ts</code></td>
+              <td>실제 <code>/api/app/*</code> 호출 전담</td>
+              <td><code>preview-api.ts</code> 대체</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/data/schemas.ts</code></td>
+              <td>Zod 요청/응답 계약</td>
+              <td>유지</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/lib/query.ts</code></td>
+              <td>query key / query function 연결</td>
+              <td><code>preview</code> 명칭 제거</td>
+            </tr>
+            <tr>
+              <td><code>webapp/src/data/mock-data.ts</code></td>
+              <td>런타임 제품 코드에서 제거</td>
+              <td>필요 시 test fixture로 이동</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>6. 함수명 변경 제안</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>현재</th>
+              <th>변경 후</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>fetchHomePreview</code></td><td><code>fetchAppHome</code></td></tr>
+            <tr><td><code>fetchReportPreview</code></td><td><code>fetchAppReport</code></td></tr>
+            <tr><td><code>fetchSearchPreview</code></td><td><code>fetchAppSearch</code></td></tr>
+            <tr><td><code>fetchCalendarPreview</code></td><td><code>fetchAppCalendar</code></td></tr>
+            <tr><td><code>fetchTransactionsPreview</code></td><td><code>fetchAppTransactions</code> 유지, query 용도 분리</td></tr>
+            <tr><td><code>fetchMonthlyReportPreview</code></td><td><code>fetchAppCurrentMonthlyReport</code></td></tr>
+            <tr><td><code>fetchStatsPreview</code></td><td><code>fetchAppStats</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>7. query 계층 변경 계획</h2>
+        <p>
+          현재 <code>webapp/src/lib/query.ts</code>는 query key와 query function에 모두 <code>preview</code> 개념이 들어가 있습니다.
+        </p>
+        <ul>
+          <li><code>['preview', 'home']</code> → <code>['app', 'home']</code></li>
+          <li><code>['preview', 'report', month]</code> → <code>['app', 'report', month]</code></li>
+          <li><code>['preview', 'calendar', month, date]</code> → <code>['app', 'calendar', month, date]</code></li>
+        </ul>
+        <div class="note">
+          query key는 캐시 키이기도 하지만, 이 프로젝트에서는 아키텍처 용어를 코드에 고정하는 역할도 합니다.
+          제품 앱이 된 이상 <code>preview</code>라는 용어를 계속 남기는 건 좋지 않습니다.
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>8. mock fallback 완전 삭제 계획</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong>읽기 화면 API 100% 실백엔드 계약 확인</strong>
+            </div>
+            <p>
+              <code>home</code>, <code>report</code>, <code>search</code>, <code>calendar</code>, <code>stats</code>, <code>reports/current</code>의 실제 응답이
+              모두 프론트 스키마와 일치하는지 검증합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong>preview 함수 제거</strong>
+            </div>
+            <p>
+              <code>fetch*Preview()</code> 계열을 제거하고, query layer는 실제 API 함수만 사용하도록 바꿉니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong><code>SourcedData</code> 제거</strong>
+            </div>
+            <p>
+              화면에서 <code>source: 'live' | 'preview'</code>를 신경 쓸 필요가 없어집니다. DTO만 받도록 단순화합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">4</span>
+              <strong><code>mock-data.ts</code> import 제거</strong>
+            </div>
+            <p>
+              제품 코드 어디에서도 <code>mock-data.ts</code>를 참조하지 않게 만든 뒤 파일 삭제 여부를 결정합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">5</span>
+              <strong>에러 화면/로딩 화면을 실제 API 실패 중심으로 재정의</strong>
+            </div>
+            <p>
+              fallback으로 화면을 채우지 않으므로, 인증 실패와 서버 실패를 UI에서 분명하게 보여줘야 합니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>9. 삭제 전 체크리스트</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>체크 기준</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/api/app/home</code></td>
+              <td>게스트가 아닌 로그인 사용자 기준으로 항상 정상 응답</td>
+            </tr>
+            <tr>
+              <td><code>/api/app/report</code></td>
+              <td>빈 거래 데이터에서도 프론트 스키마 만족</td>
+            </tr>
+            <tr>
+              <td><code>/api/app/search</code></td>
+              <td>검색 결과 0건일 때도 계약 유지</td>
+            </tr>
+            <tr>
+              <td><code>/api/app/calendar</code></td>
+              <td>월별 거래 0건일 때 days/selectedDay 구조 유지</td>
+            </tr>
+            <tr>
+              <td><code>/api/app/stats</code></td>
+              <td>카테고리/리포트 없을 때도 빈 배열 계약 유지</td>
+            </tr>
+            <tr>
+              <td><code>/api/app/reports/current</code></td>
+              <td>월간/주간 둘 다 실제 응답 가능</td>
+            </tr>
+            <tr>
+              <td>인증 흐름</td>
+              <td>토큰 누락/만료 시 UI가 mock으로 숨기지 않고 오류 처리</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>10. 실제 작업 순서</h2>
+        <div class="plan-list">
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">1</span>
+              <strong><code>app-api.ts</code> 신규 작성</strong>
+            </div>
+            <p>
+              기존 <code>preview-api.ts</code>를 복사하지 말고, 실제 API 전용 구조로 새 파일을 만듭니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">2</span>
+              <strong><code>query.ts</code>를 새 함수들로 연결</strong>
+            </div>
+            <p>
+              query key와 query function을 전부 교체합니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">3</span>
+              <strong><code>main.tsx</code> import 정리</strong>
+            </div>
+            <p>
+              현재 <code>preview-api.ts</code> import를 <code>app-api.ts</code>로 바꿉니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">4</span>
+              <strong><code>SourcedData</code> 의존 제거</strong>
+            </div>
+            <p>
+              화면 컴포넌트와 observer 타입에서 preview source 메타를 걷어냅니다.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-head">
+              <span class="step-no">5</span>
+              <strong><code>mock-data.ts</code> 삭제 또는 test fixture로 이동</strong>
+            </div>
+            <p>
+              런타임 import가 0이 되면 삭제합니다. 유지가 필요하면 <code>tests/fixtures</code> 성격으로 옮깁니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>11. 결론</h2>
+        <ul>
+          <li><code>preview-api.ts</code>는 이름부터 실제 역할과 어긋납니다. 새 이름의 실제 API 계층으로 갈아타는 게 맞습니다.</li>
+          <li>fallback mock은 전환기 안전장치였지만, 제품 앱 구조로는 오히려 오류를 숨기고 상태를 복잡하게 만듭니다.</li>
+          <li>삭제 순서는 “실백엔드 계약 확인 → query 전환 → source 메타 제거 → mock 제거”가 안전합니다.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+  </html>

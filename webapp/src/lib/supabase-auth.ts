@@ -1,16 +1,15 @@
 import { createClient, type AuthChangeEvent, type Session, type SupabaseClient } from '@supabase/supabase-js';
 
-const fallbackSupabaseUrl = 'https://uqvnepemplsdkkawbmdc.supabase.co';
-const fallbackSupabaseAnonKey =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxdm5lcGVtcGxzZGtrYXdibWRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1ODE5MTQsImV4cCI6MjA5MDE1NzkxNH0.X_zFEwbdSwSWNkkhgGRGp_VnmiJvhXZG1D-h45FovTQ';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? fallbackSupabaseUrl;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? fallbackSupabaseAnonKey;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let client: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
   if (client) return client;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase env: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in webapp/.env');
+  }
 
   client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {

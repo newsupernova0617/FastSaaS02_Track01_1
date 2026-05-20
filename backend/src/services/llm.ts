@@ -1,4 +1,4 @@
-export type LLMProvider = 'ai-studio' | 'gemini' | 'openrouter' | 'openai' | 'workers-ai';
+export type LLMProvider = 'ai-studio' | 'gemini' | 'openrouter' | 'openai';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -12,20 +12,13 @@ export interface LLMMessage {
 }
 
 /**
- * Unified LLM caller supporting Workers AI, Gemini / AI Studio, OpenRouter, and OpenAI providers.
+ * Unified LLM caller supporting Gemini / AI Studio, OpenRouter, and OpenAI providers.
  * Returns the text content of the model's response.
  */
 export async function callLLM(
   messages: LLMMessage[],
-  config: LLMConfig,
-  ai?: any // Optional Cloudflare Workers AI binding
+  config: LLMConfig
 ): Promise<string> {
-  if (config.provider === 'workers-ai') {
-    if (!ai) {
-      throw new Error('Workers AI binding not available in environment');
-    }
-    return callWorkersAI(messages, config, ai);
-  }
   if (config.provider === 'gemini' || config.provider === 'ai-studio') {
     return callGemini(messages, config);
   }
@@ -119,54 +112,6 @@ async function callOpenRouter(messages: LLMMessage[], config: LLMConfig): Promis
   return text;
 }
 
-async function callWorkersAI(
-  messages: LLMMessage[],
-  config: LLMConfig,
-  ai: any // Cloudflare Workers AI binding from Env
-): Promise<string> {
-  const formattedMessages = messages.map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
-
-  try {
-    const response = await ai.run(config.modelName, {
-      messages: formattedMessages,
-      max_tokens: 4096, // Increased for complex responses like reports
-    });
-
-    let text: string | undefined;
-    const choice = Array.isArray(response?.choices) ? response.choices[0] : undefined;
-    const message = choice && typeof choice === 'object' ? choice.message : undefined;
-
-    if (typeof message === 'string') {
-      text = message;
-    } else if (message && typeof message === 'object') {
-      if (typeof message.content === 'string') {
-        text = message.content;
-      } else if (typeof message.reasoning_content === 'string') {
-        throw new Error('Response was truncated - increase max_tokens or reduce context size');
-      }
-    }
-
-    if (!text) {
-      if (typeof response?.response === 'string') {
-        text = response.response;
-      } else if (typeof response?.result?.response === 'string') {
-        text = response.result.response;
-      }
-    }
-
-    if (!text) {
-      throw new Error('No response from Workers AI');
-    }
-
-    return text;
-  } catch (error) {
-    throw new Error(`Workers AI error: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
 /**
  * Build LLMConfig from environment variables.
  * Priority:
@@ -174,7 +119,6 @@ async function callWorkersAI(
  *   2. AI Studio / Gemini
  *   3. OpenRouter
  *   4. OpenAI
- *   5. Workers AI (Cloudflare-only fallback)
  */
 export function getLLMConfig(env: {
   AI_PROVIDER?: string;
@@ -185,34 +129,26 @@ export function getLLMConfig(env: {
   OPENROUTER_MODEL_NAME?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL_NAME?: string;
-  WORKERS_AI_MODEL_NAME?: string;
 }): LLMConfig {
-  if (env.AI_PROVIDER === 'workers-ai') {
-    return {
-      provider: 'workers-ai',
-      apiKey: '', // Not used for Workers AI
-      modelName: env.WORKERS_AI_MODEL_NAME || '@cf/openai/gpt-oss-120b',
-    };
-  }
-  if (env.AI_PROVIDER === 'openrouter' && env.OPENROUTER_API_KEY) {
+  if (env.AI_PROVIDER === 'openrouter') {
     return {
       provider: 'openrouter',
-      apiKey: env.OPENROUTER_API_KEY,
+      apiKey: env.OPENROUTER_API_KEY || '',
       modelName: env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini',
     };
   }
-  if (env.AI_PROVIDER === 'openai' && env.OPENAI_API_KEY) {
+  if (env.AI_PROVIDER === 'openai') {
     return {
       provider: 'openai',
-      apiKey: env.OPENAI_API_KEY,
+      apiKey: env.OPENAI_API_KEY || '',
       modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
     };
   }
   const geminiApiKey = env.AI_STUDIO_API_KEY || env.GEMINI_API_KEY;
-  if ((env.AI_PROVIDER === 'gemini' || env.AI_PROVIDER === 'ai-studio') && geminiApiKey) {
+  if (env.AI_PROVIDER === 'gemini' || env.AI_PROVIDER === 'ai-studio') {
     return {
       provider: env.AI_PROVIDER === 'ai-studio' ? 'ai-studio' : 'gemini',
-      apiKey: geminiApiKey,
+      apiKey: geminiApiKey || '',
       modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }
@@ -242,8 +178,8 @@ export function getLLMConfig(env: {
   }
 
   return {
-    provider: 'workers-ai',
-    apiKey: '', // Not used for Workers AI
-    modelName: env.WORKERS_AI_MODEL_NAME || '@cf/openai/gpt-oss-120b',
+    provider: 'openai',
+    apiKey: env.OPENAI_API_KEY || '',
+    modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
   };
 }

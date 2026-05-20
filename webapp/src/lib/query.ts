@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/query-core';
-import { fetchCalendarPreview, fetchHomePreview, fetchMonthlyReportPreview, fetchReportPreview, fetchSearchPreview, fetchStatsPreview, fetchTransactionsPreview, type SourcedData } from '../data/preview-api';
+import { fetchAppCalendar, fetchAppHome, fetchAppMonthlyReport, fetchAppReport, fetchAppSearch, fetchAppStats, fetchAppTransactions } from '../data/app-api';
 import type { AppTransactionsResponse, CalendarResponse, HomeResponse, ReportResponse, SearchResponse, StatsResponse, AppCurrentReportResponse } from '../data/schemas';
 
 export const queryClient = new QueryClient({
@@ -13,36 +13,36 @@ export const queryClient = new QueryClient({
 });
 
 export const homeQueryOptions = () => ({
-  queryKey: ['preview', 'home'] as const,
-  queryFn: fetchHomePreview as () => Promise<SourcedData<HomeResponse>>,
+  queryKey: ['app', 'home'] as const,
+  queryFn: fetchAppHome as () => Promise<HomeResponse>,
 });
 
 export const reportQueryOptions = (month: string) => ({
-  queryKey: ['preview', 'report', month] as const,
-  queryFn: () => fetchReportPreview(month) as Promise<SourcedData<ReportResponse>>,
+  queryKey: ['app', 'report', month] as const,
+  queryFn: () => fetchAppReport(month) as Promise<ReportResponse>,
 });
 
 export const searchQueryOptions = (query: string) => ({
-  queryKey: ['preview', 'search', query] as const,
-  queryFn: () => fetchSearchPreview(query) as Promise<SourcedData<SearchResponse>>,
+  queryKey: ['app', 'search', query] as const,
+  queryFn: () => fetchAppSearch(query) as Promise<SearchResponse>,
 });
 
 export const calendarQueryOptions = (month: string, selectedDate: string) => ({
-  queryKey: ['preview', 'calendar', month, selectedDate] as const,
-  queryFn: () => fetchCalendarPreview(month, selectedDate) as Promise<SourcedData<CalendarResponse>>,
+  queryKey: ['app', 'calendar', month, selectedDate] as const,
+  queryFn: () => fetchAppCalendar(month, selectedDate) as Promise<CalendarResponse>,
 });
 
 export const statsQueryOptions = (month: string) => ({
-  queryKey: ['preview', 'stats', month] as const,
-  queryFn: () => fetchStatsPreview(month) as Promise<SourcedData<StatsResponse>>,
+  queryKey: ['app', 'stats', month] as const,
+  queryFn: () => fetchAppStats(month) as Promise<StatsResponse>,
 });
 
 export const recordQueryOptions = (month: string) => ({
-  queryKey: ['preview', 'transactions', month] as const,
-  queryFn: () => fetchTransactionsPreview(month) as Promise<SourcedData<AppTransactionsResponse>>,
+  queryKey: ['app', 'transactions', month] as const,
+  queryFn: () => fetchAppTransactions(month) as Promise<AppTransactionsResponse>,
 });
 
 export const monthlyReportQueryOptions = (month: string) => ({
-  queryKey: ['preview', 'monthly-report', month] as const,
-  queryFn: () => fetchMonthlyReportPreview(month) as Promise<SourcedData<AppCurrentReportResponse>>,
+  queryKey: ['app', 'monthly-report', month] as const,
+  queryFn: () => fetchAppMonthlyReport(month) as Promise<AppCurrentReportResponse>,
 });

@@ -1,9 +1,5 @@
-// NOTE: @cloudflare/vitest-pool-workers requires Vitest ≤ 2.x.
-// This project uses Vitest 4.x (currently ^4.1.2), so the Workers pool cannot be used.
-// LLM smoke tests are written to use mocked callLLM with structural assertions.
-// To run real LLM calls against the Workers runtime, either:
-//   (a) downgrade vitest to ^2.x and use defineWorkersConfig, or
-//   (b) run `wrangler dev` and exercise the endpoints via curl / an external test runner.
+// NOTE: LLM smoke tests use a mocked callLLM boundary with structural assertions.
+// To run real LLM calls, point the backend at a live provider and unmock the helper.
 
 import { defineConfig } from 'vitest/config';
 

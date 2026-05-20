@@ -28,9 +28,9 @@ describe('AIReportService', () => {
   beforeEach(() => {
     // Initialize service with fake API key
     service = new AIReportService({
-      provider: 'workers-ai',
+      provider: 'openai',
       apiKey: 'test-api-key',
-      modelName: '@cf/meta/llama-2-7b-chat-int8'
+      modelName: 'gpt-4o-mini'
     });
     // Reset all mocks
     vi.clearAllMocks();

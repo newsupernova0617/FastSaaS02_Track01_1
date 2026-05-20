@@ -13,18 +13,17 @@ import type {
   StatsResponse,
   TimelineResponse,
 } from './data/schemas';
-import type { SourcedData } from './data/preview-api';
 import type { RouteName } from './state/app-store';
 
 export type AppViewProps = {
-  homeResult: QueryObserverResult<SourcedData<HomeResponse>, Error>;
-  calendarResult: QueryObserverResult<SourcedData<CalendarResponse>, Error>;
-  recordResult: QueryObserverResult<SourcedData<AppTransactionsResponse>, Error>;
-  statsResult: QueryObserverResult<SourcedData<StatsResponse>, Error>;
-  monthlyReportResult: QueryObserverResult<SourcedData<AppCurrentReportResponse>, Error>;
-  reportResult: QueryObserverResult<SourcedData<ReportResponse>, Error>;
-  searchResult: QueryObserverResult<SourcedData<SearchResponse>, Error>;
-  selectedReport: SourcedData<AppCurrentReportResponse> | null;
+  homeResult: QueryObserverResult<HomeResponse, Error>;
+  calendarResult: QueryObserverResult<CalendarResponse, Error>;
+  recordResult: QueryObserverResult<AppTransactionsResponse, Error>;
+  statsResult: QueryObserverResult<StatsResponse, Error>;
+  monthlyReportResult: QueryObserverResult<AppCurrentReportResponse, Error>;
+  reportResult: QueryObserverResult<ReportResponse, Error>;
+  searchResult: QueryObserverResult<SearchResponse, Error>;
+  selectedReport: AppCurrentReportResponse | null;
   selectedReportLoading: boolean;
   selectedReportError: string | null;
   session: Session | null;

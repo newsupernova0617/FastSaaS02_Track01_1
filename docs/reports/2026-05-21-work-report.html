@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2026-05-21 작업 보고서</title>
+    <style>
+      :root {
+        --bg: #f4efe7;
+        --panel: rgba(255, 251, 245, 0.88);
+        --panel-strong: #fffdfa;
+        --line: rgba(77, 56, 36, 0.14);
+        --text: #1f1a17;
+        --muted: #67584b;
+        --accent: #9d3c2f;
+        --accent-soft: rgba(157, 60, 47, 0.12);
+        --ok: #1f6a43;
+        --warn: #8a5a10;
+        --shadow: 0 24px 60px rgba(73, 48, 24, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(157, 60, 47, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(31, 106, 67, 0.1), transparent 24%),
+          linear-gradient(180deg, #f7f2ea 0%, var(--bg) 100%);
+      }
+
+      .wrap {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 40px 0 64px;
+      }
+
+      .hero,
+      .section,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        padding: 36px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        inset: auto -80px -80px auto;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(157, 60, 47, 0.18), transparent 65%);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+      }
+
+      .hero h1 {
+        margin-top: 18px;
+        font-size: clamp(32px, 5vw, 56px);
+        line-height: 1.04;
+        max-width: 760px;
+      }
+
+      .hero p {
+        margin-top: 16px;
+        max-width: 760px;
+        font-size: 18px;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+
+      .meta,
+      .stats,
+      .grid,
+      .timeline,
+      .files {
+        display: grid;
+        gap: 16px;
+      }
+
+      .meta {
+        margin-top: 28px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .meta .item,
+      .stats .item,
+      .timeline .item,
+      .files .item {
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: var(--panel-strong);
+        border: 1px solid var(--line);
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .section {
+        margin-top: 24px;
+        padding: 28px;
+      }
+
+      .section h2 {
+        font-size: 26px;
+        margin-bottom: 18px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .section-header p {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .stats {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .stats .value {
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      .panel h3 {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+
+      .panel p,
+      .panel li,
+      .timeline .body,
+      .files .body {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      ul {
+        margin: 12px 0 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .timeline {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .timeline .item {
+        position: relative;
+        padding-top: 48px;
+      }
+
+      .timeline .step {
+        position: absolute;
+        top: 18px;
+        left: 20px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .status.ok {
+        color: var(--ok);
+        background: rgba(31, 106, 67, 0.12);
+      }
+
+      .status.warn {
+        color: var(--warn);
+        background: rgba(138, 90, 16, 0.12);
+      }
+
+      code {
+        padding: 2px 7px;
+        border-radius: 8px;
+        background: rgba(31, 26, 23, 0.08);
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.92em;
+      }
+
+      .files {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
+      .files h3 {
+        margin-bottom: 8px;
+      }
+
+      .footer {
+        margin-top: 24px;
+        padding: 22px 24px;
+        border-radius: 20px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          width: min(100% - 24px, 1160px);
+          padding-top: 20px;
+          padding-bottom: 36px;
+        }
+
+        .hero,
+        .section {
+          padding: 22px;
+        }
+
+        .section-header {
+          display: block;
+        }
+
+        .hero p {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <span class="eyebrow">2026-05-21 작업 보고서</span>
+        <h1>백엔드 런타임 전환과 Cloudflare 분리 구성을 시각적으로 정리한 결과</h1>
+        <p>
+          이번 작업의 핵심은 기존 백엔드를 VPS 기반 Node 서버로 정리하고, 별도
+          <code>backend-cloudflare/</code> 패키지로 Workers 대안을 분리한 것입니다.
+          AI 관련 요청은 Cloudflare 경로에서 VPS API로 프록시되도록 설계했습니다.
+        </p>
+        <div class="meta">
+          <div class="item">
+            <span class="label">기준 리포지토리</span>
+            <div class="value">FastSaaS02_Track01_1</div>
+          </div>
+          <div class="item">
+            <span class="label">주요 대상</span>
+            <div class="value">backend / backend-cloudflare</div>
+          </div>
+          <div class="item">
+            <span class="label">현재 기본 런타임</span>
+            <div class="value">Hono on Node.js VPS</div>
+          </div>
+          <div class="item">
+            <span class="label">보고 시점</span>
+            <div class="value">2026-05-21</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>한눈에 보는 요약</h2>
+            <p>무엇이 바뀌었고, 현재 구조가 어떻게 나뉘는지 빠르게 볼 수 있는 섹션입니다.</p>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="item">
+            <span class="label">런타임 전환</span>
+            <div class="value">1</div>
+            <p>기본 백엔드를 Cloudflare Workers에서 Node 서버 실행 경로로 전환</p>
+          </div>
+          <div class="item">
+            <span class="label">신규 패키지</span>
+            <div class="value">1</div>
+            <p><code>backend-cloudflare/</code> 패키지 추가</p>
+          </div>
+          <div class="item">
+            <span class="label">AI 프록시 대상</span>
+            <div class="value">8+</div>
+            <p>대화, 리포트, 앱 채팅 등 AI 연계 라우트를 VPS API로 우회</p>
+          </div>
+          <div class="item">
+            <span class="label">검증 범위</span>
+            <div class="value">타입체크 + 핵심 테스트</div>
+            <p>Node 경로와 Cloudflare 패키지 모두 최소 검증 완료</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>구조 변화</h2>
+            <p>이전 상태와 현재 상태를 비교해서 보는 섹션입니다.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <article class="panel">
+            <h3>이전 인식</h3>
+            <ul>
+              <li><code>backend/</code> 가 Cloudflare Workers 중심으로 보이던 구조</li>
+              <li><code>wrangler.jsonc</code>, Workers AI, <code>fetch(request, env, ctx)</code> 엔트리 사용</li>
+              <li>런타임 설명과 실제 운영 경로가 혼재되어 있었음</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>현재 기본 구조</h3>
+            <ul>
+              <li><code>backend/</code> 는 Hono 앱을 Node 서버로 띄우는 VPS 경로</li>
+              <li><code>backend/src/server.ts</code> 가 개발 및 실행 진입점</li>
+              <li>기본 포트는 <code>8787</code>, 로그에 <code>http://:::8787</code> 로 보일 수 있음</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>병행 구조</h3>
+            <ul>
+              <li><code>backend-cloudflare/</code> 는 Workers 대안 패키지로 분리</li>
+              <li>공용 Hono 앱은 재사용하고 런타임만 분기</li>
+              <li>AI 요청은 직접 처리하지 않고 VPS API로 프록시</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>작업 타임라인</h2>
+            <p>실제 수행 내용을 단계별로 정리했습니다.</p>
+          </div>
+        </div>
+        <div class="timeline">
+          <article class="item">
+            <div class="step">1</div>
+            <h3>VPS 런타임 정리</h3>
+            <p class="body">
+              <code>backend/package.json</code> 의 실행 스크립트를 Node 기준으로 정리하고,
+              <code>backend/wrangler.jsonc</code> 를 제거했습니다.
+            </p>
+            <div class="status ok">완료</div>
+          </article>
+          <article class="item">
+            <div class="step">2</div>
+            <h3>LLM / AI 의존성 정리</h3>
+            <p class="body">
+              Workers AI 바인딩 경로를 제거하고, OpenAI 등 외부 API 기준 설정으로
+              LLM 구성을 재정리했습니다.
+            </p>
+            <div class="status ok">완료</div>
+          </article>
+          <article class="item">
+            <div class="step">3</div>
+            <h3>Node 환경 연결</h3>
+            <p class="body">
+              런타임 환경 변수 로딩과 DB 연결 레이어를 Node 실행 기준으로 맞췄고,
+              테스트 헬퍼도 같은 전제를 따르도록 수정했습니다.
+            </p>
+            <div class="status ok">완료</div>
+          </article>
+          <article class="item">
+            <div class="step">4</div>
+            <h3>Cloudflare 패키지 분리</h3>
+            <p class="body">
+              루트에 <code>backend-cloudflare/</code> 패키지를 추가하고, 공용 Hono 앱을
+              Worker 엔트리에서 다시 감싸는 형태로 구성했습니다.
+            </p>
+            <div class="status ok">완료</div>
+          </article>
+          <article class="item">
+            <div class="step">5</div>
+            <h3>AI 프록시 라우팅</h3>
+            <p class="body">
+              채팅, 메시지, 리포트 생성 등 AI 개입 경로를
+              <code>AI_API_BASE_URL</code> 로 전달하도록 별도 프록시 로직을 넣었습니다.
+            </p>
+            <div class="status ok">완료</div>
+          </article>
+          <article class="item">
+            <div class="step">6</div>
+            <h3>문서 및 검증</h3>
+            <p class="body">
+              루트 README와 백엔드 문서를 갱신했고, 타입체크와 핵심 테스트를 통해
+              최소 동작 검증을 마쳤습니다.
+            </p>
+            <div class="status warn">통합 DB 테스트는 별도 이슈 존재</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>주요 파일 변화</h2>
+            <p>핵심적으로 의미가 큰 파일만 추려서 분류했습니다.</p>
+          </div>
+        </div>
+        <div class="files">
+          <article class="item">
+            <h3>런타임 / 엔트리</h3>
+            <p class="body">
+              <code>backend/src/server.ts</code><br />
+              <code>backend/src/index.ts</code><br />
+              <code>backend/package.json</code><br />
+              <code>backend/wrangler.jsonc</code> 삭제
+            </p>
+          </article>
+          <article class="item">
+            <h3>AI / LLM / 서비스</h3>
+            <p class="body">
+              <code>backend/src/services/llm.ts</code><br />
+              <code>backend/src/services/ai.ts</code><br />
+              <code>backend/src/services/vectorize.ts</code><br />
+              <code>backend/src/services/session-message-handler.ts</code>
+            </p>
+          </article>
+          <article class="item">
+            <h3>환경 / DB / 미들웨어</h3>
+            <p class="body">
+              <code>backend/src/runtime/node-env.ts</code><br />
+              <code>backend/src/db/index.ts</code><br />
+              <code>backend/src/app.ts</code><br />
+              <code>backend/src/middleware/rateLimit.ts</code>
+            </p>
+          </article>
+          <article class="item">
+            <h3>테스트 정비</h3>
+            <p class="body">
+              <code>backend/tests/helpers/app.ts</code><br />
+              <code>backend/tests/setup-env.ts</code><br />
+              <code>backend/tests/services/ai-report.test.ts</code><br />
+              <code>backend/tests/llm-smoke/ai-parse.llm.test.ts</code>
+            </p>
+          </article>
+          <article class="item">
+            <h3>Cloudflare 대안 패키지</h3>
+            <p class="body">
+              <code>backend-cloudflare/src/index.ts</code><br />
+              <code>backend-cloudflare/src/ai-proxy.ts</code><br />
+              <code>backend-cloudflare/wrangler.jsonc</code><br />
+              <code>backend-cloudflare/package.json</code>
+            </p>
+          </article>
+          <article class="item">
+            <h3>문서 갱신</h3>
+            <p class="body">
+              <code>README.md</code><br />
+              <code>backend/README.md</code><br />
+              <code>backend-cloudflare/README.md</code><br />
+              <code>CLAUDE.md</code>
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>검증 결과</h2>
+            <p>실행 및 테스트 기준으로 확인된 결과입니다.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <article class="panel">
+            <h3>통과한 검증</h3>
+            <ul>
+              <li><code>cd backend && npm run type-check</code></li>
+              <li><code>cd backend && npm run test:llm</code></li>
+              <li><code>cd backend && npx vitest run tests/routes/ai.test.ts tests/services/ai-report.test.ts tests/llm-smoke/ai-parse.llm.test.ts</code></li>
+              <li><code>cd backend-cloudflare && ../backend/node_modules/.bin/tsc --noEmit -p tsconfig.json</code></li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>남아 있는 제약</h3>
+            <ul>
+              <li>전체 <code>npm test</code> 는 원격 Turso 기반 통합 DB 이슈로 일부 실패</li>
+              <li>실패 원인은 이번 런타임 전환 자체보다 테스트 환경의 테이블 부재에 가까움</li>
+              <li>따라서 핵심 변경 경로는 통과했지만, 통합 환경 검증은 별도 보강이 필요</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <h2>현재 판단</h2>
+            <p>지금 상태를 실무 관점에서 짧게 정리하면 아래와 같습니다.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <article class="panel">
+            <h3>운영 기준</h3>
+            <p>
+              현재 기본 백엔드는 <code>backend/</code> 이며, Hono 앱을 Node 서버로 띄우는
+              VPS 구조로 보는 것이 맞습니다.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>대안 기준</h3>
+            <p>
+              Cloudflare Workers가 완전히 사라진 것은 아니고,
+              <code>backend-cloudflare/</code> 로 분리되어 선택지로 남아 있습니다.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>AI 처리 기준</h3>
+            <p>
+              Cloudflare 쪽에서 AI를 직접 처리하는 구조가 아니라, AI 관련 라우트만
+              VPS API로 넘겨 책임을 분리한 상태입니다.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <div class="footer">
+        이 보고서는 2026-05-21 기준 작업 내용을 시각적으로 정리한 HTML 문서입니다.
+        별도 빌드 없이 브라우저에서 바로 열 수 있으며, 이후 원하면 같은 형식으로
+        릴리즈 노트나 마이그레이션 이력 페이지로 확장할 수 있습니다.
+      </div>
+    </main>
+  </body>
+</html>

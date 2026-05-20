@@ -2,16 +2,15 @@
 import type { QueryObserverResult } from '@tanstack/query-core';
 import { appStore } from '../../state/app-store';
 import type { AppCurrentReportResponse, AppReportsResponse, ReportResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { formatTimestamp, formatWon } from '../../lib/format';
 import { AppButton } from '../ui/AppButton';
 import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function ReportScreen(props: {
-  result: QueryObserverResult<SourcedData<ReportResponse>, Error>;
+  result: QueryObserverResult<ReportResponse, Error>;
   reports: AppReportsResponse | null;
-  selectedReport: SourcedData<AppCurrentReportResponse> | null;
+  selectedReport: AppCurrentReportResponse | null;
   selectedReportLoading: boolean;
   selectedReportError: string | null;
   onSelectReport: (reportId: number) => void;
@@ -22,9 +21,9 @@ export function ReportScreen(props: {
   if (props.result.isError || !props.result.data) return <ErrorCard message="리포트 데이터를 불러오지 못했습니다." />;
 
   const state = appStore.getState();
-  const { summary, dailySpending, categories, month } = props.result.data.data;
+  const { summary, dailySpending, categories, month } = props.result.data;
   const maxAmount = Math.max(...dailySpending.map((entry) => entry.amount));
-  const report = props.selectedReport?.data.report ?? null;
+  const report = props.selectedReport?.report ?? null;
   const selectedReportId = state.selectedReportId;
   const reportRows = props.reports?.reports ?? [];
 
@@ -98,7 +97,7 @@ export function ReportScreen(props: {
             </div>
             <div class="flex shrink-0 flex-col items-end gap-2 text-right">
               <div class="rounded-full bg-white/15 px-2 py-1 text-[10px] font-semibold">{report.id}</div>
-              <div class="rounded-full bg-white/15 px-2 py-1 text-[10px] font-semibold">{props.selectedReport?.source ?? 'live'}</div>
+              <div class="rounded-full bg-white/15 px-2 py-1 text-[10px] font-semibold">live</div>
               {state.editingReportId !== report.id && (
                 <div class="flex items-center gap-2">
                   <button
@@ -215,8 +214,8 @@ export function ReportScreen(props: {
     <div class="phone-panel">
       <div class="flex items-center justify-between gap-3">
         <div class="text-[11px] font-bold text-slate-500">{month.replace('-', '년 ')}월 리포트</div>
-        <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.result.data.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-          {props.result.data.source}
+        <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+          live
         </div>
       </div>
 
@@ -331,8 +330,8 @@ export function ReportScreen(props: {
             <div class="text-sm font-semibold text-slate-950">선택한 리포트 상세</div>
             <div class="text-[11px] text-slate-500">app-facing `GET /api/app/reports/:id`</div>
           </div>
-          <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.selectedReport?.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-            {props.selectedReport?.source ?? 'idle'}
+          <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+            {props.selectedReport ? 'live' : 'idle'}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import * as dbModule from '../../src/db/index';
-import appDefault from '../../src/index';
+import { app } from '../../src/app';
 import type { TestDbHandle } from './db';
 
 export interface TestAppHandle {
@@ -20,15 +20,16 @@ export function createTestApp(handle: TestDbHandle): TestAppHandle {
     SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET!,
     SUPABASE_URL: process.env.SUPABASE_URL!,
     ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS!,
-    AI_PROVIDER: 'workers-ai',
+    AI_PROVIDER: 'openai',
+    OPENAI_API_KEY: 'test-openai-key',
+    OPENAI_MODEL_NAME: 'gpt-4o-mini',
     ENVIRONMENT: 'test',
     TURSO_DB_URL: ':memory:',
     TURSO_AUTH_TOKEN: 'test-token',
-    AI: undefined,
   };
 
   return {
-    app: appDefault,
+    app,
     env,
     cleanup: () => spy.mockRestore(),
   };

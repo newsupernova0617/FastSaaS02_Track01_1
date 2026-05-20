@@ -1,14 +1,13 @@
 /** @jsxImportSource hono/jsx */
 import type { QueryObserverResult } from '@tanstack/query-core';
 import type { AppCurrentReportResponse, AppReportsResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { formatTimestamp, formatWon } from '../../lib/format';
 import { AppButton } from '../ui/AppButton';
 import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function MonthlyReportScreen(props: {
-  result: QueryObserverResult<SourcedData<AppCurrentReportResponse>, Error>;
+  result: QueryObserverResult<AppCurrentReportResponse, Error>;
   reports: AppReportsResponse | null;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -18,7 +17,7 @@ export function MonthlyReportScreen(props: {
   if (props.result.isPending) return <LoadingCard label="월간 리포트를 불러오는 중" />;
   if (props.result.isError || !props.result.data) return <ErrorCard message="월간 리포트를 불러오지 못했습니다." />;
 
-  const report = props.result.data.data.report;
+  const report = props.result.data.report;
   const summary = report.summary ?? null;
 
   return (
@@ -28,8 +27,8 @@ export function MonthlyReportScreen(props: {
           <div class="text-[11px] font-bold text-slate-500">{report.reportType}</div>
           <div class="mt-1 text-[10px] font-medium text-slate-400">월간/주간 리포트 생성</div>
         </div>
-        <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.result.data.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-          {props.result.data.source}
+        <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+          live
         </div>
       </div>
 
@@ -86,7 +85,7 @@ export function MonthlyReportScreen(props: {
         <div class="flex items-center justify-between gap-3">
           <div>
             <div class="text-sm font-semibold text-slate-950">저장된 리포트</div>
-            <div class="text-[11px] text-slate-500">report list preview</div>
+            <div class="text-[11px] text-slate-500">저장된 리포트 목록</div>
           </div>
           <div class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">{props.reports?.reports?.length ?? 0}개</div>
         </div>

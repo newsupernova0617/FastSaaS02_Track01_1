@@ -1,49 +1,17 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "backend",
-	"main": "src/index.ts",
-	"compatibility_date": "2026-03-24",
-	"compatibility_flags": ["nodejs_compat"],
-	"vars": {
-		"AI_PROVIDER": "workers-ai",
-		"ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173,http://localhost:4321,https://fastsaas02-track01-1.pages.dev,https://landing-page-7hu.pages.dev"
-	},
-	"observability": {
-		"logs": {
-			"enabled": true
-		}
-	},
-	// 환경 변수는 .dev.vars 파일에서 로드됩니다 (로컬 개발용)
-	// 프로덕션 환경에서는 wrangler secret 또는 Cloudflare 대시보드에서 설정하세요
-	//
-	// AI Provider options (set AI_PROVIDER in vars above):
-	// - workers-ai: uses the Cloudflare AI binding configured below (default: @cf/openai/gpt-oss-120b)
-	// - gemini: requires GEMINI_API_KEY, optionally GEMINI_MODEL_NAME (default: gemini-2.5-flash)
-	// - openai: requires OPENAI_API_KEY, optionally OPENAI_MODEL_NAME (default: gpt-4o-mini)
-	// "kv_namespaces": [
-	//   {
-	//     "binding": "MY_KV_NAMESPACE",
-	//     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	//   }
-	// ],
-	// "r2_buckets": [
-	//   {
-	//     "binding": "MY_BUCKET",
-	//     "bucket_name": "my-bucket"
-	//   }
-	// ],
-	// "d1_databases": [
-	//   {
-	//     "binding": "MY_DB",
-	//     "database_name": "my-database",
-	//     "database_id": ""
-	//   }
-	// ],
-	"ai": {
-		"binding": "AI"
-	},
-	// "observability": {
-	//   "enabled": true,
-	//   "head_sampling_rate": 1
-	// }
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "AI_PROVIDER": "openai",
+    "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:5173,http://localhost:4321,https://fastsaas02-track01-1.pages.dev,https://fastsaas02-track01-1-webapp.pages.dev,https://landing-page-7hu.pages.dev",
+    "AI_API_BASE_URL": "http://localhost:8788"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true
+    }
+  }
 }

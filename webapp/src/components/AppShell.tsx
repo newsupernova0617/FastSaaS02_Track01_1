@@ -47,7 +47,7 @@ export function AppShell(props: AppShellProps) {
         <section class="surface-panel w-full max-w-md space-y-4">
           <div class="flex items-center justify-between gap-3">
             <div>
-              <div class="app-panel-label">Easy AI Ledger</div>
+              <div class="app-panel-label">Easy AI budget</div>
               <div class="mt-2 app-panel-title">{auth.mode === 'sign-up' ? '회원가입' : '로그인'}</div>
             </div>
             <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">APP</div>
@@ -68,6 +68,32 @@ export function AppShell(props: AppShellProps) {
               }
             }}
           >
+            <div class="grid grid-cols-2 gap-2">
+              <AppButton
+                kind={auth.mode === 'sign-up' ? 'ghost' : 'primary'}
+                type="button"
+                class="w-full px-4"
+                onClick={() => {
+                  authStore.getState().setError(null);
+                  authStore.getState().setNotice(null);
+                  authStore.getState().setMode('sign-in');
+                }}
+              >
+                로그인
+              </AppButton>
+              <AppButton
+                kind={auth.mode === 'sign-up' ? 'primary' : 'ghost'}
+                type="button"
+                class="w-full px-4"
+                onClick={() => {
+                  authStore.getState().setError(null);
+                  authStore.getState().setNotice(null);
+                  authStore.getState().setMode('sign-up');
+                }}
+              >
+                회원가입
+              </AppButton>
+            </div>
             <input
               class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 transition focus:border-primary"
               placeholder="이메일"
@@ -83,23 +109,9 @@ export function AppShell(props: AppShellProps) {
               autoComplete="current-password"
               defaultValue=""
             />
-            <div class="grid grid-cols-2 gap-2">
-              <AppButton type="submit" class="w-full px-4" onClick={undefined}>
-                {props.authLoading ? (auth.mode === 'sign-up' ? '가입 중' : '로그인 중') : auth.mode === 'sign-up' ? '회원가입' : '로그인'}
-              </AppButton>
-              <AppButton
-                kind="ghost"
-                type="button"
-                class="w-full px-4"
-                onClick={() => {
-                  authStore.getState().setError(null);
-                  authStore.getState().setNotice(null);
-                  authStore.getState().setMode(auth.mode === 'sign-up' ? 'sign-in' : 'sign-up');
-                }}
-              >
-                {auth.mode === 'sign-up' ? '로그인으로' : '회원가입'}
-              </AppButton>
-            </div>
+            <AppButton type="submit" class="w-full px-4" onClick={undefined}>
+              {props.authLoading ? (auth.mode === 'sign-up' ? '가입 중' : '로그인 중') : auth.mode === 'sign-up' ? '회원가입' : '로그인'}
+            </AppButton>
           </form>
 
           <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -120,7 +132,7 @@ export function AppShell(props: AppShellProps) {
           <div class="flex items-center gap-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-sm font-black text-white shadow-sm">A</div>
             <div>
-              <div class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Easy AI Ledger</div>
+              <div class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Easy AI budget</div>
               <div class="text-lg font-bold text-slate-950">{props.pageTitle}</div>
             </div>
           </div>

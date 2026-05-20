@@ -10,9 +10,9 @@
 //   최대 요청 횟수(maxRequests)를 초과하면 429 에러를 반환합니다.
 //
 // ⚠️ 한계:
-//   Cloudflare Workers는 트래픽에 따라 여러 "isolate"(실행 환경)를 생성합니다.
-//   각 isolate마다 별도의 메모리를 사용하므로, 전체 요청 수를 정확히 세지 못합니다.
-//   → 엄격한 제한이 필요하면 Cloudflare Rate Limiting API 또는 Durable Objects로 교체해야 합니다.
+//   이 구현은 단일 Node 프로세스의 인메모리 Map을 사용합니다.
+//   프로세스를 여러 개 띄우면 각 프로세스가 별도의 제한 상태를 가지므로,
+//   엄격한 전역 제한이 필요하면 Redis 같은 공유 저장소로 교체해야 합니다.
 //
 // 사용 예:
 //   const limiter = createRateLimiter(20, 60_000); // 1분에 20번까지 허용
@@ -36,7 +36,7 @@ export function createRateLimiter(
   windowMs: number      // 윈도우 크기 (밀리초, 예: 60_000 = 1분)
 ): MiddlewareHandler<{ Bindings: Env; Variables: Variables }> {
   // 사용자 ID → 요청 카운트를 저장하는 인메모리 Map
-  // ⚠️ 이 Map은 isolate별로 독립적이므로 글로벌 제한이 아닙니다
+  // ⚠️ 이 Map은 프로세스별로 독립적이므로 글로벌 제한이 아닙니다
   const store = new Map<string, RateLimitEntry>();
 
   return async (

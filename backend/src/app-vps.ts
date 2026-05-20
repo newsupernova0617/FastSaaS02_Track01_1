@@ -1,23 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import transactions from './routes/transactions';
-import usersRoute from './routes/users';
 import aiRouter from './routes/ai';
 import reportsRouter from './routes/reports';
 import sessionsRouter from './routes/sessions';
-import waitlistRouter from './routes/waitlist';
-import contactRequestsRouter from './routes/contact-requests';
-import adminContactRequestsRouter from './routes/admin-contact-requests';
-import { billingPublicRoutes, billingRoutes } from './routes/billing';
-import { userNotesRoutes } from './routes/user-notes';
-import { pushAuthRouter, pushPublicRouter } from './routes/push';
+import { pushPublicRouter } from './routes/push';
 import appRouter from './routes/app';
 import { authMiddleware } from './middleware/auth';
 import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
 import type { Variables } from './middleware/auth';
+import { isDirectAiRoute } from './runtime/ai-routing';
 
-export const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+export const vpsApp = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:5173',
@@ -29,9 +23,9 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'capacitor://localhost',
   'https://easyaibudget.com',
   'https://fastsaas02-track01-1.pages.dev',
-  'https://fastsaas02-track01-1-webapp.pages.dev',
   'https://landing-page-7hu.pages.dev',
 ];
+
 let cachedOriginsRaw: string | undefined;
 let cachedAllowedOrigins = DEFAULT_ALLOWED_ORIGINS;
 
@@ -47,44 +41,51 @@ function getAllowedOrigins(envOrigins: string | undefined): string[] {
         .split(',')
         .map((origin: string) => origin.trim())
         .filter(Boolean),
-    ])
+    ]),
   );
   return cachedAllowedOrigins;
 }
 
-app.get('/', (c) => c.text('Hello! FastSaaS Backend is running!'));
+vpsApp.get('/', (c) => c.text('Hello! FastSaaS AI VPS Backend is running!'));
 
-app.use('*', async (c, next) => {
+vpsApp.use('*', async (c, next) => {
   return cors({ origin: getAllowedOrigins(c.env.ALLOWED_ORIGINS) })(c, next);
 });
 
-app.use('*', loggingMiddleware);
+vpsApp.use('*', loggingMiddleware);
 
-app.route('/waitlist', waitlistRouter);
-app.route('/admin-api', adminContactRequestsRouter);
-app.route('/billing', billingPublicRoutes);
+vpsApp.use('/api/*', async (c, next) => {
+  if (!isDirectAiRoute(c.req.raw)) {
+    return c.json({ error: 'Not found' }, 404);
+  }
 
-app.use('/api/*', authMiddleware);
+  return next();
+});
 
-app.route('/api/transactions', transactions);
-app.route('/api/users', usersRoute);
-app.route('/api/ai', aiRouter);
-app.route('/api/app', appRouter);
-app.route('/api/app/push', pushAuthRouter);
-app.route('/api/app/push', pushPublicRouter);
-app.route('/api/reports', reportsRouter);
-app.route('/api/sessions', sessionsRouter);
-app.route('/api/contact-requests', contactRequestsRouter);
-app.route('/api/billing', billingRoutes);
+vpsApp.use('/api/ai/*', authMiddleware);
+vpsApp.use('/api/sessions/*', authMiddleware);
+vpsApp.use('/api/app/*', async (c, next) => {
+  if (c.req.path === '/api/app/push/reply') {
+    return next();
+  }
 
-app.route('/api/notes', userNotesRoutes());
+  return authMiddleware(c, next);
+});
+vpsApp.use('/api/reports/*', authMiddleware);
 
-app.onError((err, c) => {
+vpsApp.route('/api/ai', aiRouter);
+vpsApp.route('/api/sessions', sessionsRouter);
+vpsApp.route('/api/app', appRouter);
+vpsApp.route('/api/app/push', pushPublicRouter);
+vpsApp.route('/api/reports', reportsRouter);
+
+vpsApp.notFound((c) => c.json({ error: 'Not found' }, 404));
+
+vpsApp.onError((err, c) => {
   if (err.name === 'ZodError') {
     return c.json({ error: 'Validation failed', details: JSON.parse(err.message) }, 400);
   }
-  console.error('[Server Error]', err);
+
+  console.error('[AI VPS Error]', err);
   return c.json({ error: err.message ?? 'Internal Server Error' }, 500);
 });
-
-export type AppType = typeof app;

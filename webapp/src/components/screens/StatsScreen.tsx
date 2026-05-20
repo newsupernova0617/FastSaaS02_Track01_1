@@ -1,14 +1,13 @@
 /** @jsxImportSource hono/jsx */
 import type { QueryObserverResult } from '@tanstack/query-core';
 import type { AppReportsResponse, StatsResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { formatWon } from '../../lib/format';
 import { AppButton } from '../ui/AppButton';
 import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function StatsScreen(props: {
-  result: QueryObserverResult<SourcedData<StatsResponse>, Error>;
+  result: QueryObserverResult<StatsResponse, Error>;
   reports: AppReportsResponse | null;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
@@ -16,7 +15,7 @@ export function StatsScreen(props: {
   if (props.result.isPending) return <LoadingCard label="통계 화면을 불러오는 중" />;
   if (props.result.isError || !props.result.data) return <ErrorCard message="통계 데이터를 불러오지 못했습니다." />;
 
-  const stats = props.result.data.data;
+  const stats = props.result.data;
   const expenseMax = Math.max(...stats.expenseCategories.map((item) => item.total), 1);
   const incomeMax = Math.max(...stats.incomeCategories.map((item) => item.total), 1);
 
@@ -47,8 +46,8 @@ export function StatsScreen(props: {
           <div class="text-[11px] font-bold text-slate-500">{stats.monthLabel}</div>
           <div class="mt-1 text-[10px] font-medium text-slate-400">월별 수입/지출 통계</div>
         </div>
-        <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.result.data.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-          {props.result.data.source}
+        <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+          live
         </div>
       </div>
 

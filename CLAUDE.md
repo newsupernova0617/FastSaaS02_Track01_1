@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend**: Cloudflare Workers (Hono) + Turso SQLite + Drizzle ORM
 - **Frontend**: Flutter (mobile) / React + Vite (web, `frontend/` directory)
 - **Authentication**: Supabase (OAuth + JWT ES256)
-- **AI/LLM**: Configurable provider (Workers AI, Gemini, OpenAI)
+- **AI/LLM**: Configurable provider (Gemini, OpenAI, OpenRouter)
 
 Users describe financial transactions in natural language (Korean) and the AI automatically extracts/categorizes them, generates reports, and maintains session-based chat history.
 
@@ -23,12 +23,11 @@ npm run type-check   # TypeScript type checking (npx tsc --noEmit)
 npm run test         # Run Vitest unit tests
 npm run test:watch   # Run tests in watch mode
 npm run test -- src/routes/transactions.test.ts  # Single test file
-npm run deploy       # Deploy to Cloudflare Workers (production)
-npm run cf-typegen   # Generate Cloudflare Worker type bindings
+npm run deploy       # Deploy the Worker
 ```
 
-- Backend uses port 8787 by default (wrangler auto-increments if occupied)
-- Local env vars go in `.dev.vars` (git-ignored); production secrets via `wrangler secret put <KEY>`
+- Wrangler dev usually uses port 8787 locally. If that port is occupied, align the frontend API base URL with the actual printed port.
+- Local env vars go in `.dev.vars` (git-ignored); production secrets come from Wrangler secrets / Cloudflare Worker settings
 
 ### Flutter Mobile
 
@@ -69,11 +68,11 @@ TURSO_AUTH_TOKEN=
 SUPABASE_JWT_SECRET=
 SUPABASE_URL=https://your-project.supabase.co   # added 2026-04-13
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-AI_PROVIDER=workers-ai
-WORKERS_AI_MODEL_NAME=@cf/openai/gpt-oss-120b
+AI_PROVIDER=openai
+OPENAI_API_KEY=...
 ```
 
-For production, `wrangler secret put` the secret-backed values (`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`) and add `OPENAI_API_KEY` / `GEMINI_API_KEY` only if you switch providers. `wrangler.jsonc` has placeholder values for non-secret vars (`ALLOWED_ORIGINS`, `AI_PROVIDER`).
+For production, set the secret-backed values (`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`) in Wrangler secrets / Cloudflare Worker settings and add `OPENAI_API_KEY` / `GEMINI_API_KEY` / `OPENROUTER_API_KEY` only if you use those providers.
 
 ## Architecture
 
@@ -96,7 +95,7 @@ Request
 |------|---------|
 | `backend/src/middleware/auth.ts` | JWT validation, userId extraction — reads `SUPABASE_URL` from env |
 | `backend/src/middleware/rateLimit.ts` | Per-user in-memory rate limiter (added 2026-04-13) |
-| `backend/src/index.ts` | Route registration, CORS (env-based), startup env var validation |
+| `backend/src/index.ts` | Worker entrypoint with env validation + shared Hono app dispatch |
 | `backend/src/routes/sessions.ts` | Primary endpoint: full AI processing per session message |
 | `backend/src/routes/ai.ts` | Legacy `/api/ai/action` — validates session ownership before write |
 | `backend/src/services/ai.ts` | `parseUserInput()` — LLM call → action type + payload |
@@ -146,38 +145,24 @@ router.get('/', async (c) => {
 export default router;
 ```
 
-Register in `backend/src/index.ts`: `app.route('/api/new-feature', newFeatureRouter);`
+Register in `backend/src/app.ts`: `app.route('/api/new-feature', newFeatureRouter);`
 
 ## Database Migrations
 
 1. Update `backend/src/db/schema.ts`
 2. Create `backend/src/db/migrations/NNN_description.sql`
-3. Migrations auto-run on `npm run dev` / deploy
-
-## Switching AI Providers
-
-In `backend/wrangler.jsonc` vars + `backend/.dev.vars`:
-```
-AI_PROVIDER=workers-ai   # workers-ai | gemini | openai
-WORKERS_AI_MODEL_NAME=@cf/openai/gpt-oss-120b  # optional
-OPENAI_API_KEY=...  # only if using OpenAI
-GEMINI_API_KEY=...  # only if using Gemini
-```
+3. Migrations should be applied as part of your deployment workflow before relying on the new schema
 
 ## Deployment
 
 ```bash
 cd backend
-wrangler secret put TURSO_DB_URL
-wrangler secret put TURSO_AUTH_TOKEN
-wrangler secret put SUPABASE_JWT_SECRET
-wrangler secret put SUPABASE_URL
 npm run deploy
 ```
 
 ## Notes for Future Work
 
-- **Rate Limiting**: Current in-memory limiter is per-isolate. For strict enforcement, migrate to Cloudflare Durable Objects or Rate Limiting API.
+- **Rate Limiting**: Current in-memory limiter is per-process. For strict enforcement, migrate to Redis or another shared store.
 - **Report Caching**: Reports generated fresh each time; could cache by `(userId, month, type)`.
 - **Session Limits**: Consider archiving old sessions to avoid unbounded list growth.
 - **Undo**: Currently only supports single-step undo (one `previousState` stored).

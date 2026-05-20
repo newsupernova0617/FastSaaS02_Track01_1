@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webapp API 사용 보고서</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #5b6475;
+        --line: #d9deea;
+        --accent: #0f766e;
+        --accent-soft: #ccfbf1;
+        --warn: #9a3412;
+        --warn-soft: #ffedd5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 220px);
+        color: var(--ink);
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 12px;
+        line-height: 1.25;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-top: 40px;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero {
+        padding: 28px;
+      }
+
+      .panel {
+        padding: 22px;
+        margin-top: 18px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .ok {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .warn {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+      }
+
+      th,
+      td {
+        padding: 12px 10px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+        text-align: left;
+      }
+
+      th {
+        color: var(--ink);
+        font-size: 13px;
+        background: #f8fafc;
+      }
+
+      code {
+        font-family: 'SFMono-Regular', ui-monospace, monospace;
+        font-size: 13px;
+        color: #0f172a;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1px 6px;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 18px;
+      }
+
+      .small {
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <h1>webapp API 사용 보고서</h1>
+        <p>
+          대상: <code>webapp/</code><br />
+          작성일: 2026-05-21<br />
+          목적: <code>webapp</code>이 실제로 어떤 인증 API와 앱 백엔드 API를 사용하는지, 그리고 어떤 화면에서 호출되는지를 정리
+        </p>
+        <div class="meta">
+          <span class="chip">환경변수 기반</span>
+          <span class="chip ok">실제 API + preview fallback 혼합 구조</span>
+          <span class="chip warn">일부 읽기 화면은 mock fallback 사용</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>1. 요약</h2>
+        <ul>
+          <li><code>webapp</code>은 인증에 Supabase를 사용한다.</li>
+          <li>앱 데이터는 <code>VITE_API_BASE_URL</code> 아래의 <code>/api/app/*</code> 엔드포인트를 사용한다.</li>
+          <li>읽기 계열 일부 화면은 live API가 실패하거나 토큰이 없으면 <code>mock-data.ts</code>로 fallback 한다.</li>
+          <li>쓰기 계열 작업은 fallback 없이 실제 백엔드만 사용한다.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>2. 환경변수와 베이스 경로</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>키</th>
+              <th>용도</th>
+              <th>사용 위치</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>VITE_API_BASE_URL</code></td>
+              <td><code>/api/app/*</code> 백엔드 호출의 base URL</td>
+              <td><code>webapp/src/data/preview-api.ts</code></td>
+            </tr>
+            <tr>
+              <td><code>VITE_SUPABASE_URL</code></td>
+              <td>Supabase 인증 서버 URL</td>
+              <td><code>webapp/src/lib/supabase-auth.ts</code></td>
+            </tr>
+            <tr>
+              <td><code>VITE_SUPABASE_ANON_KEY</code></td>
+              <td>Supabase anon key</td>
+              <td><code>webapp/src/lib/supabase-auth.ts</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>3. 인증 API</h2>
+        <p class="small">
+          Supabase SDK를 통해 호출된다. 네트워크 관점에서는 Supabase Auth REST 엔드포인트로 요청이 나간다.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>동작</th>
+              <th>wrapper 함수</th>
+              <th>호출 위치</th>
+              <th>비고</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>현재 세션 조회</td>
+              <td><code>getCurrentSession()</code></td>
+              <td><code>main.tsx</code> 초기 부트스트랩</td>
+              <td>앱 시작 시 로그인 상태 복원</td>
+            </tr>
+            <tr>
+              <td>로그인</td>
+              <td><code>signInWithPassword()</code></td>
+              <td><code>handleSignIn()</code> in <code>main.tsx</code></td>
+              <td>이메일/비밀번호 방식</td>
+            </tr>
+            <tr>
+              <td>회원가입</td>
+              <td><code>signUpWithPassword()</code></td>
+              <td><code>handleSignUp()</code> in <code>main.tsx</code></td>
+              <td>이메일 확인이 필요할 수 있음</td>
+            </tr>
+            <tr>
+              <td>로그아웃</td>
+              <td><code>signOut()</code></td>
+              <td><code>handleSignOut()</code> in <code>main.tsx</code></td>
+              <td>quick entry 정리 후 실행</td>
+            </tr>
+            <tr>
+              <td>세션 변화 구독</td>
+              <td><code>onAuthStateChange()</code></td>
+              <td><code>main.tsx</code> 하단 초기화 구간</td>
+              <td>세션 바뀌면 전체 데이터 재조회</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>4. 앱 백엔드 API 목록</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>메서드</th>
+              <th>경로</th>
+              <th>wrapper 함수</th>
+              <th>주요 사용 위치</th>
+              <th>fallback</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/bootstrap</code></td>
+              <td><code>fetchAppBootstrap()</code></td>
+              <td><code>refreshAllQueries()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/sessions</code></td>
+              <td><code>fetchAppSessions()</code></td>
+              <td>현재 미사용 export</td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/timeline?sessionId=...</code></td>
+              <td><code>fetchAppTimeline()</code></td>
+              <td><code>refreshAllQueries()</code>, <code>handleSelectSession()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/reports?month=...&amp;limit=...</code></td>
+              <td><code>fetchAppReports()</code></td>
+              <td><code>refreshAllQueries()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/reports/:id</code></td>
+              <td><code>fetchAppReportDetail()</code></td>
+              <td><code>loadSelectedReport()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/profile</code></td>
+              <td><code>fetchAppProfile()</code></td>
+              <td><code>refreshAllQueries()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/push/public-key</code></td>
+              <td><code>fetchAppPushPublicKey()</code></td>
+              <td><code>handleEnableQuickEntry()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/push/subscriptions</code></td>
+              <td><code>fetchAppPushSubscriptions()</code></td>
+              <td>현재 미사용 export</td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/push/subscribe</code></td>
+              <td><code>registerAppPushSubscription()</code></td>
+              <td><code>handleEnableQuickEntry()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td><code>/api/app/push/subscribe</code></td>
+              <td><code>unregisterAppPushSubscription()</code></td>
+              <td><code>cleanupQuickEntryConnection()</code>, <code>handleEnableQuickEntry()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/push/test</code></td>
+              <td><code>sendAppQuickEntryTest()</code></td>
+              <td><code>handleSendQuickEntryTest()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/sessions</code></td>
+              <td><code>createAppSession()</code></td>
+              <td><code>handleCreateSession()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td><code>/api/app/sessions/:id</code></td>
+              <td><code>deleteAppSession()</code></td>
+              <td><code>handleDeleteSession()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>PATCH</td>
+              <td><code>/api/app/sessions/:id</code></td>
+              <td><code>updateAppSession()</code></td>
+              <td><code>handleRenameSession()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/chat</code></td>
+              <td><code>sendAppChat()</code></td>
+              <td><code>handleComposerSubmit()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/home</code></td>
+              <td><code>fetchHomePreview()</code></td>
+              <td><code>homeQueryOptions()</code> via query observer</td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/report?month=...</code></td>
+              <td><code>fetchReportPreview()</code></td>
+              <td><code>reportQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/search?q=...</code></td>
+              <td><code>fetchSearchPreview()</code></td>
+              <td><code>searchQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/calendar?month=...&amp;date=...</code></td>
+              <td><code>fetchCalendarPreview()</code></td>
+              <td><code>calendarQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/transactions?month=...</code></td>
+              <td><code>fetchAppTransactions()</code>, <code>fetchTransactionsPreview()</code></td>
+              <td><code>recordQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/reports/current?period=...&amp;month=...</code></td>
+              <td><code>fetchAppCurrentReport()</code>, <code>fetchMonthlyReportPreview()</code></td>
+              <td><code>monthlyReportQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/reports/generate</code></td>
+              <td><code>generateAppReport()</code></td>
+              <td><code>handleGenerateMonthlyReport()</code>, <code>handleGenerateWeeklyReport()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>PATCH</td>
+              <td><code>/api/app/reports/:id</code></td>
+              <td><code>updateAppReport()</code></td>
+              <td><code>handleRenameReport()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td><code>/api/app/reports/:id</code></td>
+              <td><code>deleteAppReport()</code></td>
+              <td><code>handleDeleteReport()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/transactions</code></td>
+              <td><code>createAppTransaction()</code></td>
+              <td><code>handleSubmitRecord()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>DELETE</td>
+              <td><code>/api/app/transactions/:id</code></td>
+              <td><code>deleteAppTransaction()</code></td>
+              <td><code>handleDeleteTransaction()</code></td>
+              <td>없음</td>
+            </tr>
+            <tr>
+              <td>GET</td>
+              <td><code>/api/app/stats?month=...</code></td>
+              <td><code>fetchStatsPreview()</code></td>
+              <td><code>statsQueryOptions()</code></td>
+              <td>있음</td>
+            </tr>
+            <tr>
+              <td>POST</td>
+              <td><code>/api/app/push/reply</code></td>
+              <td>service worker direct fetch</td>
+              <td><code>webapp/src/sw.ts</code> notification inline reply</td>
+              <td>없음</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>5. preview fallback이 있는 읽기 화면</h2>
+        <p>
+          아래 함수들은 live API를 먼저 시도하고, 인증 토큰이 없거나 <code>401/403</code>이면
+          <code>mock-data.ts</code> 응답으로 대체한다.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>preview 함수</th>
+              <th>실제 API</th>
+              <th>mock 함수</th>
+              <th>사용 화면 계층</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fetchHomePreview()</code></td>
+              <td><code>GET /api/app/home</code></td>
+              <td><code>getMockHomeResponse()</code></td>
+              <td><code>homeQueryOptions()</code> → <code>main.tsx</code> → 화면 렌더</td>
+            </tr>
+            <tr>
+              <td><code>fetchReportPreview()</code></td>
+              <td><code>GET /api/app/report</code></td>
+              <td><code>getMockReportResponse()</code></td>
+              <td><code>reportQueryOptions()</code></td>
+            </tr>
+            <tr>
+              <td><code>fetchSearchPreview()</code></td>
+              <td><code>GET /api/app/search</code></td>
+              <td><code>getMockSearchResponse()</code></td>
+              <td><code>searchQueryOptions()</code></td>
+            </tr>
+            <tr>
+              <td><code>fetchCalendarPreview()</code></td>
+              <td><code>GET /api/app/calendar</code></td>
+              <td><code>getMockCalendarResponse()</code></td>
+              <td><code>calendarQueryOptions()</code></td>
+            </tr>
+            <tr>
+              <td><code>fetchTransactionsPreview()</code></td>
+              <td><code>GET /api/app/transactions</code></td>
+              <td><code>getMockTransactionsResponse()</code></td>
+              <td><code>recordQueryOptions()</code></td>
+            </tr>
+            <tr>
+              <td><code>fetchMonthlyReportPreview()</code></td>
+              <td><code>GET /api/app/reports/current</code></td>
+              <td><code>getMockCurrentReportResponse()</code></td>
+              <td><code>monthlyReportQueryOptions()</code></td>
+            </tr>
+            <tr>
+              <td><code>fetchStatsPreview()</code></td>
+              <td><code>GET /api/app/stats</code></td>
+              <td><code>getMockStatsResponse()</code></td>
+              <td><code>statsQueryOptions()</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>6. 코드 구조 해석</h2>
+        <ul>
+          <li><code>preview-api.ts</code>는 이름과 달리 실제 백엔드 호출 코드도 같이 가진다.</li>
+          <li><code>mock-data.ts</code>는 읽기 화면의 preview/demo 데이터를 제공한다.</li>
+          <li><code>main.tsx</code>는 쓰기 API와 세션/리포트 관리 API를 직접 호출한다.</li>
+          <li><code>lib/query.ts</code>는 읽기 화면 쿼리 옵션을 만들고, 여기서 preview 함수들이 연결된다.</li>
+          <li><code>sw.ts</code>는 quick entry 알림의 inline reply를 위해 <code>/api/app/push/reply</code>를 직접 호출한다.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>7. 정리</h2>
+        <ul>
+          <li>실제 백엔드가 이미 있다면, 제거 후보는 <code>mock-data.ts</code>와 preview fallback 로직이다.</li>
+          <li>하지만 <code>preview-api.ts</code> 전체는 삭제 대상이 아니라, 실제 API 계층으로 이름을 정리할 대상에 가깝다.</li>
+          <li>읽기 화면도 모두 실백엔드만 쓰게 바꾸려면 <code>fetch*Preview()</code> 계열 사용처부터 정리해야 한다.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+  </html>

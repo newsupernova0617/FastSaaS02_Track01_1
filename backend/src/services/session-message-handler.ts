@@ -113,7 +113,7 @@ export async function processSessionMessage({
       .returning()
       .get();
 
-    const aiService = createAIService(getLLMConfig(env), env.AI);
+    const aiService = createAIService(getLLMConfig(env));
     const vectorizeService = getVectorizeService(env, getDbClient(env));
     const contextService = getContextService(vectorizeService);
     const { recentTransactions, userCategories } = await loadUserAiContext(db, userId);
@@ -457,7 +457,7 @@ How can I help with your finances?`;
 
         case 'report': {
           const reportPayload = validateReportPayload(action.payload);
-          const reportService = new AIReportService(getLLMConfig(env), env.AI);
+          const reportService = new AIReportService(getLLMConfig(env));
           const report = await reportService.generateReport(db, userId, reportPayload);
           const savedReport = await db.insert(reports).values({
             userId,

@@ -1,14 +1,13 @@
 /** @jsxImportSource hono/jsx */
 import type { QueryObserverResult } from '@tanstack/query-core';
 import type { CalendarResponse } from '../../data/schemas';
-import type { SourcedData } from '../../data/preview-api';
 import { formatWon, dayLabel } from '../../lib/format';
 import { AppButton } from '../ui/AppButton';
 import { LoadingCard } from '../ui/LoadingCard';
 import { ErrorCard } from '../ui/ErrorCard';
 
 export function CalendarScreen(props: {
-  result: QueryObserverResult<SourcedData<CalendarResponse>, Error>;
+  result: QueryObserverResult<CalendarResponse, Error>;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (date: string) => void;
@@ -16,7 +15,7 @@ export function CalendarScreen(props: {
   if (props.result.isPending) return <LoadingCard label="달력 화면을 불러오는 중" />;
   if (props.result.isError || !props.result.data) return <ErrorCard message="달력 데이터를 불러오지 못했습니다." />;
 
-  const calendar = props.result.data.data;
+  const calendar = props.result.data;
   const { summary, days, selectedDay, monthLabel } = calendar;
   const firstDayOffset = days[0]?.weekday ?? 0;
   const gridCells: Array<(typeof days)[number] | null> = [
@@ -31,8 +30,8 @@ export function CalendarScreen(props: {
           <div class="text-[11px] font-bold text-slate-500">{monthLabel}</div>
           <div class="mt-1 text-[10px] font-medium text-slate-400">선택일 {selectedDay.date}</div>
         </div>
-        <div class={`rounded-full px-2 py-1 text-[10px] font-semibold ${props.result.data.source === 'live' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-          {props.result.data.source}
+        <div class="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+          live
         </div>
       </div>
 

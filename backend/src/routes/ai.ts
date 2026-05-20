@@ -151,7 +151,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
     // Save user message to session
     await saveMessageToSession(db, userId, sessionId, 'user', text);
 
-    const aiService = createAIService(getLLMConfig(c.env), c.env.AI);
+    const aiService = createAIService(getLLMConfig(c.env));
 
     // Initialize context service for RAG enhancement
     const contextService = getContextService({});
@@ -493,7 +493,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
         const reportPayload = validateReportPayload(action.payload);
 
         // Initialize report service
-        const reportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+        const reportService = new AIReportService(getLLMConfig(c.env));
 
         // Generate report
         const report = await reportService.generateReport(db, userId, reportPayload);

@@ -187,7 +187,7 @@ router.post('/generate', reportWriteRateLimit, async (c) => {
       }, 200);
     }
 
-    const reportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+    const reportService = new AIReportService(getLLMConfig(c.env));
     const report = await reportService.generateReport(db, userId, reportPayload);
     const savedReport = await db.insert(reports).values({
       userId,
@@ -229,7 +229,7 @@ router.get('/current', async (c) => {
     let report = await reportService.getLatestReportByType(userId, currentPayload.reportType);
 
     if (!report) {
-      const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+      const aiReportService = new AIReportService(getLLMConfig(c.env));
       const generated = await aiReportService.generateReport(db, userId, currentPayload);
       const savedReport = await db.insert(reports).values({
         userId,
@@ -253,7 +253,7 @@ router.get('/current', async (c) => {
         updatedAt: savedReport.updatedAt ?? savedReport.createdAt ?? new Date().toISOString(),
       };
     } else if (!report.summaryData) {
-      const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+      const aiReportService = new AIReportService(getLLMConfig(c.env));
       const summary = await aiReportService.generateSummary(db, userId, currentPayload);
       await reportService.updateReportSummary(userId, report.id, summary as unknown as Record<string, unknown>);
       report = {

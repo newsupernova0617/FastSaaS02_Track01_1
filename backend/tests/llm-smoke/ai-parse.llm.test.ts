@@ -1,10 +1,7 @@
-// NOTE: These tests run with mocked LLM because @cloudflare/vitest-pool-workers
-// is incompatible with Vitest 4.x. The structural assertions here document the
-// expected shape from real Workers AI calls.
+// NOTE: These tests run with a mocked LLM. The structural assertions here
+// document the expected shape from real provider calls.
 //
-// To run against real Workers AI:
-//   (a) Downgrade vitest to ^2.x and switch to defineWorkersConfig, or
-//   (b) Run `wrangler dev` and exercise endpoints via curl / an external runner.
+// To run against a live provider, set a real API key and unmock callLLM.
 //
 // Gate: only collected when RUN_LLM_TESTS=1 (vitest.llm.config.ts include array).
 
@@ -43,10 +40,11 @@ function makeAIService() {
   // Dynamic import so vi.spyOn in mockLlmResponse intercepts callLLM before
   // the module cache resolves. Re-import per test to avoid stale mocks.
   return import('../../src/services/ai').then(({ AIService }) => {
-    return new AIService(
-      { provider: 'workers-ai' as any, apiKey: '', modelName: '' },
-      null // no real AI binding needed — callLLM is mocked
-    );
+    return new AIService({
+      provider: 'openai',
+      apiKey: 'test-openai-key',
+      modelName: 'gpt-4o-mini',
+    });
   });
 }
 

@@ -1,10 +1,7 @@
-// NOTE: These tests run with mocked LLM because @cloudflare/vitest-pool-workers
-// is incompatible with Vitest 4.x. The structural assertions here document the
-// expected shape from the clarification flow in real usage.
+// NOTE: These tests run with a mocked LLM. The structural assertions here
+// document the expected shape from the clarification flow in real usage.
 //
-// To run against real Workers AI:
-//   (a) Downgrade vitest to ^2.x and switch to defineWorkersConfig, or
-//   (b) Run `wrangler dev` and exercise endpoints via curl / an external runner.
+// To run against a live provider, set a real API key and unmock callLLM.
 //
 // Gate: only collected when RUN_LLM_TESTS=1 (vitest.llm.config.ts include array).
 

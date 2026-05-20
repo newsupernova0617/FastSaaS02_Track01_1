@@ -512,7 +512,7 @@ router.get('/reports/current', zValidator('query', appReportPeriodSchema), async
   let report = await reportService.getLatestReportByType(userId, reportPayload.reportType);
 
   if (!report) {
-    const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+    const aiReportService = new AIReportService(getLLMConfig(c.env));
     const generated = await aiReportService.generateReport(db, userId, reportPayload);
     const savedReport = await db.insert(reports).values({
       userId,
@@ -538,7 +538,7 @@ router.get('/reports/current', zValidator('query', appReportPeriodSchema), async
   }
 
   if (report && !report.summaryData) {
-    const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+    const aiReportService = new AIReportService(getLLMConfig(c.env));
     const summary = await aiReportService.generateSummary(db, userId, reportPayload);
     await reportService.updateReportSummary(userId, report.id, summary as unknown as Record<string, unknown>);
     report = {
@@ -566,7 +566,7 @@ router.post('/reports/generate', appReportRateLimit, zValidator('json', appRepor
   const payload = c.req.valid('json');
   const reportPayload = buildCurrentReportPayload(payload.period, payload.month, payload.weekStart, payload.weekEnd);
 
-  const aiReportService = new AIReportService(getLLMConfig(c.env), c.env.AI);
+  const aiReportService = new AIReportService(getLLMConfig(c.env));
   const generated = await aiReportService.generateReport(db, userId, reportPayload);
   const savedReport = await db.insert(reports).values({
     userId,

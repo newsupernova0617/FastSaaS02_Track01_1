@@ -1,0 +1,22 @@
+{
+  "name": "backend-vps",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.3",
+    "@hono/zod-validator": "^0.7.2",
+    "@libsql/client": "^0.17.2",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.9",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "tsx": "^4.22.2",
+    "typescript": "^6.0.2"
+  }
+}
