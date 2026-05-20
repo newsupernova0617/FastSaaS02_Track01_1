@@ -169,11 +169,12 @@ async function callWorkersAI(
 
 /**
  * Build LLMConfig from environment variables.
- * If AI_PROVIDER is 'workers-ai', uses Cloudflare Workers AI.
- * If AI_PROVIDER is 'openrouter' and OPENROUTER_API_KEY is set, uses OpenRouter.
- * If AI_PROVIDER is 'openai' and OPENAI_API_KEY is set, uses OpenAI.
- * If AI_PROVIDER is 'gemini' or 'ai-studio' and a Gemini key is set, uses Gemini AI Studio / Gemini API.
- * Otherwise falls back to Workers AI.
+ * Priority:
+ *   1. Explicit AI_PROVIDER when the matching credentials exist
+ *   2. AI Studio / Gemini
+ *   3. OpenRouter
+ *   4. OpenAI
+ *   5. Workers AI (Cloudflare-only fallback)
  */
 export function getLLMConfig(env: {
   AI_PROVIDER?: string;
@@ -215,6 +216,31 @@ export function getLLMConfig(env: {
       modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }
+
+  if (geminiApiKey) {
+    return {
+      provider: 'ai-studio',
+      apiKey: geminiApiKey,
+      modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
+    };
+  }
+
+  if (env.OPENROUTER_API_KEY) {
+    return {
+      provider: 'openrouter',
+      apiKey: env.OPENROUTER_API_KEY,
+      modelName: env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini',
+    };
+  }
+
+  if (env.OPENAI_API_KEY) {
+    return {
+      provider: 'openai',
+      apiKey: env.OPENAI_API_KEY,
+      modelName: env.OPENAI_MODEL_NAME || 'gpt-4o-mini',
+    };
+  }
+
   return {
     provider: 'workers-ai',
     apiKey: '', // Not used for Workers AI

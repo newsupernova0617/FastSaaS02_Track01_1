@@ -1,5 +1,6 @@
-import { getDb, type Env } from '../index';
+import { getDb, getDbClient, type Env } from '../index';
 import { knowledgeBase } from '../schema';
+import { vectorizeService } from '../../services/vectorize';
 
 // Financial knowledge base items
 const KNOWLEDGE_ITEMS = [
@@ -125,7 +126,7 @@ const KNOWLEDGE_ITEMS = [
   },
 ];
 
-export async function seedKnowledgeBase(db: ReturnType<typeof getDb>) {
+export async function seedKnowledgeBase(db: ReturnType<typeof getDb>, env?: Env) {
   try {
     // Check if knowledge base already has items
     const existingItems = await db
@@ -138,10 +139,51 @@ export async function seedKnowledgeBase(db: ReturnType<typeof getDb>) {
       return;
     }
 
+    const runtimeEnv: Env = env || {
+      TURSO_DB_URL: process.env.TURSO_DB_URL || '',
+      TURSO_AUTH_TOKEN: process.env.TURSO_AUTH_TOKEN || '',
+      SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET || '',
+      SUPABASE_URL: process.env.SUPABASE_URL || '',
+      ADMIN_DASHBOARD_PASSWORD: process.env.ADMIN_DASHBOARD_PASSWORD,
+      AI_STUDIO_API_KEY: process.env.AI_STUDIO_API_KEY,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      GEMINI_MODEL_NAME: process.env.GEMINI_MODEL_NAME,
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+      OPENROUTER_MODEL_NAME: process.env.OPENROUTER_MODEL_NAME,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
+      WORKERS_AI_MODEL_NAME: process.env.WORKERS_AI_MODEL_NAME,
+      AI_PROVIDER: process.env.AI_PROVIDER as Env['AI_PROVIDER'],
+      AI: undefined,
+      VECTORIZE: undefined,
+      CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
+      CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
+      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
+      ENVIRONMENT: process.env.ENVIRONMENT,
+      GOOGLE_PLAY_PACKAGE_NAME: process.env.GOOGLE_PLAY_PACKAGE_NAME,
+      GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL,
+      GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY,
+      GOOGLE_PLAY_ACCESS_TOKEN: process.env.GOOGLE_PLAY_ACCESS_TOKEN,
+      GOOGLE_PUBSUB_PUSH_AUDIENCE: process.env.GOOGLE_PUBSUB_PUSH_AUDIENCE,
+      GOOGLE_PUBSUB_PUSH_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_PUBSUB_PUSH_SERVICE_ACCOUNT_EMAIL,
+      WEB_PUSH_VAPID_PUBLIC_KEY: process.env.WEB_PUSH_VAPID_PUBLIC_KEY,
+      WEB_PUSH_VAPID_PRIVATE_KEY_JWK: process.env.WEB_PUSH_VAPID_PRIVATE_KEY_JWK,
+      WEB_PUSH_SUBJECT: process.env.WEB_PUSH_SUBJECT,
+    };
+    const ragService = vectorizeService(runtimeEnv, getDbClient(runtimeEnv));
+    const rows = [];
+    for (const item of KNOWLEDGE_ITEMS) {
+      const embedding = await ragService.embedText(item.content);
+      rows.push({
+        ...item,
+        embedding,
+      });
+    }
+
     // Insert all knowledge items
     await db
       .insert(knowledgeBase)
-      .values(KNOWLEDGE_ITEMS);
+      .values(rows);
 
     console.log(`Successfully seeded ${KNOWLEDGE_ITEMS.length} knowledge base items`);
   } catch (error) {

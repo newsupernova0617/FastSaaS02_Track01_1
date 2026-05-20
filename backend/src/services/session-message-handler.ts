@@ -21,7 +21,7 @@ import {
   validateUpdatePayload,
 } from './validation';
 import { vectorizeService as getVectorizeService } from './vectorize';
-import type { Env } from '../db/index';
+import { getDbClient, type Env } from '../db/index';
 import type { TransactionAction } from '../types/ai';
 
 type ProcessSessionMessageParams = {
@@ -114,10 +114,7 @@ export async function processSessionMessage({
       .get();
 
     const aiService = createAIService(getLLMConfig(env), env.AI);
-    const vectorizeService = getVectorizeService(
-      env.CLOUDFLARE_ACCOUNT_ID || '',
-      env.CLOUDFLARE_API_TOKEN || ''
-    );
+    const vectorizeService = getVectorizeService(env, getDbClient(env));
     const contextService = getContextService(vectorizeService);
     const { recentTransactions, userCategories } = await loadUserAiContext(db, userId);
     const activeClarification = await clarificationService.getClarification(db, userId, sessionId);

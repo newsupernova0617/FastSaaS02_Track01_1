@@ -66,7 +66,8 @@ export type AppViewProps = {
   onRenameSession: (sessionId: number) => void;
   onSubmitSearch: () => void;
   onSubmitComposer: () => void;
-  onSignIn: () => void;
+  onSignIn: (email: string, password: string) => void;
+  onSignUp: (email: string, password: string) => void;
   onSignOut: () => void;
 };
 

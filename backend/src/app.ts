@@ -12,8 +12,6 @@ import { billingPublicRoutes, billingRoutes } from './routes/billing';
 import { userNotesRoutes } from './routes/user-notes';
 import { pushAuthRouter, pushPublicRouter } from './routes/push';
 import appRouter from './routes/app';
-import { userNotesService } from './services/user-notes';
-import { vectorizeService } from './services/vectorize';
 import { authMiddleware } from './middleware/auth';
 import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
@@ -79,9 +77,7 @@ app.route('/api/sessions', sessionsRouter);
 app.route('/api/contact-requests', contactRequestsRouter);
 app.route('/api/billing', billingRoutes);
 
-const vectorizeServiceForNotes = vectorizeService('', '');
-const notesServiceForNotes = userNotesService(vectorizeServiceForNotes);
-app.route('/api/notes', userNotesRoutes(notesServiceForNotes));
+app.route('/api/notes', userNotesRoutes());
 
 app.onError((err, c) => {
   if (err.name === 'ZodError') {

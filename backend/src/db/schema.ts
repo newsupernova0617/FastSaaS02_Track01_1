@@ -1,6 +1,34 @@
 // backend/src/db/schema.ts
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { customType, sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+
+const vector32 = customType<{
+    data: number[];
+    driverData: Uint8Array;
+    config: { dimensions: number };
+    configRequired: true;
+}>({
+    dataType(config) {
+        return `F32_BLOB(${config.dimensions})`;
+    },
+    toDriver(value) {
+        const buffer = new ArrayBuffer(value.length * 4);
+        const view = new DataView(buffer);
+        value.forEach((num, index) => {
+            view.setFloat32(index * 4, num, true);
+        });
+        return new Uint8Array(buffer);
+    },
+    fromDriver(value: Uint8Array) {
+        const bytes = value;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const result: number[] = [];
+        for (let offset = 0; offset < bytes.byteLength; offset += 4) {
+            result.push(view.getFloat32(offset, true));
+        }
+        return result;
+    },
+});
 
 // OAuth 로그인한 사용자 정보
 export const users = sqliteTable('users', {
@@ -92,6 +120,7 @@ export const userNotes = sqliteTable('user_notes', {
     userId:    text('user_id').notNull().references(() => users.id),
     content:   text('content').notNull(),
     embeddingId: text('embedding_id'),
+    embedding: vector32('embedding', { dimensions: 768 }),
     createdAt: text('created_at').default(sql`(datetime('now'))`),
     updatedAt: text('updated_at').default(sql`(datetime('now'))`),
 });
@@ -102,6 +131,7 @@ export const knowledgeBase = sqliteTable('knowledge_base', {
     content:   text('content').notNull(),
     category:  text('category'),
     embeddingId: text('embedding_id'),
+    embedding: vector32('embedding', { dimensions: 768 }),
     createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
@@ -192,9 +222,13 @@ export type Report = Omit<
 export type NewReport = typeof reports.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
-export type UserNote = typeof userNotes.$inferSelect;
+export type UserNote = Omit<typeof userNotes.$inferSelect, 'embedding'> & {
+  embedding?: number[] | null;
+};
 export type NewUserNote = typeof userNotes.$inferInsert;
-export type KnowledgeBaseItem = typeof knowledgeBase.$inferSelect;
+export type KnowledgeBaseItem = Omit<typeof knowledgeBase.$inferSelect, 'embedding'> & {
+  embedding?: number[] | null;
+};
 export type NewKnowledgeBaseItem = typeof knowledgeBase.$inferInsert;
 export type ContactRequest = typeof contactRequests.$inferSelect;
 export type NewContactRequest = typeof contactRequests.$inferInsert;

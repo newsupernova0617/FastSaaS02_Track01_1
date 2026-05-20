@@ -5,12 +5,19 @@ import type { UserNote, NewUserNote } from '../db/schema';
 export class UserNotesService {
   constructor(private vectorizeService: any) {}
 
+  private normalizeEmbedding(embedding: number[]): number[] {
+    if (embedding.length === 768) return embedding;
+    if (embedding.length > 768) return embedding.slice(0, 768);
+    return [...embedding, ...Array.from({ length: 768 - embedding.length }, () => 0)];
+  }
+
   /**
    * Create a new user note and vectorize it
    */
   async createNote(db: any, userId: string, content: string): Promise<UserNote> {
     // Vectorize the note content
     const embedding = await this.vectorizeService.embedText(content);
+    const normalizedEmbedding = this.normalizeEmbedding(embedding);
     const embeddingId = embedding.length > 0 ? `note-${Date.now()}` : null;
 
     // Insert note
@@ -20,6 +27,7 @@ export class UserNotesService {
         userId,
         content,
         embeddingId,
+        embedding: normalizedEmbedding,
       })
       .returning();
 
@@ -64,6 +72,7 @@ export class UserNotesService {
 
     // Re-vectorize
     const embedding = await this.vectorizeService.embedText(content);
+    const normalizedEmbedding = this.normalizeEmbedding(embedding);
     const embeddingId = embedding.length > 0 ? `note-${Date.now()}` : null;
 
     // Update
@@ -72,6 +81,7 @@ export class UserNotesService {
       .set({
         content,
         embeddingId,
+        embedding: normalizedEmbedding,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(userNotes.id, id))

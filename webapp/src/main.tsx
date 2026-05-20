@@ -7,7 +7,7 @@ import { calendarQueryOptions, homeQueryOptions, monthlyReportQueryOptions, quer
 import { appStore, type RouteName } from './state/app-store';
 import { authStore } from './state/auth-store';
 import type { AppCurrentReportResponse, AppProfileResponse, AppReportsResponse, AppTransactionsResponse, BootstrapResponse, CalendarResponse, HomeResponse, ReportResponse, SearchResponse, StatsResponse, TimelineResponse } from './data/schemas';
-import { getCurrentSession, onAuthStateChange, signInWithPassword, signOut } from './lib/supabase-auth';
+import { getCurrentSession, onAuthStateChange, signInWithPassword, signOut, signUpWithPassword } from './lib/supabase-auth';
 import { createAppSession, createAppTransaction, deleteAppReport, deleteAppSession, deleteAppTransaction, fetchAppBootstrap, fetchAppProfile, fetchAppPushPublicKey, fetchAppReportDetail, fetchAppReports, fetchAppTimeline, generateAppReport, registerAppPushSubscription, sendAppChat, sendAppQuickEntryTest, type SourcedData, unregisterAppPushSubscription, updateAppReport, updateAppSession } from './data/preview-api';
 import { clearQuickEntryRegistration, getQuickEntryRegistration, setQuickEntryRegistration, type QuickEntryRegistration } from './lib/quick-entry-store';
 import { pageEntries } from './lib/page-registry';
@@ -128,6 +128,7 @@ function renderApp() {
       onSubmitSearch={() => appStore.getState().submitSearch()}
       onSubmitComposer={handleComposerSubmit}
       onSignIn={handleSignIn}
+      onSignUp={handleSignUp}
       onSignOut={handleSignOut}
     />,
     root
@@ -852,16 +853,39 @@ async function handleComposerSubmit() {
   }
 }
 
-async function handleSignIn() {
+async function handleSignIn(email: string, password: string) {
   const auth = authStore.getState();
   authStore.getState().setLoading(true);
   authStore.getState().setError(null);
+  authStore.getState().setNotice(null);
   try {
-    const session = await signInWithPassword(auth.email.trim(), auth.password);
+    const session = await signInWithPassword(email.trim(), password);
     authStore.getState().setSession(session);
     await refreshAllQueries();
   } catch (error) {
     authStore.getState().setError(error instanceof Error ? error.message : '로그인에 실패했습니다.');
+  } finally {
+    authStore.getState().setLoading(false);
+    authStore.getState().setInitialized(true);
+  }
+}
+
+async function handleSignUp(email: string, password: string) {
+  authStore.getState().setLoading(true);
+  authStore.getState().setError(null);
+  authStore.getState().setNotice(null);
+  try {
+    const session = await signUpWithPassword(email.trim(), password);
+    if (session) {
+      authStore.getState().setSession(session);
+      await refreshAllQueries();
+      return;
+    }
+
+    authStore.getState().setNotice('가입이 완료되었습니다. 이메일 확인이 필요할 수 있습니다.');
+    authStore.getState().setMode('sign-in');
+  } catch (error) {
+    authStore.getState().setError(error instanceof Error ? error.message : '회원가입에 실패했습니다.');
   } finally {
     authStore.getState().setLoading(false);
     authStore.getState().setInitialized(true);

@@ -16,7 +16,10 @@ export type Env = {
     GEMINI_MODEL_NAME?: string;
     OPENROUTER_API_KEY?: string;
     OPENROUTER_MODEL_NAME?: string;
-    AI_PROVIDER?: 'ai-studio' | 'gemini' | 'openrouter' | 'workers-ai'; // defaults to 'workers-ai'
+    OPENAI_API_KEY?: string;
+    OPENAI_MODEL_NAME?: string;
+    WORKERS_AI_MODEL_NAME?: string;
+    AI_PROVIDER?: 'ai-studio' | 'gemini' | 'openrouter' | 'openai' | 'workers-ai';
     AI?: any; // Cloudflare Workers AI binding
     VECTORIZE?: any; // Cloudflare Vectorize binding (optional)
     CLOUDFLARE_ACCOUNT_ID?: string; // For Vectorize API calls
@@ -43,6 +46,21 @@ let cachedDbKey: string | undefined;
 let cachedClient: Client | undefined;
 let cachedDb: ReturnType<typeof createDb> | undefined;
 
+export function getDbClient(env: Env) {
+    const key = `${env.TURSO_DB_URL}\0${env.TURSO_AUTH_TOKEN}`;
+
+    if (cachedClient && cachedDbKey === key) {
+        return cachedClient;
+    }
+
+    cachedClient = createClient({
+        url: env.TURSO_DB_URL,
+        authToken: env.TURSO_AUTH_TOKEN,
+    });
+    cachedDbKey = key;
+    return cachedClient;
+}
+
 export function getDb(env: Env) {
     const key = `${env.TURSO_DB_URL}\0${env.TURSO_AUTH_TOKEN}`;
 
@@ -50,11 +68,7 @@ export function getDb(env: Env) {
         return cachedDb;
     }
 
-    cachedClient = createClient({
-        url: env.TURSO_DB_URL,
-        authToken: env.TURSO_AUTH_TOKEN,
-    });
+    cachedClient = getDbClient(env);
     cachedDb = createDb(cachedClient);
-    cachedDbKey = key;
     return cachedDb;
 }

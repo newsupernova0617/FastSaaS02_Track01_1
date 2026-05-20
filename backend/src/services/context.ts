@@ -17,12 +17,13 @@ export class ContextService {
   ): Promise<ContextData> {
     // Determine retrieval strategy
     const strategy = this.getRetrievalStrategy(actionType);
+    const queryEmbedding = await this.getQueryEmbedding(userText);
 
     // Retrieve context from each source
     const [knowledge, transactions_context, notes] = await Promise.all([
-      this.retrieveKnowledge(db, strategy.knowledgeItems),
+      this.retrieveKnowledge(db, queryEmbedding, strategy.knowledgeItems),
       this.retrieveTransactions(db, userId, userText, strategy.transactionItems),
-      this.retrieveNotes(db, userId, strategy.noteItems),
+      this.retrieveNotes(db, userId, queryEmbedding, strategy.noteItems),
     ]);
 
     // Format for LLM injection
@@ -47,10 +48,12 @@ export class ContextService {
     userId: string,
     userText: string
   ): Promise<ContextData> {
+    const queryEmbedding = await this.getQueryEmbedding(userText);
+
     const [knowledge, transactions_context, notes] = await Promise.all([
-      this.retrieveKnowledge(db, 3),
+      this.retrieveKnowledge(db, queryEmbedding, 3),
       this.retrieveTransactions(db, userId, userText, 10),
-      this.retrieveNotes(db, userId, 3),
+      this.retrieveNotes(db, userId, queryEmbedding, 3),
     ]);
 
     const formatted = this.formatContextMessage(knowledge, transactions_context, notes);
@@ -139,8 +142,24 @@ export class ContextService {
   /**
    * Retrieve knowledge base items
    */
-  private async retrieveKnowledge(db: any, limit: number): Promise<ContextItem[]> {
+  private async retrieveKnowledge(
+    db: any,
+    queryEmbedding: number[] | null,
+    limit: number
+  ): Promise<ContextItem[]> {
     if (limit <= 0) return [];
+
+    if (queryEmbedding?.length && typeof this.vectorizeService?.searchVectors === 'function') {
+      const items = await this.vectorizeService.searchVectors(queryEmbedding, 'knowledge_base', limit);
+      if (items.length > 0) {
+        return items.map((item: any) => ({
+          type: 'knowledge' as const,
+          content: item.content,
+          source: 'rag',
+          metadata: { id: item.id, score: item.score },
+        }));
+      }
+    }
 
     const items = await db
       .select()
@@ -187,8 +206,25 @@ export class ContextService {
   /**
    * Retrieve user notes for context
    */
-  private async retrieveNotes(db: any, userId: string, limit: number): Promise<ContextItem[]> {
+  private async retrieveNotes(
+    db: any,
+    userId: string,
+    queryEmbedding: number[] | null,
+    limit: number
+  ): Promise<ContextItem[]> {
     if (limit <= 0) return [];
+
+    if (queryEmbedding?.length && typeof this.vectorizeService?.searchVectors === 'function') {
+      const items = await this.vectorizeService.searchVectors(queryEmbedding, 'user_notes', limit, userId);
+      if (items.length > 0) {
+        return items.map((item: any) => ({
+          type: 'note' as const,
+          content: item.content,
+          source: 'rag',
+          metadata: { id: item.id, score: item.score },
+        }));
+      }
+    }
 
     const items = await db
       .select()
@@ -237,6 +273,19 @@ export class ContextService {
     return sections.length > 0
       ? 'Consider this context:\n\n' + sections.join('\n\n')
       : '';
+  }
+
+  private async getQueryEmbedding(userText: string): Promise<number[] | null> {
+    if (typeof this.vectorizeService?.embedText !== 'function') {
+      return null;
+    }
+
+    try {
+      return await this.vectorizeService.embedText(userText);
+    } catch (error) {
+      console.warn('[RAG] Failed to build query embedding:', error);
+      return null;
+    }
   }
 }
 

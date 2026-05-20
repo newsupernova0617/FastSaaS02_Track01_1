@@ -11,13 +11,20 @@
 // ============================================================
 
 import { Hono } from 'hono';
-import { getDb, Env } from '../db/index';
+import { getDb, type Env } from '../db/index';
 import type { Context as HonoContext } from 'hono';
 import type { Variables } from '../middleware/auth';
 import type { UserNote } from '../db/schema';
+import { userNotesService } from '../services/user-notes';
+import { vectorizeService } from '../services/vectorize';
 
-export const createUserNotesRoutes = (userNotesService: any) => {
+export const createUserNotesRoutes = (notesServiceOverride?: any) => {
   const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+  const buildNotesService = async (env: Env) => {
+    if (notesServiceOverride) return notesServiceOverride;
+    const { getDbClient } = await import('../db/index');
+    return userNotesService(vectorizeService(env, getDbClient(env)));
+  };
 
   /**
    * POST /api/notes - 새 노트 생성
@@ -27,13 +34,14 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');  // [보안] JWT에서 추출
       const db = getDb(c.env);
+      const notesService = await buildNotesService(c.env);
       const { content } = await c.req.json();
 
       if (!content) {
         return c.json({ error: 'Content is required' }, 400);
       }
 
-      const note = await userNotesService.createNote(db, userId, content);
+      const note = await notesService.createNote(db, userId, content);
       return c.json(note, 201);
     } catch (error) {
       console.error('Error creating note:', error);
@@ -48,7 +56,8 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
-      const notes = await userNotesService.listNotes(db, userId);
+      const notesService = await buildNotesService(c.env);
+      const notes = await notesService.listNotes(db, userId);
       return c.json(notes);
     } catch (error) {
       console.error('Error listing notes:', error);
@@ -63,13 +72,14 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
+      const notesService = await buildNotesService(c.env);
       const idParam = c.req.param('id');
       if (!idParam) {
         return c.json({ error: 'Note ID is required' }, 400);
       }
       const id = parseInt(idParam);
 
-      const note = await userNotesService.getNote(db, id, userId);
+      const note = await notesService.getNote(db, id, userId);
       if (!note) {
         return c.json({ error: 'Note not found' }, 404);
       }
@@ -88,6 +98,7 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
+      const notesService = await buildNotesService(c.env);
       const idParam = c.req.param('id');
       if (!idParam) {
         return c.json({ error: 'Note ID is required' }, 400);
@@ -99,7 +110,7 @@ export const createUserNotesRoutes = (userNotesService: any) => {
         return c.json({ error: 'Content is required' }, 400);
       }
 
-      const note = await userNotesService.updateNote(db, id, userId, content);
+      const note = await notesService.updateNote(db, id, userId, content);
       return c.json(note);
     } catch (error: any) {
       if (error.message === 'Note not found or unauthorized') {
@@ -117,13 +128,14 @@ export const createUserNotesRoutes = (userNotesService: any) => {
     try {
       const userId = c.get('userId');
       const db = getDb(c.env);
+      const notesService = await buildNotesService(c.env);
       const idParam = c.req.param('id');
       if (!idParam) {
         return c.json({ error: 'Note ID is required' }, 400);
       }
       const id = parseInt(idParam);
 
-      await userNotesService.deleteNote(db, id, userId);
+      await notesService.deleteNote(db, id, userId);
       return c.json({ success: true });
     } catch (error: any) {
       if (error.message === 'Note not found or unauthorized') {

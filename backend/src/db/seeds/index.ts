@@ -57,7 +57,7 @@ async function runSeeds() {
 
   const db = getDb(env);
 
-  await seedKnowledgeBase(db);
+  await seedKnowledgeBase(db, env);
 
   console.log('All seeds completed successfully');
 }

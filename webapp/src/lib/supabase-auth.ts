@@ -34,6 +34,12 @@ export async function signInWithPassword(email: string, password: string): Promi
   return data.session;
 }
 
+export async function signUpWithPassword(email: string, password: string): Promise<Session | null> {
+  const { data, error } = await getSupabaseClient().auth.signUp({ email, password });
+  if (error) throw error;
+  return data.session;
+}
+
 export async function signOut(): Promise<void> {
   const { error } = await getSupabaseClient().auth.signOut();
   if (error) throw error;

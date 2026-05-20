@@ -154,7 +154,7 @@ router.post('/action', aiActionRateLimit, async (c) => {
     const aiService = createAIService(getLLMConfig(c.env), c.env.AI);
 
     // Initialize context service for RAG enhancement
-    const contextService = getContextService(c.env.VECTORIZE);
+    const contextService = getContextService({});
 
     // Fetch user context
     const { recentTransactions, userCategories } = await loadUserAiContext(db, userId);
