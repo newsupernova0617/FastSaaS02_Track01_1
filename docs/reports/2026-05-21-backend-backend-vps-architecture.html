@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>backend / backend-vps 구조 보고서</title>
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'neutral',
+        securityLevel: 'loose',
+      });
+    </script>
+    <style>
+      :root {
+        --bg: #f3efe8;
+        --panel: rgba(255, 252, 247, 0.92);
+        --panel-strong: #fffdfa;
+        --line: rgba(60, 44, 28, 0.14);
+        --text: #1d1814;
+        --muted: #65584b;
+        --accent: #9f3d2e;
+        --accent-soft: rgba(159, 61, 46, 0.12);
+        --ok: #1f6a43;
+        --shadow: 0 24px 56px rgba(61, 45, 29, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(159, 61, 46, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(31, 106, 67, 0.08), transparent 24%),
+          linear-gradient(180deg, #f8f4ed 0%, var(--bg) 100%);
+      }
+
+      .wrap {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 36px 0 60px;
+      }
+
+      .hero,
+      .section,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        padding: 36px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        right: -80px;
+        bottom: -80px;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(159, 61, 46, 0.2), transparent 65%);
+      }
+
+      h1, h2, h3, p {
+        margin: 0;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .hero h1 {
+        margin-top: 18px;
+        max-width: 860px;
+        font-size: clamp(30px, 5vw, 54px);
+        line-height: 1.06;
+      }
+
+      .hero p {
+        margin-top: 16px;
+        max-width: 860px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.65;
+      }
+
+      .meta,
+      .stats,
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .meta,
+      .stats {
+        margin-top: 28px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .meta .item,
+      .stats .item {
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: var(--panel-strong);
+        border: 1px solid var(--line);
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .stats .value {
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .section {
+        margin-top: 24px;
+        padding: 28px;
+      }
+
+      .section h2 {
+        margin-bottom: 10px;
+        font-size: 26px;
+      }
+
+      .section > p {
+        margin-bottom: 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      .card h3 {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      ul {
+        margin: 12px 0 0;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .diagram {
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: #faf6f0;
+        overflow: auto;
+      }
+
+      code {
+        padding: 2px 7px;
+        border-radius: 8px;
+        background: rgba(29, 24, 20, 0.08);
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 0.92em;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(31, 106, 67, 0.12);
+        color: var(--ok);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .footer {
+        margin-top: 24px;
+        padding: 22px 24px;
+        border-radius: 20px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          width: min(100% - 24px, 1180px);
+          padding-top: 20px;
+          padding-bottom: 36px;
+        }
+
+        .hero,
+        .section {
+          padding: 22px;
+        }
+
+        .hero p {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <span class="eyebrow">Architecture Report</span>
+        <h1>`backend`와 `backend-vps`가 어떤 역할로 나뉘고, 어떤 요청이 어디로 흐르는지 설명하는 구조 보고서</h1>
+        <p>
+          현재 구조는 `backend`를 Cloudflare Workers 메인 게이트웨이로 두고,
+          직접 AI 통신이 필요한 경로만 `backend-vps`로 프록시하는 하이브리드 백엔드입니다.
+          두 백엔드는 같은 Turso DB에 직접 접근하지만, 역할 경계는 요청 경로 기준으로 분리되어 있습니다.
+        </p>
+        <div class="meta">
+          <div class="item">
+            <span class="label">메인 백엔드</span>
+            <div class="value">`backend/`</div>
+          </div>
+          <div class="item">
+            <span class="label">AI 전용 백엔드</span>
+            <div class="value">`backend-vps/`</div>
+          </div>
+          <div class="item">
+            <span class="label">런타임</span>
+            <div class="value">Workers + VPS</div>
+          </div>
+          <div class="item">
+            <span class="label">DB 접근</span>
+            <div class="value">둘 다 Turso 직접 접근</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>한눈에 보는 구조</h2>
+        <p>프론트는 Workers만 바라보고, Workers가 AI 직접 통신 경로만 VPS로 보냅니다.</p>
+        <div class="diagram">
+          <div class="mermaid">
+flowchart LR
+    FE[Frontend / Mobile / Webapp]
+    CF[backend<br/>Cloudflare Workers]
+    VPS[backend-vps<br/>Node.js VPS]
+    DB[(Turso DB)]
+    AI[External AI API<br/>AI Studio / Gemini / OpenAI / OpenRouter]
+
+    FE --> CF
+    CF -->|general API| DB
+    CF -->|direct AI routes proxy| VPS
+    VPS --> DB
+    VPS --> AI
+          </div>
+        </div>
+        <div class="pill">프론트 입장에서는 API 엔드포인트가 여전히 하나처럼 보이도록 유지</div>
+      </section>
+
+      <section class="section">
+        <h2>역할 분리</h2>
+        <p>핵심은 “일반 API는 Workers”, “직접 AI API는 VPS”입니다.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>`backend`가 맡는 것</h3>
+            <ul>
+              <li>Cloudflare Workers 메인 백엔드</li>
+              <li>JWT 인증, CORS, 로깅, 일반 API 처리</li>
+              <li>`AI_API_BASE_URL` 기준 직접 AI 라우트 프록시</li>
+              <li>일반 CRUD / 일반 조회 / AI 비직접 경로 처리</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>`backend-vps`가 맡는 것</h3>
+            <ul>
+              <li>Node.js VPS에서 실행되는 AI 전용 백엔드</li>
+              <li>LLM 호출</li>
+              <li>세션 메시지 처리</li>
+              <li>AI 리포트 생성 / 현재 리포트 생성</li>
+              <li>푸시 응답 기반 AI 처리</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>공통 전제</h3>
+            <ul>
+              <li>둘 다 같은 Turso DB를 직접 사용</li>
+              <li>둘 다 Supabase JWT를 기준으로 인증</li>
+              <li>프론트는 Workers 엔드포인트만 알면 됨</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>요청 흐름</h2>
+        <p>일반 API와 직접 AI API의 요청 흐름은 다릅니다.</p>
+        <div class="diagram">
+          <div class="mermaid">
+sequenceDiagram
+    participant U as User / Frontend
+    participant W as backend (Workers)
+    participant V as backend-vps
+    participant T as Turso
+    participant L as External AI API
+
+    alt General API
+      U->>W: /api/transactions, /api/users, etc
+      W->>T: direct DB read/write
+      T-->>W: result
+      W-->>U: response
+    else Direct AI API
+      U->>W: /api/ai/action or /api/sessions/:id/messages
+      W->>V: proxy request
+      V->>T: load session / transactions / reports
+      V->>L: LLM request
+      L-->>V: AI response
+      V->>T: save message / save report / update data
+      T-->>V: result
+      V-->>W: response
+      W-->>U: response
+    end
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>보고서 생성 흐름</h2>
+        <p>`webapp` 사용자가 보고서 작성을 요청하면, 프론트는 Workers만 호출하고 실제 AI 보고서 생성은 `backend-vps`가 담당합니다.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>요청 시작점</h3>
+            <ul>
+              <li>`webapp`이 `backend`로 요청</li>
+              <li>예: <code>POST /api/reports/generate</code></li>
+              <li>또는 <code>POST /api/app/reports/generate</code></li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Workers 역할</h3>
+            <ul>
+              <li>요청 경로가 직접 AI 라우트인지 판별</li>
+              <li>해당 경로면 `AI_API_BASE_URL`로 프록시</li>
+              <li>즉 `backend-vps`로 전달</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>VPS 역할</h3>
+            <ul>
+              <li>Turso에서 사용자 거래/기존 리포트 조회</li>
+              <li>외부 AI API 호출로 리포트 생성</li>
+              <li>생성 결과를 Turso `reports` 테이블에 저장</li>
+            </ul>
+          </article>
+        </div>
+        <div class="diagram" style="margin-top: 18px;">
+          <div class="mermaid">
+sequenceDiagram
+    participant W as webapp
+    participant B as backend (Workers)
+    participant V as backend-vps
+    participant T as Turso
+    participant AI as External AI API
+
+    W->>B: POST /api/reports/generate
+    B->>V: proxy request
+    V->>T: load user transactions / existing reports
+    T-->>V: source data
+    V->>AI: generate report
+    AI-->>V: report content
+    V->>T: save report
+    T-->>V: saved report
+    V-->>B: response
+    B-->>W: response
+          </div>
+        </div>
+        <div class="pill">중요: `webapp`은 `backend-vps`를 직접 호출하지 않고, 항상 `backend`를 통해 간접적으로 도달</div>
+      </section>
+
+      <section class="section">
+        <h2>직접 AI 라우트 목록</h2>
+        <p>현재 `backend`가 프록시하고 `backend-vps`가 처리하는 경로는 아래와 같습니다.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>레거시 / 세션</h3>
+            <ul>
+              <li><code>POST /api/ai/action</code></li>
+              <li><code>POST /api/sessions/:sessionId/messages</code></li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>앱 채팅 / 푸시</h3>
+            <ul>
+              <li><code>POST /api/app/chat</code></li>
+              <li><code>POST /api/app/push/reply</code></li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>리포트</h3>
+            <ul>
+              <li><code>GET /api/reports/current</code></li>
+              <li><code>POST /api/reports/generate</code></li>
+              <li><code>GET /api/app/reports/current</code></li>
+              <li><code>POST /api/app/reports/generate</code></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>코드 기준 구조</h2>
+        <p>어떤 파일이 어디서 무슨 역할을 하는지도 코드 기준으로 나눌 수 있습니다.</p>
+        <div class="diagram">
+          <div class="mermaid">
+flowchart TD
+    subgraph CF["backend / Cloudflare Workers"]
+      CFI[src/index.ts]
+      CFR[runtime/ai-routing.ts]
+      CFA[src/app.ts]
+      CFT[routes/* general APIs]
+      CFI --> CFR
+      CFI --> CFA
+      CFA --> CFT
+    end
+
+    subgraph VPS["backend-vps / Node VPS"]
+      VSS[src/server.ts]
+      VSA[src/app-vps.ts]
+      VRT[routes/ai.ts]
+      VRS[routes/sessions.ts]
+      VRP[routes/push.ts]
+      VRR[routes/reports.ts]
+      VRA[routes/app.ts]
+      VSV[services/session-message-handler.ts]
+      VLLM[services/llm.ts]
+      VREP[services/ai-report.ts]
+      VSS --> VSA
+      VSA --> VRT
+      VSA --> VRS
+      VSA --> VRP
+      VSA --> VRR
+      VSA --> VRA
+      VRT --> VSV
+      VRS --> VSV
+      VRA --> VSV
+      VRR --> VREP
+      VSV --> VLLM
+      VREP --> VLLM
+    end
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Turso 접근 방식</h2>
+        <p>중요한 점은 현재 AI API가 별도 내부 DB API를 거치지 않고, Turso에 직접 붙는다는 것입니다.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>현재 방식</h3>
+            <ul>
+              <li>`backend`도 Turso 직접 접근</li>
+              <li>`backend-vps`도 Turso 직접 접근</li>
+              <li>즉 DB write 책임이 두 런타임에 분산</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>장점</h3>
+            <ul>
+              <li>구현 단순</li>
+              <li>프록시 한 번 더 거치는 내부 DB API가 없음</li>
+              <li>AI 처리 후 바로 저장 가능</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>주의점</h3>
+            <ul>
+              <li>DB 접근 정책이 두 군데에 존재</li>
+              <li>권한/검증 로직이 양쪽에서 맞아야 함</li>
+              <li>장기적으로는 공용 패키지 분리가 더 안전</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>현재 판단</h2>
+        <p>현재 구조는 “전체 백엔드를 VPS로 옮기지 않고, AI 직접 통신 경로만 VPS로 빼는” 목적에는 잘 맞습니다.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>장점</h3>
+            <ul>
+              <li>Cloudflare를 메인 진입점으로 유지 가능</li>
+              <li>AI 통신 이슈가 있는 구간만 우회 가능</li>
+              <li>프론트 변경 범위를 최소화 가능</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>남은 과제</h3>
+            <ul>
+              <li>`backend-vps`와 `backend`의 중복 코드 관리</li>
+              <li>프록시 타임아웃 / 재시도 / 로깅 정책 강화</li>
+              <li>장기적으로 공용 코어 패키지 분리 검토</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <div class="footer">
+        이 보고서는 2026-05-21 기준 `backend`와 `backend-vps`의 현재 구조를 Mermaid 다이어그램으로 설명하는 문서입니다.
+        핵심은 “Workers가 메인, VPS가 직접 AI API 전용”이며, 두 런타임이 같은 Turso DB를 직접 사용하는 구조라는 점입니다.
+      </div>
+    </main>
+  </body>
+</html>

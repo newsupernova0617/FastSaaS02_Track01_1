@@ -10,7 +10,7 @@ AI 기반 가계부 챗봇 애플리케이션입니다. 자연어로 가계부�
 | Backend | Hono (Cloudflare Workers) |
 | Database | Turso (Serverless SQLite) + Drizzle ORM |
 | Auth | Supabase (OAuth + JWT) |
-| AI | OpenAI / Gemini / OpenRouter |
+| AI | AI Studio / Gemini / OpenAI / OpenRouter |
 | Mobile | Capacitor |
 
 ## 개발 서버 실행 방법
@@ -30,7 +30,7 @@ npm run dev      # wrangler dev 실행
 http://localhost:8787
 ```
 
-> **환경 변수**: 민감 정보(`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`)는 `backend/.dev.vars`에 저장합니다. AI는 `AI_PROVIDER=openai|gemini|openrouter` 중 하나와 해당 API 키를 사용합니다. AI 직접 호출 경로를 VPS로 분리하려면 `AI_API_BASE_URL=http://localhost:8788` 같은 값을 같이 둡니다.
+> **환경 변수**: 민감 정보(`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`)는 `backend/.dev.vars`에 저장합니다. Workers 쪽은 `AI_API_BASE_URL`과 `AI_PROXY_SECRET`로 VPS의 RAG/AI 경로를 호출합니다. AI 모델 키와 provider 설정은 `backend-vps/.env` 쪽에 둡니다.
 
 ### 터미널 2: AI VPS 백엔드
 
@@ -46,6 +46,8 @@ http://localhost:8788
 ```
 
 > **직접 분리 대상**: `POST /api/ai/action`, `POST /api/sessions/:sessionId/messages`, `POST /api/app/chat`, `POST /api/app/push/reply`, 리포트 `current/generate` 경로만 `backend-vps`로 프록시됩니다.
+
+> **배포 경계**: `backend/`는 Cloudflare Workers 전용이고, `backend-vps/`는 VPS 전용입니다.
 
 ### 터미널 3: 프론트엔드
 
@@ -102,8 +104,7 @@ lsof -i :8787
    - `SUPABASE_JWT_SECRET`
    - `SUPABASE_URL`
    - `AI_API_BASE_URL`
-   - `AI_PROVIDER`
-   - `OPENAI_API_KEY` / `GEMINI_API_KEY` / `OPENROUTER_API_KEY` 중 사용 중인 provider에 맞는 값
+   - `AI_PROXY_SECRET`
 2. 배포합니다:
 
 ```bash
@@ -118,8 +119,9 @@ npm run deploy
    - `TURSO_AUTH_TOKEN`
    - `SUPABASE_JWT_SECRET`
    - `SUPABASE_URL`
-   - `AI_PROVIDER`
-   - `OPENAI_API_KEY` / `GEMINI_API_KEY` / `OPENROUTER_API_KEY`
+   - `AI_PROXY_SECRET`
+   - `AI_STUDIO_API_KEY`
+   - `GEMINI_API_KEY` / `OPENAI_API_KEY` / `OPENROUTER_API_KEY` only if you intentionally switch providers
 2. 서버에서 실행합니다:
 
 ```bash

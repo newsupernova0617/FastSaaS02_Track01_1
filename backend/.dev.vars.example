@@ -1,0 +1,9 @@
+TURSO_DB_URL="libsql://your-database.turso.io"
+TURSO_AUTH_TOKEN="your-turso-auth-token"
+
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_JWT_SECRET="your-supabase-jwt-secret"
+AI_API_BASE_URL="http://localhost:8788"
+AI_PROXY_SECRET="your-internal-proxy-secret"
+
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173,http://localhost:4321,https://fastsaas02-track01-1.pages.dev,https://fastsaas02-track01-1-webapp.pages.dev,https://landing-page-7hu.pages.dev"

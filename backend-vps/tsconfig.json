@@ -9,7 +9,9 @@
     "types": ["node"]
   },
   "include": [
-    "src/**/*.ts",
-    "../backend/src/**/*.ts"
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
   ]
 }

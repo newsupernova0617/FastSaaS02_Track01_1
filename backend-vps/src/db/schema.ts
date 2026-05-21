@@ -1,0 +1,238 @@
+// backend/src/db/schema.ts
+import { customType, sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+const vector32 = customType<{
+    data: number[];
+    driverData: Uint8Array;
+    config: { dimensions: number };
+    configRequired: true;
+}>({
+    dataType(config) {
+        return `F32_BLOB(${config.dimensions})`;
+    },
+    toDriver(value) {
+        const buffer = new ArrayBuffer(value.length * 4);
+        const view = new DataView(buffer);
+        value.forEach((num, index) => {
+            view.setFloat32(index * 4, num, true);
+        });
+        return new Uint8Array(buffer);
+    },
+    fromDriver(value: Uint8Array) {
+        const bytes = value;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const result: number[] = [];
+        for (let offset = 0; offset < bytes.byteLength; offset += 4) {
+            result.push(view.getFloat32(offset, true));
+        }
+        return result;
+    },
+});
+
+// OAuth 로그인한 사용자 정보
+export const users = sqliteTable('users', {
+    id:        text('id').primaryKey(),      // Supabase에서 할당한 고유 사용자 ID
+    email:     text('email'),                 // 이메일 (선택사항)
+    name:      text('name'),                  // 사용자 이름 (선택사항)
+    avatarUrl: text('avatar_url'),            // 프로필 이미지 URL
+    provider:  text('provider').notNull(),    // 'google' 또는 'kakao' 같은 OAuth 제공자
+    createdAt: text('created_at').default(sql`(datetime('now'))`), // 생성 시간 (자동)
+});
+
+// 지출/수입 거래 기록
+export const transactions = sqliteTable('transactions', {
+    id:        integer('id').primaryKey({ autoIncrement: true }), // 자동 증가 ID
+    userId:    text('user_id').notNull().references(() => users.id), // 어느 사용자의 거래인지
+    type:      text('type', { enum: ['income', 'expense'] }).notNull(), // 수입 또는 지출
+    amount:    integer('amount').notNull(),   // 금액 (원)
+    category:  text('category').notNull(),    // 식비, 교통, 월급 등 카테고리
+    memo:      text('memo'),                  // 추가 설명 (선택사항)
+    date:      text('date').notNull(),        // YYYY-MM-DD 형식의 거래 날짜
+    createdAt: text('created_at').default(sql`(datetime('now'))`), // 기록 생성 시간 (자동)
+    deletedAt: text('deleted_at'),            // 소프트 삭제 타임스탬프 (선택사항, null이면 활성 상태)
+    previousState: text('previous_state'),    // 수정 전 상태 JSON (undo용, 1단계만 지원)
+});
+
+// Chat sessions for organizing conversations (forward declare)
+export const sessions = sqliteTable('sessions', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    userId:    text('user_id').notNull().references(() => users.id),
+    title:     text('title').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+// AI 챗 메시지 기록
+export const chatMessages = sqliteTable('chat_messages', {
+    id:        integer('id').primaryKey({ autoIncrement: true }), // 자동 증가 ID
+    userId:    text('user_id').notNull().references(() => users.id), // 어느 사용자의 메시지인지
+    sessionId: integer('session_id').references(() => sessions.id), // 대화 세션 ID (선택사항)
+    role:      text('role', { enum: ['user', 'assistant'] }).notNull(), // 사용자 또는 어시스턴트
+    content:   text('content').notNull(),     // 메시지 내용
+    metadata:  text('metadata'),              // JSON 형식의 추가 메타데이터 (리포트 데이터 등)
+    createdAt: text('created_at').default(sql`(datetime('now'))`), // 메시지 생성 시간 (자동)
+});
+
+// Clarification sessions for handling ambiguous user input
+export const clarificationSessions = sqliteTable('clarification_sessions', {
+    id:        text('id').primaryKey(),                    // UUID, generated
+    userId:    text('user_id').notNull().references(() => users.id),
+    chatSessionId: integer('chat_session_id').notNull().references(() => sessions.id),
+    state:     text('state').notNull(),                    // JSON string: ClarificationState
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+export type ClarificationSession = typeof clarificationSessions.$inferSelect;
+export type NewClarificationSession = typeof clarificationSessions.$inferInsert;
+
+export interface ClarificationState {
+  missingFields: string[];          // ['amount', 'category']
+  partialData: {
+    transactionType?: 'income' | 'expense';
+    amount?: number;
+    category?: string;
+    memo?: string;
+    date?: string;
+  };
+  messageId: string;                // ID of AI's clarification message
+}
+
+// AI 생성 리포트
+export const reports = sqliteTable('reports', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id').notNull().references(() => users.id),
+    reportType: text('report_type', {
+        enum: ['weekly_summary', 'monthly_summary', 'category_detail', 'spending_pattern', 'anomaly', 'suggestion']
+    }).notNull(),
+    title: text('title').notNull(),
+    subtitle: text('subtitle'),
+    reportData: text('report_data').notNull(), // JSON string
+    summaryData: text('summary_data'), // JSON string for preview/home cards
+    params: text('params').notNull(), // JSON string
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+// User notes for personalized context
+export const userNotes = sqliteTable('user_notes', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    userId:    text('user_id').notNull().references(() => users.id),
+    content:   text('content').notNull(),
+    embeddingId: text('embedding_id'),
+    embedding: vector32('embedding', { dimensions: 768 }),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+// Financial knowledge base (static, shared across users)
+export const knowledgeBase = sqliteTable('knowledge_base', {
+    id:        integer('id').primaryKey({ autoIncrement: true }),
+    content:   text('content').notNull(),
+    category:  text('category'),
+    embeddingId: text('embedding_id'),
+    embedding: vector32('embedding', { dimensions: 768 }),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+// 출시 알림 이메일 수집 (랜딩페이지 공개 엔드포인트)
+// 인증 없이 접근 가능하므로 userId 없음
+export const waitlist = sqliteTable('waitlist', {
+    id:        text('id').primaryKey(),        // crypto.randomUUID()
+    email:     text('email').notNull().unique(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
+export const contactRequests = sqliteTable('contact_requests', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: text('user_id').notNull().references(() => users.id),
+    type: text('type', {
+        enum: ['bug', 'feature', 'account', 'billing', 'other']
+    }).notNull(),
+    title: text('title').notNull(),
+    details: text('details').notNull(),
+    status: text('status', {
+        enum: ['new', 'in_progress', 'resolved']
+    }).notNull().default('new'),
+    metadata: text('metadata').notNull().default('{}'),
+    adminNote: text('admin_note'),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+export const userSubscriptions = sqliteTable('user_subscriptions', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id),
+    platform: text('platform', {
+        enum: ['android']
+    }).notNull(),
+    productId: text('product_id').notNull(),
+    purchaseToken: text('purchase_token').notNull().unique(),
+    status: text('status', {
+        enum: ['active', 'expired', 'canceled', 'pending', 'revoked', 'unknown']
+    }).notNull(),
+    plan: text('plan', {
+        enum: ['free', 'paid']
+    }).notNull(),
+    expiresAt: text('expires_at'),
+    autoRenewing: integer('auto_renewing', { mode: 'boolean' }).notNull().default(false),
+    rawProviderData: text('raw_provider_data').notNull(),
+    lastVerifiedAt: text('last_verified_at').notNull(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+
+export const pushSubscriptions = sqliteTable('push_subscriptions', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id),
+    endpoint: text('endpoint').notNull().unique(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    expirationTime: text('expiration_time'),
+    quickEntryTokenHash: text('quick_entry_token_hash').notNull().unique(),
+    createdAt: text('created_at').default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at').default(sql`(datetime('now'))`),
+});
+export interface TransactionSnapshot {
+  type: 'income' | 'expense';
+  amount: number;
+  category: string;
+  memo: string | null;
+  date: string;
+}
+
+export type Transaction = Omit<
+  typeof transactions.$inferSelect,
+  'previousState'
+> & {
+  previousState?: string | null;
+};
+export type NewTransaction = typeof transactions.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type NewChatMessage = typeof chatMessages.$inferInsert;
+export type Report = Omit<
+  typeof reports.$inferSelect,
+  'createdAt' | 'updatedAt' | 'summaryData'
+> & {
+  createdAt: string | Date | null;
+  updatedAt: string | Date | null;
+  summaryData?: string | null;
+};
+export type NewReport = typeof reports.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
+export type UserNote = Omit<typeof userNotes.$inferSelect, 'embedding'> & {
+  embedding?: number[] | null;
+};
+export type NewUserNote = typeof userNotes.$inferInsert;
+export type KnowledgeBaseItem = Omit<typeof knowledgeBase.$inferSelect, 'embedding'> & {
+  embedding?: number[] | null;
+};
+export type NewKnowledgeBaseItem = typeof knowledgeBase.$inferInsert;
+export type ContactRequest = typeof contactRequests.$inferSelect;
+export type NewContactRequest = typeof contactRequests.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type NewUserSubscription = typeof userSubscriptions.$inferInsert;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;

@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend**: Cloudflare Workers (Hono) + Turso SQLite + Drizzle ORM
 - **Frontend**: Flutter (mobile) / React + Vite (web, `frontend/` directory)
 - **Authentication**: Supabase (OAuth + JWT ES256)
-- **AI/LLM**: Configurable provider (Gemini, OpenAI, OpenRouter)
+- **AI/LLM**: Configurable provider (AI Studio, Gemini, OpenAI, OpenRouter)
 
 Users describe financial transactions in natural language (Korean) and the AI automatically extracts/categorizes them, generates reports, and maintains session-based chat history.
 
@@ -68,11 +68,11 @@ TURSO_AUTH_TOKEN=
 SUPABASE_JWT_SECRET=
 SUPABASE_URL=https://your-project.supabase.co   # added 2026-04-13
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-AI_PROVIDER=openai
-OPENAI_API_KEY=...
+AI_API_BASE_URL=http://localhost:8788
+AI_PROXY_SECRET=...
 ```
 
-For production, set the secret-backed values (`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`) in Wrangler secrets / Cloudflare Worker settings and add `OPENAI_API_KEY` / `GEMINI_API_KEY` / `OPENROUTER_API_KEY` only if you use those providers.
+For production, set the secret-backed values (`TURSO_DB_URL`, `TURSO_AUTH_TOKEN`, `SUPABASE_JWT_SECRET`, `SUPABASE_URL`, `AI_PROXY_SECRET`) in Wrangler secrets / Cloudflare Worker settings. Use `AI_STUDIO_API_KEY` in `backend-vps` unless you intentionally switch providers.
 
 ## Architecture
 
@@ -99,7 +99,7 @@ Request
 | `backend/src/routes/sessions.ts` | Primary endpoint: full AI processing per session message |
 | `backend/src/routes/ai.ts` | Legacy `/api/ai/action` — validates session ownership before write |
 | `backend/src/services/ai.ts` | `parseUserInput()` — LLM call → action type + payload |
-| `backend/src/services/llm.ts` | LLM provider config, switch via `AI_PROVIDER` env var |
+| `backend/src/services/llm.ts` | LLM provider config for AI-related backend-vps paths |
 | `backend/src/services/clarifications.ts` | Ambiguous input state (always filters by userId) |
 | `backend/src/services/chat.ts` | `getChatHistoryBySession(db, sessionId, userId, limit?)` — userId required |
 | `backend/src/db/schema.ts` | All Drizzle table definitions |

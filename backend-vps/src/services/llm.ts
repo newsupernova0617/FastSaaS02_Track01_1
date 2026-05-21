@@ -149,7 +149,7 @@ export function getLLMConfig(env: {
     return {
       provider: env.AI_PROVIDER === 'ai-studio' ? 'ai-studio' : 'gemini',
       apiKey: geminiApiKey || '',
-      modelName: env.GEMINI_MODEL_NAME || 'gemini-3.5-flash-lite',
+      modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }
 
@@ -157,7 +157,7 @@ export function getLLMConfig(env: {
     return {
       provider: 'ai-studio',
       apiKey: geminiApiKey,
-      modelName: env.GEMINI_MODEL_NAME || 'gemini-3.5-flash-lite',
+      modelName: env.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
     };
   }
 

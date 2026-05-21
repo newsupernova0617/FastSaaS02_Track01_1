@@ -5,11 +5,12 @@ import reportsRouter from './routes/reports';
 import sessionsRouter from './routes/sessions';
 import { pushPublicRouter } from './routes/push';
 import appRouter from './routes/app';
+import ragRouter from './routes/rag';
 import { authMiddleware } from './middleware/auth';
 import { loggingMiddleware } from './middleware/logging';
 import type { Env } from './db/index';
 import type { Variables } from './middleware/auth';
-import { isDirectAiRoute } from './runtime/ai-routing';
+import { isDirectAiRoute, isRagRoute } from './runtime/ai-routing';
 
 export const vpsApp = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -55,7 +56,7 @@ vpsApp.use('*', async (c, next) => {
 vpsApp.use('*', loggingMiddleware);
 
 vpsApp.use('/api/*', async (c, next) => {
-  if (!isDirectAiRoute(c.req.raw)) {
+  if (!isDirectAiRoute(c.req.raw) && !isRagRoute(c.req.raw)) {
     return c.json({ error: 'Not found' }, 404);
   }
 
@@ -78,6 +79,7 @@ vpsApp.route('/api/sessions', sessionsRouter);
 vpsApp.route('/api/app', appRouter);
 vpsApp.route('/api/app/push', pushPublicRouter);
 vpsApp.route('/api/reports', reportsRouter);
+vpsApp.route('/api/rag', ragRouter);
 
 vpsApp.notFound((c) => c.json({ error: 'Not found' }, 404));
 

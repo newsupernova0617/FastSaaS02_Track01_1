@@ -757,4 +757,74 @@ describe('VectorizeService', () => {
       expect(() => JSON.parse(callOptions.body)).not.toThrow();
     });
   });
+
+  describe('proxy mode', () => {
+    const proxyEnv = {
+      TURSO_DB_URL: 'libsql://proxy-test.turso.io',
+      TURSO_AUTH_TOKEN: 'proxy-test-token',
+      SUPABASE_JWT_SECRET: 'supabase-secret',
+      SUPABASE_URL: 'https://example.supabase.co',
+      AI_API_BASE_URL: 'http://localhost:8788',
+      AI_PROXY_SECRET: 'proxy-secret',
+    } as any;
+
+    it('should proxy embedText to backend-vps', async () => {
+      service = new VectorizeService(proxyEnv);
+      const mockEmbedding = [0.2, 0.4, 0.6];
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, embedding: mockEmbedding }),
+      });
+
+      const result = await service.embedText('proxy text');
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'http://localhost:8788/api/rag/embed',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Internal-Proxy-Token': 'proxy-secret',
+          }),
+        })
+      );
+      expect(result.slice(0, 3)).toEqual(mockEmbedding);
+      expect(result.length).toBe(768);
+    });
+
+    it('should proxy searchVectors to backend-vps', async () => {
+      service = new VectorizeService(proxyEnv);
+      const items = [
+        { id: '1', content: 'Result 1', score: 0.92 },
+        { id: '2', content: 'Result 2', score: 0.87 },
+      ];
+      fetchSpy.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, items }),
+      });
+
+      const embedding = [0.1, 0.2, 0.3];
+      const result = await service.searchVectors(embedding, 'user_notes', 10, 'user-123');
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'http://localhost:8788/api/rag/search',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Internal-Proxy-Token': 'proxy-secret',
+          }),
+        })
+      );
+
+      const requestBody = JSON.parse(fetchSpy.mock.calls[0][1].body);
+      expect(requestBody).toEqual({
+        embedding,
+        table: 'user_notes',
+        limit: 10,
+        userId: 'user-123',
+      });
+      expect(result).toEqual(items);
+    });
+  });
 });

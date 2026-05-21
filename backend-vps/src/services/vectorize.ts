@@ -156,59 +156,41 @@ export class VectorizeService {
     return null;
   }
 
-  private getProxyBaseUrl(): string | null {
-    const baseUrl = this.env.AI_API_BASE_URL?.trim();
-    if (!baseUrl) return null;
-    return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  }
-
-  private getProxyHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.env.AI_PROXY_SECRET) {
-      headers['X-Internal-Proxy-Token'] = this.env.AI_PROXY_SECRET;
-    }
-
-    return headers;
-  }
-
-  private async proxyRagRequest<T>(
-    path: '/api/rag/embed' | '/api/rag/search',
-    body: Record<string, unknown>,
-  ): Promise<T> {
-    const baseUrl = this.getProxyBaseUrl();
-    if (!baseUrl) {
-      throw new Error('AI API base URL is not configured');
-    }
-
-    const response = await fetch(`${baseUrl}${path}`, {
-      method: 'POST',
-      headers: this.getProxyHeaders(),
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      throw new Error(`RAG proxy error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json() as Promise<T>;
-  }
-
   async embedText(text: string): Promise<number[]> {
     if (this.legacyMode) {
       return this.embedTextLegacy(text);
     }
 
-    const baseUrl = this.getProxyBaseUrl();
-    if (baseUrl) {
-      try {
-        const response = await this.proxyRagRequest<{ success?: boolean; embedding?: number[] }>('/api/rag/embed', { text });
-        const embedding = response.embedding || [];
-        return normalizeEmbedding(embedding);
-      } catch (error) {
-        console.warn('[RAG] Proxy embedding failed, falling back locally:', error);
+    const provider = this.resolveEmbeddingProvider();
+
+    if (provider === 'ai-studio' || provider === 'gemini') {
+      const apiKey = this.env.AI_STUDIO_API_KEY || this.env.GEMINI_API_KEY;
+      if (apiKey) {
+        try {
+          return await this.embedWithGemini(text, apiKey);
+        } catch (error) {
+          console.warn('[RAG] Gemini embedding failed, falling back:', error);
+        }
+      }
+    }
+
+    if (provider === 'openai') {
+      if (this.env.OPENAI_API_KEY) {
+        try {
+          return await this.embedWithOpenAI(text, this.env.OPENAI_API_KEY, this.env.OPENAI_MODEL_NAME || 'text-embedding-3-small');
+        } catch (error) {
+          console.warn('[RAG] OpenAI embedding failed, falling back:', error);
+        }
+      }
+    }
+
+    if (provider === 'openrouter') {
+      if (this.env.OPENROUTER_API_KEY) {
+        try {
+          return await this.embedWithOpenRouter(text, this.env.OPENROUTER_API_KEY, this.env.OPENROUTER_MODEL_NAME || 'openai/text-embedding-3-small');
+        } catch (error) {
+          console.warn('[RAG] OpenRouter embedding failed, falling back:', error);
+        }
       }
     }
 
@@ -227,25 +209,37 @@ export class VectorizeService {
       return this.searchVectorsLegacy(embedding, table, limit, userId);
     }
 
+    const queryVector = JSON.stringify(normalizeEmbedding(embedding));
+    const vectorIndex = table === 'user_notes' ? 'user_notes_embedding_idx' : 'knowledge_base_embedding_idx';
+    const client = this.client ?? getDbClient(this.env);
+
     try {
-      const baseUrl = this.getProxyBaseUrl();
-      if (!baseUrl) {
-        return [];
+      if (table === 'user_notes') {
+        if (!userId) return [];
+
+        const result = await client.execute(
+          `SELECT n.id, n.content, vector_distance_cos(n.embedding, vector32(?)) AS score
+           FROM vector_top_k('${vectorIndex}', vector32(?), ?) top
+           JOIN user_notes n ON n.rowid = top.id
+           WHERE n.user_id = ?
+           ORDER BY score ASC`,
+          [queryVector, queryVector, limit, userId]
+        );
+
+        return result.rows.map((row) => parseVectorRow(row as Record<string, unknown>));
       }
 
-      const response = await this.proxyRagRequest<{
-        success?: boolean;
-        items?: Array<{ id: string; content: string; score: number }>;
-      }>('/api/rag/search', {
-        embedding,
-        table,
-        limit,
-        userId,
-      });
+      const result = await client.execute(
+        `SELECT k.id, k.content, vector_distance_cos(k.embedding, vector32(?)) AS score
+         FROM vector_top_k('${vectorIndex}', vector32(?), ?) top
+         JOIN knowledge_base k ON k.rowid = top.id
+         ORDER BY score ASC`,
+        [queryVector, queryVector, limit]
+      );
 
-      return response.items ?? [];
+      return result.rows.map((row) => parseVectorRow(row as Record<string, unknown>));
     } catch (error) {
-      console.warn('[RAG] Proxy vector search failed, returning empty result:', error);
+      console.warn('[RAG] Turso vector query failed, returning empty result:', error);
       return [];
     }
   }
@@ -319,7 +313,7 @@ export class VectorizeService {
   }
 
   private async embedWithGemini(text: string, apiKey: string): Promise<number[]> {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

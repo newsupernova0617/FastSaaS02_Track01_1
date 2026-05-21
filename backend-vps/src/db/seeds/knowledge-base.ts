@@ -153,8 +153,6 @@ export async function seedKnowledgeBase(db: ReturnType<typeof getDb>, env?: Env)
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       OPENAI_MODEL_NAME: process.env.OPENAI_MODEL_NAME,
       AI_PROVIDER: process.env.AI_PROVIDER as Env['AI_PROVIDER'],
-      AI_API_BASE_URL: process.env.AI_API_BASE_URL,
-      AI_PROXY_SECRET: process.env.AI_PROXY_SECRET,
       VECTORIZE: undefined,
       CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
       CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,

@@ -1,6 +1,6 @@
 import { serve } from '@hono/node-server';
-import { vpsApp } from '../../backend/src/app-vps';
-import { buildRuntimeEnv } from '../../backend/src/runtime/node-env';
+import { vpsApp } from './app-vps';
+import { buildRuntimeEnv } from './runtime/node-env';
 
 const env = buildRuntimeEnv();
 const port = Number(process.env.PORT || 8788);
