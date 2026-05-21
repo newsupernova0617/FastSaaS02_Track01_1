@@ -52,6 +52,7 @@ import {
   type TimelineResponse,
   type UpdateSessionResponse,
 } from './schemas';
+import { authStore } from '../state/auth-store';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -71,6 +72,9 @@ function getAccessToken(): string {
   if (typeof window === 'undefined') {
     throw new Error('Access token is unavailable outside the browser.');
   }
+
+  const sessionToken = authStore.getState().session?.access_token;
+  if (sessionToken) return sessionToken;
 
   const directToken = localStorage.getItem('access_token');
   if (directToken) return directToken;

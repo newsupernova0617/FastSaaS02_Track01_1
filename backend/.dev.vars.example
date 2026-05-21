@@ -4,6 +4,6 @@ TURSO_AUTH_TOKEN="your-turso-auth-token"
 SUPABASE_URL="https://your-project.supabase.co"
 SUPABASE_JWT_SECRET="your-supabase-jwt-secret"
 AI_API_BASE_URL="http://localhost:8788"
-AI_PROXY_SECRET="your-internal-proxy-secret"
+AI_PROXY_SECRET="1b8b45c3e1c38b80e8215ba2ab65bd91457aa82b6024bbb67d005478fd5d8053"
 
 ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173,http://localhost:4321,https://fastsaas02-track01-1.pages.dev,https://fastsaas02-track01-1-webapp.pages.dev,https://landing-page-7hu.pages.dev"
