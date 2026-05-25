@@ -86,7 +86,7 @@ export function HomeScreen(props: {
         <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 shadow-lg shadow-slate-200/40">
           <input
             class="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400"
-            value={state.composerDraft}
+            defaultValue={state.composerDraft}
             placeholder={homeView.inputPlaceholder}
             onInput={(event) => appStore.getState().setComposerDraft((event.currentTarget as HTMLInputElement).value)}
           />

@@ -8,7 +8,7 @@ import { appStore, type RouteName } from './state/app-store';
 import { authStore } from './state/auth-store';
 import type { AppCurrentReportResponse, AppProfileResponse, AppReportsResponse, AppTransactionsResponse, BootstrapResponse, CalendarResponse, HomeResponse, ReportResponse, SearchResponse, StatsResponse, TimelineResponse } from './data/schemas';
 import { getCurrentSession, onAuthStateChange, signInWithPassword, signOut, signUpWithPassword } from './lib/supabase-auth';
-import { createAppSession, createAppTransaction, deleteAppReport, deleteAppSession, deleteAppTransaction, fetchAppBootstrap, fetchAppProfile, fetchAppPushPublicKey, fetchAppReportDetail, fetchAppReports, fetchAppTimeline, generateAppReport, registerAppPushSubscription, sendAppChat, sendAppQuickEntryTest, unregisterAppPushSubscription, updateAppReport, updateAppSession } from './data/app-api';
+import { createAppSession, createAppTransaction, deleteAppReport, deleteAppSession, deleteAppTransaction, fetchAppBootstrap, fetchAppProfile, fetchAppPushPublicKey, fetchAppReportDetail, fetchAppReports, fetchAppTimeline, generateAppReport, registerAppPushSubscription, sendAppChat, sendAppQuickEntryTest, syncAppUser, unregisterAppPushSubscription, updateAppReport, updateAppSession } from './data/app-api';
 import { clearQuickEntryRegistration, getQuickEntryRegistration, setQuickEntryRegistration, type QuickEntryRegistration } from './lib/quick-entry-store';
 import { pageEntries } from './lib/page-registry';
 import './styles.css';
@@ -565,6 +565,40 @@ searchObserver.subscribe((next) => {
 });
 
 appStore.subscribe((state, previous) => {
+  const isComposerDraftOnlyChange =
+    state.composerDraft !== previous.composerDraft &&
+    state.route === previous.route &&
+    state.calendarMonth === previous.calendarMonth &&
+    state.calendarDate === previous.calendarDate &&
+    state.recordMonth === previous.recordMonth &&
+    state.recordType === previous.recordType &&
+    state.recordAmount === previous.recordAmount &&
+    state.recordCategory === previous.recordCategory &&
+    state.recordDate === previous.recordDate &&
+    state.recordMemo === previous.recordMemo &&
+    state.recordSubmitting === previous.recordSubmitting &&
+    state.recordError === previous.recordError &&
+    state.statsMonth === previous.statsMonth &&
+    state.monthlyReportMonth === previous.monthlyReportMonth &&
+    state.searchDraft === previous.searchDraft &&
+    state.submittedSearch === previous.submittedSearch &&
+    state.selectedReportId === previous.selectedReportId &&
+    state.activeSessionId === previous.activeSessionId &&
+    state.composerSending === previous.composerSending &&
+    state.composerError === previous.composerError &&
+    state.sessionActionLoading === previous.sessionActionLoading &&
+    state.sessionActionError === previous.sessionActionError &&
+    state.reportActionLoading === previous.reportActionLoading &&
+    state.reportActionError === previous.reportActionError &&
+    state.editingSessionId === previous.editingSessionId &&
+    state.sessionTitleDraft === previous.sessionTitleDraft &&
+    state.editingReportId === previous.editingReportId &&
+    state.reportTitleDraft === previous.reportTitleDraft;
+
+  if (isComposerDraftOnlyChange) {
+    return;
+  }
+
   if (state.submittedSearch !== previous.submittedSearch) {
     searchObserver.setOptions(searchQueryOptions(state.submittedSearch));
   }
@@ -816,6 +850,7 @@ async function handleSignIn(email: string, password: string) {
   try {
     const session = await signInWithPassword(email.trim(), password);
     authStore.getState().setSession(session);
+    await syncAppUser(session).catch(() => undefined);
     await refreshAllQueries();
   } catch (error) {
     authStore.getState().setError(error instanceof Error ? error.message : '로그인에 실패했습니다.');
@@ -833,6 +868,7 @@ async function handleSignUp(email: string, password: string) {
     const session = await signUpWithPassword(email.trim(), password);
     if (session) {
       authStore.getState().setSession(session);
+      await syncAppUser(session).catch(() => undefined);
       await refreshAllQueries();
       return;
     }
@@ -894,7 +930,9 @@ getCurrentSession()
   .then((session) => {
     authStore.getState().setSession(session);
     authStore.getState().setInitialized(true);
-    return refreshAllQueries();
+    return syncAppUser(session)
+      .catch(() => undefined)
+      .then(() => refreshAllQueries());
   })
   .catch((error) => {
     authStore.getState().setError(error instanceof Error ? error.message : '세션 복원에 실패했습니다.');
@@ -904,7 +942,9 @@ getCurrentSession()
 onAuthStateChange((session) => {
   authStore.getState().setSession(session);
   authStore.getState().setInitialized(true);
-  void refreshAllQueries();
+  void syncAppUser(session)
+    .catch(() => undefined)
+    .then(() => refreshAllQueries());
 });
 
 renderApp();

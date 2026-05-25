@@ -53,8 +53,13 @@ import {
   type UpdateSessionResponse,
 } from './schemas';
 import { authStore } from '../state/auth-store';
+import { z } from 'zod';
+import type { Session } from '@supabase/supabase-js';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const syncUserResponseSchema = z.object({
+  success: z.literal(true),
+});
 
 if (!apiBaseUrl) {
   throw new Error('Missing API env: set VITE_API_BASE_URL in webapp/.env');
@@ -101,6 +106,22 @@ export function getStoredAccessToken(): string | null {
   } catch {
     return null;
   }
+}
+
+export async function syncAppUser(session: Session | null): Promise<void> {
+  if (!session) return;
+
+  const metadata = session.user.user_metadata ?? {};
+  const provider = session.user.app_metadata?.provider ?? 'supabase';
+  await apiSend('/api/users/sync', syncUserResponseSchema, {
+    method: 'POST',
+    body: JSON.stringify({
+      email: session.user.email ?? undefined,
+      name: (metadata.name ?? metadata.full_name) || undefined,
+      avatar_url: (metadata.avatar_url ?? metadata.picture) || undefined,
+      provider,
+    }),
+  });
 }
 
 async function apiRequest<T>(
